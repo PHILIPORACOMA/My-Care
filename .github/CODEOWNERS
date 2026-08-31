@@ -1,0 +1,16 @@
+# Auto-request review from the module owner.
+# Mapped to Manuscript Table 30 (List of Modules).
+# Replace the placeholders with real GitHub usernames.
+
+*                          @BINGHAY_USERNAME
+
+/packages/triage-engine/   @RACOMA_USERNAME @SEABORG_USERNAME
+/packages/ruleset/         @RACOMA_USERNAME
+
+/apps/api/                 @BINGHAY_USERNAME
+/apps/pwa/                 @SEABORG_USERNAME
+/apps/portal/              @TABANAG_USERNAME
+/apps/console/             @TABANAG_USERNAME
+
+/docs/                     @BINGHAY_USERNAME
+/.github/                  @BINGHAY_USERNAME
