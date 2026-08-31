@@ -1,0 +1,16 @@
+{
+  "name": "@mycare/triage-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "test": "tsx --test src/evaluate.test.ts",
+    "typecheck": "tsc --noEmit",
+    "purity": "node scripts/check-purity.mjs"
+  },
+  "devDependencies": {
+    "@mycare/ruleset": "*"
+  }
+}
