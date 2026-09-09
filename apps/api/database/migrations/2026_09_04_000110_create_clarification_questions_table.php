@@ -32,8 +32,13 @@ return new class extends Migration
             $table->json('allowed_answers');
             $table->string('red_flag_answer', 50)->nullable();
 
-            // One phrasing per language per version.
-            $table->unique(['ruleset_version_id', 'question_key', 'language']);
+            // One phrasing per language per version. The index is named
+            // explicitly because Laravel's generated name for these three
+            // columns is 71 characters, past MySQL's 64-character limit.
+            $table->unique(
+                ['ruleset_version_id', 'question_key', 'language'],
+                'clarification_questions_version_key_lang_unique'
+            );
 
             $table->foreign('ruleset_version_id')->references('id')->on('ruleset_versions')->cascadeOnDelete();
             $table->foreign('symptom_code_id')->references('id')->on('symptom_codes')->restrictOnDelete();
