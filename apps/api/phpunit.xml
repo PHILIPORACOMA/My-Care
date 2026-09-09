@@ -33,9 +33,10 @@
         <env name="DB_CONNECTION" value="mysql"/>
         <env name="DB_HOST" value="127.0.0.1"/>
         <env name="DB_PORT" value="3306"/>
+        <!-- Credentials come from the gitignored .env.testing; this file is committed.
+             DB_DATABASE stays here as a hard guard so a test run can never reach the
+             development schema even if .env.testing is missing. -->
         <env name="DB_DATABASE" value="mycare_test"/>
-        <env name="DB_USERNAME" value="root"/>
-        <env name="DB_PASSWORD" value=""/>
         <env name="DB_URL" value=""/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
