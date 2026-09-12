@@ -18,10 +18,10 @@ do not let this drift from the code.
 | UT-009 | Triage Rule & Lexicon Configuration | Threshold Configuration | Super-admin sets a red-flag override condition | Override forces an emergency-tier result whenever triggered, regardless of other rules | **Implemented** (engine behavior only — the authoring UI is Phase 4) | `packages/triage-engine/src/evaluate.test.ts` ("a red-flag severity threshold escalates ahead of normal rule matching", "red-flag clarification answer short-circuits...") |
 | UT-010 | Triage Rule & Lexicon Configuration | Content Versioning | Draft rule set is edited multiple times before publishing | Each save creates a new version; prior versions remain retrievable | Pending — Phase 3/4 | — |
 | UT-011 | Triage Rule & Lexicon Configuration | Publish / Rollback | Super-admin publishes a rule version | Devices receive the updated rule set on next sync; rollback restores the prior version | Pending — Phase 3/4/6 | — |
-| UT-012 | Sync & Data Aggregation | Aggregate Sync | Device regains connectivity after being offline | De-identified aggregate data is uploaded; raw symptom text is never transmitted | Pending — Phase 6 (offline sync layer) | — |
-| UT-013 | Sync & Data Aggregation | Version Sync | Device checks for rule/lexicon updates | Latest published version is downloaded and cached locally | Pending — Phase 6 | — |
+| UT-012 | Sync & Data Aggregation | Aggregate Sync | Device regains connectivity after being offline | De-identified aggregate data is uploaded; raw symptom text is never transmitted | **Partially implemented** — the receiving endpoint is built and the privacy half is enforced at the schema: `StoreSyncBatchRequest` has no field able to carry free text, so a client sending `symptom_text` has it dropped, asserted by test. The **device side** that regains connectivity and uploads is Phase 6 | `apps/api/tests/Feature/Api/SyncBatchTest.php` ("silently drops any free-text field a client tries to send", plus the store/link/stamp tests) |
+| UT-013 | Sync & Data Aggregation | Version Sync | Device checks for rule/lexicon updates | Latest published version is downloaded and cached locally | **Partially implemented** — `GET /api/v1/ruleset/current` serves the latest published bundle and never a draft; assembly is deterministic so a version rebuilds identically every time. **Caching locally** is the device's half, Phase 6 | `apps/api/tests/Feature/Api/RulesetBundleTest.php` (7 tests), `apps/api/app/Domain/Ruleset/BundleAssembler.php` |
 | UT-014 | Sync & Data Aggregation | Sync Status Monitoring | Sub-admin opens the Sync Status screen | Last sync timestamp and device/session counts display correctly | Pending — Phase 7 (sub-admin dashboard) | — |
-| UT-015 | Sync & Data Aggregation | Deduplication | Same triage session is submitted twice due to a retry | Duplicate is detected and not double-counted in aggregates | **Partially implemented** — the database-level guarantee is built and verified: UNIQUE on `sync_batches.client_batch_uuid` and on `triage_sessions.client_session_uuid`, each asserted by a real duplicate insert throwing. The **endpoint** behaviour (a duplicate POST returns `200` with the original result, never `409`) is not built — remaining Phase 3 work | `apps/api/tests/Feature/SchemaTest.php` ("enforces sync batch idempotency at the database level", "enforces session idempotency at the database level") |
+| UT-015 | Sync & Data Aggregation | Deduplication | Same triage session is submitted twice due to a retry | Duplicate is detected and not double-counted in aggregates | **Implemented.** Both halves now hold: UNIQUE on `sync_batches.client_batch_uuid` and `triage_sessions.client_session_uuid` at the database, and the endpoint contract above it — a replayed POST returns **200 with the original result, never 409**, and four identical POSTs still yield one batch and one session. A session already stored keeps its original batch rather than moving between uploads | `apps/api/tests/Feature/Api/SyncBatchTest.php` (replay, double-count, attempt-count and original-batch tests), `apps/api/tests/Feature/SchemaTest.php` (the two index tests) |
 | UT-016 | Sync & Data Aggregation | Barangay-Scoped Isolation | Sub-admin account is scoped to Barangay X | Only Barangay X aggregates are visible to that account | Pending — Phase 3/7 | — |
 | UT-017 | Dashboard, Reporting & Account Management | Trends Dashboard | Sub-admin opens the Trends & Surveillance dashboard | Correct tier counts and top-symptom trends are displayed | Pending — Phase 7 | — |
 | UT-018 | Dashboard, Reporting & Account Management | Report Export | Sub-admin generates a CSV/PDF report | File downloads with correct date range and de-identified content | Pending — Phase 3/7 (`Domain/Aggregation/SuppressionRule`) | — |
@@ -40,14 +40,18 @@ do not let this drift from the code.
   negation detection belong to the NLP layer, not `evaluate()`. They stay
   pending until that layer exists (Phase 5, `apps/pwa`).
 - **A test case is only "Implemented" when the behaviour Table 31 describes is
-  the behaviour under test.** UT-015 and UT-020 both have real, passing tests
-  as of Phase 3, but they sit at different distances from their test case, and
-  the Status column says which. UT-020's rule *is* the unit Table 31 names, so
-  it is implemented and only its callers are missing. UT-015's test case is
-  about a retried **submission**, and the endpoint that would do the retrying
-  does not exist yet — the UNIQUE indexes make double-counting impossible at
-  the database, which is the load-bearing half, but calling UT-015 done would
-  claim an HTTP contract nothing has exercised.
+  the behaviour under test.** The Status column says how far each one actually
+  reaches, and several sit deliberately at "Partially implemented" rather than
+  being rounded up. UT-015 was one of them until the sync endpoint landed: the
+  UNIQUE indexes were always the load-bearing half, but the HTTP contract they
+  support — a replay answering 200 with the original result — had nothing
+  exercising it. It does now, so UT-015 is Implemented.
+- **UT-012 and UT-013 are half-tests by nature.** Both describe a *device*
+  doing something: regaining connectivity and uploading, checking for updates
+  and caching locally. Phase 3 built the server side each one talks to, and
+  that side is fully tested, but the handset that initiates them is Phase 5/6.
+  They stay Partially implemented until `apps/pwa` exists — the server passing
+  its own tests is not the same as the test case Table 31 wrote down.
 - **UT-018 depends on UT-020's rule and stays pending regardless.** Its
   suppression dependency is ready; what is missing is the CSV/PDF export
   itself, the date-range handling, and the read path that calls

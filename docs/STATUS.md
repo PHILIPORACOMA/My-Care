@@ -1,7 +1,8 @@
 # Development status checkpoint
 
-Last updated: 2026-09-12. **Phase 3's schema is built and verified** — the 20
-migrations, the seed, and the Pest suite all run green against real MySQL 8.
+Last updated: 2026-09-12. **Phase 3 is complete for devices** — schema,
+device-facing endpoints, and audit observers all run green against real MySQL 8.
+What is left of Phase 3 is staff-facing, and blocked on the auth decision.
 Update this file at the end of any session that changes phase status, adds a
 major decision, or closes/opens a known gap — don't let it drift.
 
@@ -10,10 +11,12 @@ major decision, or closes/opens a known gap — don't let it drift.
 Paste this into a new chat session to pick up where this one left off:
 
 > Read `docs/STATUS.md`, `docs/REPO.md`, `docs/adr/0001-triage-resolution.md`,
-> `docs/ut-matrix.md`, and `docs/data-dictionary.md` before doing anything else. Phase 3's schema is done
-> and verified; what remains is documentation debt and then the API endpoints.
-> Tell me what you understand the current state to be and wait for direction —
-> don't start new work yet.
+> `docs/ut-matrix.md`, `docs/data-dictionary.md`, and
+> `docs/adr/0003-device-api-and-sync-contract.md` before doing anything else.
+> Phase 3's schema and device-facing endpoints are done and verified; staff
+> endpoints are blocked on the JWT-vs-Sanctum decision. Tell me what you
+> understand the current state to be and wait for direction — don't start new
+> work yet.
 
 ## What this is
 
@@ -29,7 +32,7 @@ specification.
 | 0 | Monorepo, CI, conventions | ✅ workspaces + two CI workflows: `engine-purity` and `api`, **both green on PR #1**. Note both trigger only on `push` to `main` or on `pull_request` — a feature-branch push alone runs nothing. |
 | 1 | Triage engine + ruleset schema | ✅ |
 | 2 | Ruleset v1 from the Clinical Appraisal Form | ✅ 23 presentations encoded and tested; ⚠️ **not yet clinician-reviewed** |
-| 3 | Laravel API + 20 migrations | 🔨 **schema done and verified**; endpoints not started — see Next steps |
+| 3 | Laravel API + 20 migrations | 🔨 **schema + device-facing endpoints done and verified.** Staff endpoints blocked on the auth decision (Phase 4) |
 | 4 | Super-admin console | ⬜ not started |
 | 5 | Patient PWA | ⬜ not started |
 | 6 | Offline sync layer | ⬜ not started |
@@ -52,8 +55,11 @@ Phase 3 schema — **verified by execution, not just written**:
 
 - `apps/api` on **Laravel 13.30.1**, PHP 8.4.13, MySQL 8.
 - **All 20 migrations run clean** from `migrate:fresh` (Tables 5–24).
-- `RoleSeeder` seeds the two staff roles.
-- **Pest: 35 passed, 124 assertions.**
+- `RoleSeeder` seeds the two staff roles. `DeviceSeeder` exists for local
+  development and is deliberately **not** in the default chain — `migrate
+  --seed` must never mint a working API credential. Run it explicitly:
+  `php artisan db:seed --class=DeviceSeeder`.
+- **Pest: 70 passed, 249 assertions.**
 - Confirmed directly in MySQL, not merely via test names:
   - **21 tables** = the 20 Data Dictionary entities + Laravel's `migrations`.
     No `cache`, `jobs`, `sessions`, or `password_reset_tokens`.
@@ -64,8 +70,23 @@ Phase 3 schema — **verified by execution, not just written**:
   `app/Domain/Audit/Recorder.php`, `app/Domain/Triage/SessionTierResolver.php`.
 - 20 Eloquent models, all `$timestamps = false`.
 
-Commits on `feat/UT-020-laravel-api-schema`: `ec1246e` (scaffold + schema),
-`116865c` (index-name fix), `538b399` (credentials out of phpunit.xml).
+Phase 3 endpoints — **device-facing only** (2026-09-12):
+
+- `GET /api/v1/ruleset/current` and `POST /api/v1/sync/batches`, both behind
+  `AuthenticateDevice` (`DEVICE.api_token`). Sanctum is **not** installed and
+  `php artisan install:api` must not be run — it would add a token table the
+  dictionary lacks and pre-empt the Phase 4 auth decision.
+- `Domain/Ruleset/BundleAssembler` — the single translation point between the
+  snake_case columns and the camelCase `RulesetBundle` contract.
+- `Domain/Sync/BatchIngestor` — idempotent, one transaction per batch.
+- `Observers/AuditableObserver` on 14 configuration models.
+- `packages/ruleset` gained `healthTips`; engine still 12/12, purity clean.
+
+Full reasoning: `docs/adr/0003-device-api-and-sync-contract.md`.
+
+Branch `feat/UT-020-laravel-api-schema`, **PR #1 open**: `ec1246e` (scaffold +
+schema), `116865c` (index-name fix), `538b399` (credentials out of phpunit.xml),
+then the Phase 3 documentation set and the endpoints.
 
 ## Environment notes (needed to run this on a fresh machine)
 
@@ -137,7 +158,8 @@ Carried forward:
 - `apps/pwa`, `apps/portal`, `apps/console` are still empty.
 - ~~The `api` workflow has never actually run.~~ **Resolved 2026-09-12 — it
   ran and passed on its first attempt** (PR #1, 49s): migrations applied,
-  `RoleSeeder` ran, **Pest 35 passed / 124 assertions** on a MySQL 8 service
+  `RoleSeeder` ran, **Pest 35 passed / 124 assertions** (the count at that
+  commit; it is 70/249 now) on a MySQL 8 service
   container, matching the local result exactly. The two parts flagged as
   risky — the MySQL handshake and the `.env`/`phpunit.xml` precedence — both
   worked; the log confirms `DB_DATABASE: mycare_test` and
@@ -152,6 +174,23 @@ Carried forward:
   today; bump both to `@v5` when convenient. `engine-purity` uses the same
   pinned actions.
 - `docs/REPO.md` and `docs/ut-matrix.md` cite table numbers by hand.
+- **`RULE_CONDITION` (Table 10) has no sequence column, but condition order is
+  semantically load-bearing.** Each condition's `operator` says how it combines
+  with the ones before it, so reordering a rule's conditions can change the tier
+  it produces. Insertion order — the primary key — is the only ordering the
+  schema offers, and `BundleAssembler` sorts by `id` accordingly. Stable only
+  while conditions are append-only. **A rule-authoring UI that lets a
+  super-admin reorder them (Phase 4, UT-007) needs either a sequence column by
+  amendment, or delete-and-reinsert semantics.** Found 2026-09-12 while building
+  the bundle endpoint.
+- **Nothing publishes the v1 bundle into the database.** `GET
+  /api/v1/ruleset/current` returns 503 on a fresh install because no importer
+  exists to write `packages/ruleset/src/bundle/v1.ts` into Tables 6–11/15/21.
+  Phase 4 publish work.
+- **`DEVICE.api_token` is stored and compared in plaintext.** Table 12 types it
+  `VARCHAR(80)` with no hashing implied, and a hashed column cannot be looked up
+  directly. Revisit in Phase 4 with staff auth — prefix-plus-hash fits the same
+  width.
 - `apps/api/composer.json` still carries the Laravel skeleton's
   `post-create-project-cmd` line that touches `database/database.sqlite`. Dead
   — it fires only on `composer create-project`, no such file exists, and the
@@ -168,9 +207,12 @@ Open, from the manuscript review:
   Pinned by a deliberately-named test in `SessionTierResolverTest`. Fix is a
   manuscript amendment adding `outcome_tier` (ideally plus `resolution_source`)
   to Table 13 — decide when Phase 4 starts.
-- **`HEALTH_TIP` (Table 21) is not in the bundle contract.** It is
-  `ruleset_version_id`-scoped so it ships to devices, but `RulesetBundle` has no
-  `healthTips` field. Ruleset-contract change; deferred to the publish endpoint.
+- ~~**`HEALTH_TIP` (Table 21) is not in the bundle contract.**~~ **Resolved
+  2026-09-12.** `healthTips` was added to `packages/ruleset/src/schema.ts` and
+  the bundle endpoint serves it, ordered by `display_order`. Tips are
+  presentational only — a tip never influences a tier and `evaluate()` does not
+  read the field. The v1 bundle ships `healthTips: []`: **tip content is medical
+  guidance and still needs clinical review before anything is written.**
 - **Staff auth has no token table.** No `personal_access_tokens` in the
   dictionary. Phase 4 must choose stateless JWT (no table, no amendment) or
   Sanctum (+1 table, amendment). Not decided.
@@ -239,14 +281,39 @@ Documentation debt:
   service container does not create. An explicit migrate+seed step runs before
   Pest, since `RefreshDatabase` migrates but never invokes `RoleSeeder`.
 
-**Documentation debt is now clear.** The remaining Phase 3 work is code.
+**Documentation debt is clear.**
 
-Then the rest of Phase 3:
+Phase 3 endpoints — ~~controllers and routes~~, ~~the idempotent sync
+endpoint~~, ~~model observers wired to `Domain/Audit/Recorder`~~ — **all done
+2026-09-12**, verified by **Pest 70 passed / 249 assertions** (was 35/124). See
+`docs/adr/0003-device-api-and-sync-contract.md`.
 
-- Controllers and routes.
-- The sync endpoint, idempotent on `client_batch_uuid` (a duplicate POST returns
-  200 with the original result, never 409).
-- Model observers wired to `Domain/Audit/Recorder`.
+What was built:
+
+- `GET /api/v1/ruleset/current` — serves the latest **published** bundle, never
+  a draft; 503 (not 404) when nothing is published. Deterministic assembly, so
+  a version rebuilds byte-identically (Figure 41).
+- `POST /api/v1/sync/batches` — idempotent on `client_batch_uuid`: **201**
+  first, **200 with the original result** on replay, **never 409**. One
+  transaction per batch. `attempt_count` increments on replay but is absent
+  from the response, so it cannot change the answer a retry gets.
+- `AuthenticateDevice` middleware on `DEVICE.api_token`, rejecting any device
+  not both approved and active.
+- `AuditableObserver` on 14 configuration models, with patient data, sync
+  plumbing, derived data and `AUDIT_LOG` itself deliberately excluded.
+
+**What Phase 3 does not have, and cannot until you decide:** any staff-facing
+endpoint. Dashboard, trends, reports, rule authoring and account management all
+need the JWT-vs-Sanctum call first.
+
+Next, in the order they unblock things:
+
+1. **Decide staff auth** (JWT vs Sanctum). Blocks Phases 4 and 7 entirely.
+2. **A ruleset importer/publisher** — nothing currently gets
+   `packages/ruleset/src/bundle/v1.ts` into Tables 6–11/15/21, so
+   `GET /ruleset/current` returns 503 on a fresh install. Phase 4 publish work
+   (UT-010, UT-011).
+3. Phase 4 proper: the super-admin console.
 
 ## Commands to re-verify state
 
@@ -261,7 +328,7 @@ npm run purity -w @mycare/triage-engine
 cd apps/api
 composer install
 php artisan migrate:fresh --seed --force
-./vendor/bin/pest                      # 35 passed, 124 assertions
+./vendor/bin/pest                      # 70 passed, 249 assertions
 ```
 
 ## Repo pointers
