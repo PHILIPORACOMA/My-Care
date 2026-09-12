@@ -26,7 +26,7 @@ specification.
 
 | Phase | Scope | Status |
 |---|---|---|
-| 0 | Monorepo, CI, conventions | ✅ workspaces + two CI workflows: `engine-purity` and `api`. The `api` workflow is new and **has not run yet** — first run is the push that adds it. |
+| 0 | Monorepo, CI, conventions | ✅ workspaces + two CI workflows: `engine-purity` and `api`. **Neither runs on a feature-branch push** — both trigger only on `push` to `main` or on `pull_request`. The `api` workflow has therefore never run. |
 | 1 | Triage engine + ruleset schema | ✅ |
 | 2 | Ruleset v1 from the Clinical Appraisal Form | ✅ 23 presentations encoded and tested; ⚠️ **not yet clinician-reviewed** |
 | 3 | Laravel API + 20 migrations | 🔨 **schema done and verified**; endpoints not started — see Next steps |
@@ -136,11 +136,18 @@ Carried forward:
 - The lexicon/NLP layer doesn't exist. UT-003, UT-004 pending.
 - `apps/pwa`, `apps/portal`, `apps/console` are still empty.
 - **The `api` workflow has never actually run.** Its YAML parses and its
-  structure was checked, but nothing has exercised it on real GitHub runners —
-  it runs for the first time on the push that adds it. Treat that first run as
-  a thing to watch, not a thing that works: the MySQL service handshake and the
-  `.env`/`phpunit.xml` precedence are the two parts most likely to need a
-  second pass. (`engine-purity` has been running since Phase 0.)
+  structure was checked, but nothing has exercised it on real GitHub runners.
+  It will not run on a feature-branch push either: like `engine-purity`, it
+  triggers only on `push` to `main` or on `pull_request`, and no PR is open.
+  **Opening the PR for this branch is what first exercises it.** Treat that run
+  as a thing to watch, not a thing that works — the MySQL service handshake and
+  the `.env`/`phpunit.xml` precedence are the two parts most likely to need a
+  second pass.
+- Consequently **no CI has ever run against this branch at all**, including
+  `engine-purity`. Every run in the repo's history is a push to `main`. If
+  per-push feedback on feature branches is wanted, both workflows need their
+  `push.branches` filter widened; that is a deliberate choice, not an
+  oversight, and it is currently set narrow.
 - `docs/REPO.md` and `docs/ut-matrix.md` cite table numbers by hand.
 - `apps/api/composer.json` still carries the Laravel skeleton's
   `post-create-project-cmd` line that touches `database/database.sqlite`. Dead
