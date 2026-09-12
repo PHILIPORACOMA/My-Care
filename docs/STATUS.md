@@ -1,6 +1,6 @@
 # Development status checkpoint
 
-Last updated: 2026-09-09. **Phase 3's schema is built and verified** — the 20
+Last updated: 2026-09-12. **Phase 3's schema is built and verified** — the 20
 migrations, the seed, and the Pest suite all run green against real MySQL 8.
 Update this file at the end of any session that changes phase status, adds a
 major decision, or closes/opens a known gap — don't let it drift.
@@ -10,7 +10,7 @@ major decision, or closes/opens a known gap — don't let it drift.
 Paste this into a new chat session to pick up where this one left off:
 
 > Read `docs/STATUS.md`, `docs/REPO.md`, `docs/adr/0001-triage-resolution.md`,
-> and `docs/ut-matrix.md` before doing anything else. Phase 3's schema is done
+> `docs/ut-matrix.md`, and `docs/data-dictionary.md` before doing anything else. Phase 3's schema is done
 > and verified; what remains is documentation debt and then the API endpoints.
 > Tell me what you understand the current state to be and wait for direction —
 > don't start new work yet.
@@ -26,7 +26,7 @@ specification.
 
 | Phase | Scope | Status |
 |---|---|---|
-| 0 | Monorepo, CI, conventions | ✅ workspaces + `engine-purity` CI. No API CI yet. |
+| 0 | Monorepo, CI, conventions | ✅ workspaces + two CI workflows: `engine-purity` and `api`. The `api` workflow is new and **has not run yet** — first run is the push that adds it. |
 | 1 | Triage engine + ruleset schema | ✅ |
 | 2 | Ruleset v1 from the Clinical Appraisal Form | ✅ 23 presentations encoded and tested; ⚠️ **not yet clinician-reviewed** |
 | 3 | Laravel API + 20 migrations | 🔨 **schema done and verified**; endpoints not started — see Next steps |
@@ -135,8 +135,18 @@ Carried forward:
   `packages/ruleset/src/bundle/v1.ts` is draft.
 - The lexicon/NLP layer doesn't exist. UT-003, UT-004 pending.
 - `apps/pwa`, `apps/portal`, `apps/console` are still empty.
-- No CI beyond `engine-purity`.
+- **The `api` workflow has never actually run.** Its YAML parses and its
+  structure was checked, but nothing has exercised it on real GitHub runners —
+  it runs for the first time on the push that adds it. Treat that first run as
+  a thing to watch, not a thing that works: the MySQL service handshake and the
+  `.env`/`phpunit.xml` precedence are the two parts most likely to need a
+  second pass. (`engine-purity` has been running since Phase 0.)
 - `docs/REPO.md` and `docs/ut-matrix.md` cite table numbers by hand.
+- `apps/api/composer.json` still carries the Laravel skeleton's
+  `post-create-project-cmd` line that touches `database/database.sqlite`. Dead
+  — it fires only on `composer create-project`, no such file exists, and the
+  sqlite connection is gone from `config/database.php` — but it reads as a
+  contradiction of the no-SQLite rule. One line to delete.
 
 Open, from the manuscript review:
 
@@ -175,16 +185,51 @@ adds a non-key column and alters no relationship in Figure 42.
 
 ## Next steps
 
-Documentation debt (planned, not started):
+Documentation debt:
 
-- `docs/data-dictionary.md` — transcribe Tables 5–24 so no future session needs
-  the 22 MB .docx.
-- `docs/adr/0002-phase-3-schema-decisions.md` — the `created_at` amendment, the
-  derive-don't-store tier decision, strict timestamp adherence, Laravel 13.
-- `docs/ut-matrix.md` — mark UT-015 and UT-020 as covered at the schema/domain
-  level. **This is now true and verified**, so it can be stated plainly.
-- `.github/workflows/api.yml` — PHP 8.4 + MySQL 8 service container, Pest,
-  with `DB_USERNAME`/`DB_PASSWORD` supplied as env vars.
+- ~~`docs/data-dictionary.md` — transcribe Tables 5–24 so no future session
+  needs the 22 MB .docx.~~ **Done 2026-09-12.** All 20 entities transcribed
+  verbatim from `My Care Manuscript (2).docx` (22.3 MB, modified 2026-08-19 —
+  the authoritative revision; older copies in `~/Downloads` are stale). Table
+  numbers taken from the manuscript's own List of Tables, not inferred.
+  Transcription verified cell-for-cell against the .docx by script, and
+  conformance-checked against the 20 migrations: **every entity matches
+  column-for-column**, the only divergence being the approved
+  `audit_logs.created_at`. The file also records the manuscript's own
+  inconsistencies (`9999` vs `255` in the Format column, Table 13's
+  `TIMESTAMP`, the `CLARIFICATIO_ANSWER` typo in the List of Tables) and
+  carries a re-extraction snippet so it can be regenerated.
+- ~~`docs/adr/0002-phase-3-schema-decisions.md` — the `created_at` amendment,
+  the derive-don't-store tier decision, strict timestamp adherence,
+  Laravel 13.~~ **Done 2026-09-12.** Those four are recorded as full decisions
+  with their rejected alternatives (`new_value`, storing `outcome_tier`,
+  Laravel 12); the smaller ones — `increments()` over `id()`, SQLite removed
+  outright, `password_hash`, plural table names, read-time-only suppression,
+  audit-writes-via-`Recorder`, Pest 5, credentials out of `phpunit.xml` — are
+  recorded below them so the reasoning survives. Versions in the ADR were read
+  from `composer.lock`, not from memory.
+- ~~`docs/ut-matrix.md` — mark UT-015 and UT-020 as covered at the
+  schema/domain level.~~ **Done 2026-09-12**, but not symmetrically, because
+  the two are not at the same distance from their test case. **UT-020 is
+  Implemented** at the domain level — the rule *is* the unit Table 31 names,
+  and only its Phase 7 callers are missing. **UT-015 is only Partially
+  implemented**: the UNIQUE indexes make double-counting impossible at the
+  database and are asserted by real duplicate inserts, but Table 31 describes a
+  retried *submission*, and the endpoint is not built — marking it done would
+  claim an HTTP contract nothing has exercised. The Notes section now also
+  flags that `it('suppresses a true zero as well')` is pinned to your undecided
+  zero-suppression question.
+- ~~`.github/workflows/api.yml` — PHP 8.4 + MySQL 8 service container, Pest,
+  with `DB_USERNAME`/`DB_PASSWORD` supplied as env vars.~~ **Written
+  2026-09-12, not yet run** (see Known gaps). A separate workflow from
+  `engine-purity` on purpose, so the safety-critical engine job never waits on
+  or flakes with a database it does not use. `DB_DATABASE=mycare_test` is set
+  at job level too, because the standalone `artisan migrate:fresh --seed` step
+  does not read `phpunit.xml` and `.env.example` points at `mycare`, which the
+  service container does not create. An explicit migrate+seed step runs before
+  Pest, since `RefreshDatabase` migrates but never invokes `RoleSeeder`.
+
+**Documentation debt is now clear.** The remaining Phase 3 work is code.
 
 Then the rest of Phase 3:
 
@@ -212,8 +257,8 @@ php artisan migrate:fresh --seed --force
 ## Repo pointers
 
 - Remote: `origin` → `PHILIPORACOMA/My-Care.git`.
-- **Working branch: `feat/UT-020-laravel-api-schema`**, ahead of `main`. Not yet
-  merged; no PR opened.
+- **Working branch: `feat/UT-020-laravel-api-schema`**, ahead of `main` and
+  pushed to `origin`. Not yet merged; no PR opened.
 - `main` is still at `9358811`.
 - `apps/api/vendor/`, `apps/api/.env`, `apps/api/.env.testing` are gitignored.
 - The project working-agreement file (`CLAUDE.md`) is intentionally
