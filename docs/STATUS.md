@@ -26,7 +26,7 @@ specification.
 
 | Phase | Scope | Status |
 |---|---|---|
-| 0 | Monorepo, CI, conventions | ✅ workspaces + two CI workflows: `engine-purity` and `api`. **Neither runs on a feature-branch push** — both trigger only on `push` to `main` or on `pull_request`. The `api` workflow has therefore never run. |
+| 0 | Monorepo, CI, conventions | ✅ workspaces + two CI workflows: `engine-purity` and `api`, **both green on PR #1**. Note both trigger only on `push` to `main` or on `pull_request` — a feature-branch push alone runs nothing. |
 | 1 | Triage engine + ruleset schema | ✅ |
 | 2 | Ruleset v1 from the Clinical Appraisal Form | ✅ 23 presentations encoded and tested; ⚠️ **not yet clinician-reviewed** |
 | 3 | Laravel API + 20 migrations | 🔨 **schema done and verified**; endpoints not started — see Next steps |
@@ -135,19 +135,22 @@ Carried forward:
   `packages/ruleset/src/bundle/v1.ts` is draft.
 - The lexicon/NLP layer doesn't exist. UT-003, UT-004 pending.
 - `apps/pwa`, `apps/portal`, `apps/console` are still empty.
-- **The `api` workflow has never actually run.** Its YAML parses and its
-  structure was checked, but nothing has exercised it on real GitHub runners.
-  It will not run on a feature-branch push either: like `engine-purity`, it
-  triggers only on `push` to `main` or on `pull_request`, and no PR is open.
-  **Opening the PR for this branch is what first exercises it.** Treat that run
-  as a thing to watch, not a thing that works — the MySQL service handshake and
-  the `.env`/`phpunit.xml` precedence are the two parts most likely to need a
-  second pass.
-- Consequently **no CI has ever run against this branch at all**, including
-  `engine-purity`. Every run in the repo's history is a push to `main`. If
-  per-push feedback on feature branches is wanted, both workflows need their
-  `push.branches` filter widened; that is a deliberate choice, not an
-  oversight, and it is currently set narrow.
+- ~~The `api` workflow has never actually run.~~ **Resolved 2026-09-12 — it
+  ran and passed on its first attempt** (PR #1, 49s): migrations applied,
+  `RoleSeeder` ran, **Pest 35 passed / 124 assertions** on a MySQL 8 service
+  container, matching the local result exactly. The two parts flagged as
+  risky — the MySQL handshake and the `.env`/`phpunit.xml` precedence — both
+  worked; the log confirms `DB_DATABASE: mycare_test` and
+  `Creating database mycare_test`.
+- **Both workflows trigger only on `push` to `main` or on `pull_request`.** A
+  feature-branch push alone runs nothing, which is why nothing had ever run
+  against this branch before PR #1 was opened. If per-push feedback on feature
+  branches is wanted, both need their `push.branches` filter widened — a
+  deliberate choice, currently set narrow.
+- CI emits a deprecation warning: `actions/checkout@v4` and `actions/cache@v4`
+  target Node.js 20, which GitHub runners now force onto Node 24. Harmless
+  today; bump both to `@v5` when convenient. `engine-purity` uses the same
+  pinned actions.
 - `docs/REPO.md` and `docs/ut-matrix.md` cite table numbers by hand.
 - `apps/api/composer.json` still carries the Laravel skeleton's
   `post-create-project-cmd` line that touches `database/database.sqlite`. Dead
@@ -265,7 +268,8 @@ php artisan migrate:fresh --seed --force
 
 - Remote: `origin` → `PHILIPORACOMA/My-Care.git`.
 - **Working branch: `feat/UT-020-laravel-api-schema`**, ahead of `main` and
-  pushed to `origin`. Not yet merged; no PR opened.
+  pushed to `origin`. **PR #1 is open** and green on both workflows; not yet
+  merged or reviewed. https://github.com/PHILIPORACOMA/My-Care/pull/1
 - `main` is still at `9358811`.
 - `apps/api/vendor/`, `apps/api/.env`, `apps/api/.env.testing` are gitignored.
 - The project working-agreement file (`CLAUDE.md`) is intentionally
