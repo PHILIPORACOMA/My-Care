@@ -29,6 +29,13 @@ function makeUser(string $email = 'staff@example.test'): User
 it('records a privileged action against the acting user', function () {
     $user = makeUser();
 
+    // Creating that Role, Barangay and User is itself auditable now that
+    // AuditableObserver is registered (UT-019 requires account creation to
+    // leave a trail), so the fixtures above have already written entries. This
+    // test is about what one Recorder call produces, so it measures the delta
+    // rather than the global count it originally asserted.
+    $before = AuditLog::count();
+
     $entry = (new Recorder)->record(
         actionType: 'publish',
         targetTable: 'ruleset_versions',
@@ -43,7 +50,7 @@ it('records a privileged action against the acting user', function () {
         ->and($entry->target_table)->toBe('ruleset_versions')
         ->and($entry->target_id)->toBe(7)
         ->and($entry->old_value)->toBe(['status' => 'draft'])
-        ->and(AuditLog::count())->toBe(1);
+        ->and(AuditLog::count())->toBe($before + 1);
 });
 
 it('attributes a system-initiated action to "system" with a null actor', function () {
