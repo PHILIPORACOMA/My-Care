@@ -77,4 +77,9 @@ export const v1Bundle: RulesetBundle = {
   severityThresholds: [],
   clarificationQuestions: [],
   rules: v1Rules,
+  // Empty for the same reason as clarificationQuestions and severityThresholds:
+  // the appraisal form specifies 23 presentations and their tiers, not the
+  // plain-language advice that accompanies them. Health tips are medical
+  // content and must come from the clinical source, not be invented here.
+  healthTips: [],
 };
