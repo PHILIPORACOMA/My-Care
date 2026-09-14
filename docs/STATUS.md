@@ -1,8 +1,14 @@
 # Development status checkpoint
 
-Last updated: 2026-09-14. **Phase 3 is complete** — schema,
-device-facing endpoints, staff authentication and audit observers all run green
-against real MySQL 8. Phases 4 and 7 are unblocked.
+Last updated: 2026-09-14 (end of session). **Phase 3 is feature-complete** —
+schema, device endpoints, staff authentication and audit observers all run green
+against real MySQL 8, and the API has been exercised by hand as well as by the
+suite. Phases 4 and 7 are unblocked.
+
+⚠️ **One open defect blocks nothing but must be fixed first thing:** a stray
+`Authorization: Bearer` header on any staff route returns **500**, not 401. See
+Known gaps. A fix is written up and awaiting Philipo's choice of approach.
+
 Update this file at the end of any session that changes phase status, adds a
 major decision, or closes/opens a known gap — don't let it drift.
 
@@ -10,11 +16,22 @@ major decision, or closes/opens a known gap — don't let it drift.
 
 Paste this into a new chat session to pick up where this one left off:
 
-> Read `docs/STATUS.md`, `docs/REPO.md`, `docs/adr/0001-triage-resolution.md`,
-> `docs/ut-matrix.md`, `docs/data-dictionary.md`, and the ADRs in `docs/adr/`
-> before doing anything else. Phase 3 is complete — schema, device endpoints and
-> staff auth all verified. Phase 4 (super-admin console) is next and unblocked.
-> Tell me what you understand the current state to be and wait for direction —
+> Read `docs/STATUS.md`, `docs/REPO.md`, `docs/ut-matrix.md`,
+> `docs/data-dictionary.md`, and all four ADRs in `docs/adr/` before doing
+> anything else.
+>
+> Phase 3 is feature-complete and verified (Pest 89/315): the 20-table schema,
+> the device endpoints (ruleset pull + idempotent sync), staff auth via Sanctum
+> SPA cookie mode, and audit observers. PR #1 is open and green.
+>
+> There is **one open defect**, written up under "Known gaps": a stray
+> `Authorization: Bearer` header on any staff route returns 500 instead of 401,
+> because `auth:sanctum` falls back to a token lookup against a table SPA mode
+> deliberately never creates. I still need to choose between switching the
+> staff group to `auth:web` or adding middleware that rejects `Authorization`
+> headers there. Do not implement either until I say which.
+>
+> Tell me what you understand the current state to be, and wait for direction —
 > don't start new work yet.
 
 ## What this is
@@ -31,7 +48,7 @@ specification.
 | 0 | Monorepo, CI, conventions | ✅ workspaces + two CI workflows: `engine-purity` and `api`, **both green on PR #1**. Note both trigger only on `push` to `main` or on `pull_request` — a feature-branch push alone runs nothing. |
 | 1 | Triage engine + ruleset schema | ✅ |
 | 2 | Ruleset v1 from the Clinical Appraisal Form | ✅ 23 presentations encoded and tested; ⚠️ **not yet clinician-reviewed** |
-| 3 | Laravel API + 20 migrations | ✅ **schema, device endpoints, staff auth — done and verified.** Pest 88/309 |
+| 3 | Laravel API + 20 migrations | ✅ feature-complete, Pest **89/315** — ⚠️ one open auth defect, see Known gaps |
 | 4 | Super-admin console | ⬜ not started — **now unblocked** |
 | 5 | Patient PWA | ⬜ not started |
 | 6 | Offline sync layer | ⬜ not started |
@@ -57,8 +74,11 @@ Phase 3 schema — **verified by execution, not just written**:
 - `RoleSeeder` seeds the two staff roles. `DeviceSeeder` exists for local
   development and is deliberately **not** in the default chain — `migrate
   --seed` must never mint a working API credential. Run it explicitly:
-  `php artisan db:seed --class=DeviceSeeder`.
-- **Pest: 88 passed, 309 assertions.**
+  `php artisan db:seed --class=DeviceSeeder`. `DemoDataSeeder` does the same
+  for a published ruleset version plus two staff accounts, so the API can be
+  driven by hand before the console exists — also outside the default chain,
+  because it mints a staff password. Both refuse to run in production.
+- **Pest: 89 passed, 315 assertions.**
 - Confirmed directly in MySQL, not merely via test names:
   - **21 tables** = the 20 Data Dictionary entities + Laravel's `migrations`.
     No `cache`, `jobs`, `sessions`, or `password_reset_tokens`.
@@ -163,6 +183,44 @@ Phase 3:
   they instruct agents to install `laravel/boost`.
 
 ## Known gaps / open items
+
+### ⚠️ Open defect — fix before anything else
+
+**A stray `Authorization: Bearer` header on any staff route returns 500, not
+401.** Found by manual API testing on 2026-09-14, reproduced directly:
+
+```
+GET /api/v1/staff/me   (no auth header)            -> 401  correct
+GET /api/v1/staff/me   Authorization: Bearer foo   -> 500  defect
+SQLSTATE[42S02]: Table 'mycare.personal_access_tokens' doesn't exist
+```
+
+`auth:sanctum` is a dual guard: stateful requests use the web session, but the
+presence of a bearer token sends it down the **token** path, which queries
+`personal_access_tokens` — the table SPA mode deliberately does not create. So
+the decision that avoided the manuscript amendment left an unauthenticated 500
+on every staff route. With `APP_DEBUG=true` the response echoes the SQL, table
+and database names to an unauthenticated caller.
+
+`StaffAuthTest` missed it because it only tests the opposite direction (a staff
+session must not reach a device route); nothing sends a bearer token *to* a
+staff route.
+
+**Decision needed from Philipo — two options:**
+
+1. **Switch the staff group to `auth:web`** (recommended). No token is ever
+   issued, so the token code path exists only to fail. One line in
+   `routes/api.php`.
+2. **Keep `auth:sanctum`** and add middleware rejecting `Authorization` headers
+   on staff routes.
+
+Either way: add the missing test direction (bearer on a staff route must be 401
+and must not name `personal_access_tokens`), and note it in ADR-0004. Verify
+`auth:web` still returns a JSON 401 rather than redirecting to a login route,
+and that `actingAs()` still resolves in the existing tests.
+
+**Related, for the Phase 9 checklist: `APP_DEBUG=false` in production.** Any
+500 leaks internals otherwise.
 
 Carried forward:
 
@@ -320,13 +378,18 @@ What was built:
 - `AuditableObserver` on 14 configuration models, with patient data, sync
   plumbing, derived data and `AUDIT_LOG` itself deliberately excluded.
 
-**What Phase 3 does not have, and cannot until you decide:** any staff-facing
-endpoint. Dashboard, trends, reports, rule authoring and account management all
-need the JWT-vs-Sanctum call first.
+- Staff session auth (`POST /staff/login`, `/logout`, `GET /me`), `EnsureRole`,
+  and `Domain/Auth/BarangayScope`.
 
-Next, in the order they unblock things:
+**What Phase 3 does not have:** any staff *business* endpoint. The auth and
+authorisation primitives exist and are tested, but dashboard, trends, reports,
+rule authoring and account management are Phase 4/7 screens that have not been
+built. They are no longer blocked — only unwritten.
 
-1. **Decide staff auth** (JWT vs Sanctum). Blocks Phases 4 and 7 entirely.
+Next, in order:
+
+1. **Fix the `auth:sanctum` 500** (see Known gaps). Small, and it is an
+   unauthenticated error path on every staff route.
 2. **A ruleset importer/publisher** — nothing currently gets
    `packages/ruleset/src/bundle/v1.ts` into Tables 6–11/15/21, so
    `GET /ruleset/current` returns 503 on a fresh install. Phase 4 publish work
@@ -346,7 +409,7 @@ npm run purity -w @mycare/triage-engine
 cd apps/api
 composer install
 php artisan migrate:fresh --seed --force
-./vendor/bin/pest                      # 88 passed, 309 assertions
+./vendor/bin/pest                      # 89 passed, 315 assertions
 ```
 
 ## Repo pointers
