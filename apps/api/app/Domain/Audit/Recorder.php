@@ -35,10 +35,41 @@ final class Recorder
         ?array $oldValue = null,
         ?User $actor = null,
     ): AuditLog {
+        return $this->write($actionType, $targetTable, $targetId, $oldValue, $actor ?? Auth::user());
+    }
+
+    /**
+     * Records an action that must NOT be attributed to whoever happens to be
+     * authenticated right now.
+     *
+     * `record()` treats a null actor as "look up the current user", which is
+     * the right default for a model observer. It is the wrong default for a
+     * failed login: the request may well carry a valid session for some other
+     * account, and attributing a failed attempt to that account would put an
+     * action in an innocent person's audit trail. Passing null to `record()`
+     * does not express that — hence this.
+     *
+     * @param  array<string, mixed>|null  $oldValue
+     */
+    public function recordUnattributed(
+        string $actionType,
+        string $targetTable,
+        ?int $targetId = null,
+        ?array $oldValue = null,
+    ): AuditLog {
+        return $this->write($actionType, $targetTable, $targetId, $oldValue, null);
+    }
+
+    /** @param array<string, mixed>|null $oldValue */
+    private function write(
+        string $actionType,
+        string $targetTable,
+        ?int $targetId,
+        ?array $oldValue,
+        ?User $actor,
+    ): AuditLog {
         $this->guardLength('action_type', $actionType, self::MAX_ACTION_TYPE);
         $this->guardLength('target_table', $targetTable, self::MAX_TARGET_TABLE);
-
-        $actor ??= Auth::user();
 
         return AuditLog::create([
             'actor_id' => $actor?->getKey(),

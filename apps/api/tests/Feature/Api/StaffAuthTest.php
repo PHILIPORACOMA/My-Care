@@ -238,3 +238,34 @@ it('explains itself when a request is not first-party, rather than 500ing', func
     ])->assertStatus(400)
         ->assertJsonFragment(['message' => 'Staff authentication requires a first-party session. This request carried no Origin or Referer matching SANCTUM_STATEFUL_DOMAINS, so no session was started.']);
 });
+
+/*
+ * REGRESSION. Found by hand in Postman/curl, not by the suite above: the
+ * original code passed actor: null to Recorder::record(), which treats null as
+ * "look up the authenticated user" rather than "no actor". A failed login sent
+ * from a browser that already held a valid session was therefore filed under
+ * THAT account — an action in an innocent person's audit trail, which is the
+ * one thing ADR-0004 says the failed-login entry must never do.
+ */
+it('does not attribute a failed login to a different signed-in account', function () {
+    $victim = makeStaff('sub_admin', $this->barangay, 'victim@example.test');
+    $attacker = makeStaff('super_admin', null, 'attacker@example.test');
+
+    // Authenticated as one account...
+    $this->postJson('/api/v1/staff/login', [
+        'email' => 'attacker@example.test', 'password' => 'correct-horse',
+    ])->assertStatus(200);
+
+    // ...then a failed attempt against another, on the same session.
+    $this->postJson('/api/v1/staff/login', [
+        'email' => 'victim@example.test', 'password' => 'wrong',
+    ])->assertStatus(422);
+
+    $entry = AuditLog::where('action_type', 'login_failed')->firstOrFail();
+
+    expect($entry->actor_id)->toBeNull()
+        ->and($entry->actor_label)->toBe('system')
+        ->and($entry->target_id)->toBe($victim->getKey());
+
+    expect($entry->actor_id)->not->toBe($attacker->getKey());
+});

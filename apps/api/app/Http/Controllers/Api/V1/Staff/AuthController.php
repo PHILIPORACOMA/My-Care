@@ -161,12 +161,15 @@ class AuthController extends Controller
      */
     private function recordAttempt(string $action, string $email): void
     {
-        $this->recorder->record(
+        // recordUnattributed, not record(actor: null). The latter falls back to
+        // Auth::user(), and this request may carry a valid session for a
+        // different account — which would file the failed attempt under that
+        // innocent account's name.
+        $this->recorder->recordUnattributed(
             actionType: $action,
             targetTable: 'users',
             targetId: User::where('email', $email)->value('id'),
             oldValue: ['attempted_email' => $email],
-            actor: null,
         );
     }
 
