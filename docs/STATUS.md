@@ -1,8 +1,8 @@
 # Development status checkpoint
 
-Last updated: 2026-09-12. **Phase 3 is complete for devices** — schema,
-device-facing endpoints, and audit observers all run green against real MySQL 8.
-What is left of Phase 3 is staff-facing, and blocked on the auth decision.
+Last updated: 2026-09-14. **Phase 3 is complete** — schema,
+device-facing endpoints, staff authentication and audit observers all run green
+against real MySQL 8. Phases 4 and 7 are unblocked.
 Update this file at the end of any session that changes phase status, adds a
 major decision, or closes/opens a known gap — don't let it drift.
 
@@ -11,12 +11,11 @@ major decision, or closes/opens a known gap — don't let it drift.
 Paste this into a new chat session to pick up where this one left off:
 
 > Read `docs/STATUS.md`, `docs/REPO.md`, `docs/adr/0001-triage-resolution.md`,
-> `docs/ut-matrix.md`, `docs/data-dictionary.md`, and
-> `docs/adr/0003-device-api-and-sync-contract.md` before doing anything else.
-> Phase 3's schema and device-facing endpoints are done and verified; staff
-> endpoints are blocked on the JWT-vs-Sanctum decision. Tell me what you
-> understand the current state to be and wait for direction — don't start new
-> work yet.
+> `docs/ut-matrix.md`, `docs/data-dictionary.md`, and the ADRs in `docs/adr/`
+> before doing anything else. Phase 3 is complete — schema, device endpoints and
+> staff auth all verified. Phase 4 (super-admin console) is next and unblocked.
+> Tell me what you understand the current state to be and wait for direction —
+> don't start new work yet.
 
 ## What this is
 
@@ -32,11 +31,11 @@ specification.
 | 0 | Monorepo, CI, conventions | ✅ workspaces + two CI workflows: `engine-purity` and `api`, **both green on PR #1**. Note both trigger only on `push` to `main` or on `pull_request` — a feature-branch push alone runs nothing. |
 | 1 | Triage engine + ruleset schema | ✅ |
 | 2 | Ruleset v1 from the Clinical Appraisal Form | ✅ 23 presentations encoded and tested; ⚠️ **not yet clinician-reviewed** |
-| 3 | Laravel API + 20 migrations | 🔨 **schema + device-facing endpoints done and verified.** Staff endpoints blocked on the auth decision (Phase 4) |
-| 4 | Super-admin console | ⬜ not started |
+| 3 | Laravel API + 20 migrations | ✅ **schema, device endpoints, staff auth — done and verified.** Pest 88/309 |
+| 4 | Super-admin console | ⬜ not started — **now unblocked** |
 | 5 | Patient PWA | ⬜ not started |
 | 6 | Offline sync layer | ⬜ not started |
-| 7 | Sub-admin dashboard | ⬜ not started |
+| 7 | Sub-admin dashboard | ⬜ not started — **now unblocked** |
 | 8 | Integration + offline E2E | ⬜ not started |
 | 9 | Deployment | ⬜ not started |
 
@@ -59,7 +58,7 @@ Phase 3 schema — **verified by execution, not just written**:
   development and is deliberately **not** in the default chain — `migrate
   --seed` must never mint a working API credential. Run it explicitly:
   `php artisan db:seed --class=DeviceSeeder`.
-- **Pest: 70 passed, 249 assertions.**
+- **Pest: 88 passed, 309 assertions.**
 - Confirmed directly in MySQL, not merely via test names:
   - **21 tables** = the 20 Data Dictionary entities + Laravel's `migrations`.
     No `cache`, `jobs`, `sessions`, or `password_reset_tokens`.
@@ -73,16 +72,31 @@ Phase 3 schema — **verified by execution, not just written**:
 Phase 3 endpoints — **device-facing only** (2026-09-12):
 
 - `GET /api/v1/ruleset/current` and `POST /api/v1/sync/batches`, both behind
-  `AuthenticateDevice` (`DEVICE.api_token`). Sanctum is **not** installed and
-  `php artisan install:api` must not be run — it would add a token table the
-  dictionary lacks and pre-empt the Phase 4 auth decision.
+  `AuthenticateDevice` (`DEVICE.api_token`). Devices do **not** use Sanctum —
+  a device is not an account. **`php artisan install:api` must still never be
+  run**: it publishes Sanctum's migration and would add the
+  `personal_access_tokens` table that SPA cookie mode exists to avoid.
+  `SchemaTest` now asserts that table's absence, so the build catches it.
 - `Domain/Ruleset/BundleAssembler` — the single translation point between the
   snake_case columns and the camelCase `RulesetBundle` contract.
 - `Domain/Sync/BatchIngestor` — idempotent, one transaction per batch.
 - `Observers/AuditableObserver` on 14 configuration models.
 - `packages/ruleset` gained `healthTips`; engine still 12/12, purity clean.
 
-Full reasoning: `docs/adr/0003-device-api-and-sync-contract.md`.
+Phase 3 staff authentication (2026-09-14):
+
+- **Sanctum in SPA (cookie) mode** — `POST /api/v1/staff/login`, `/logout`,
+  `GET /me`. **No `personal_access_tokens` table, so no manuscript amendment.**
+  Verified: `migrate:fresh` still yields exactly 21 tables.
+- `EnsureRole` middleware (`role:super_admin`), `Domain/Auth/BarangayScope`
+  (UT-016, single implementation, fails closed).
+- Logins, logouts, failed attempts and throttle lockouts are audited. A failed
+  attempt records `actor_id` as **null** — see ADR-0004 for why that matters.
+- Throttling at 5 failures per email+IP per minute; no account enumeration;
+  session regenerated on login and invalidated on logout.
+
+Full reasoning: `docs/adr/0003-device-api-and-sync-contract.md`,
+`docs/adr/0004-staff-authentication.md`.
 
 Branch `feat/UT-020-laravel-api-schema`, **PR #1 open**: `ec1246e` (scaffold +
 schema), `116865c` (index-name fix), `538b399` (credentials out of phpunit.xml),
@@ -213,9 +227,13 @@ Open, from the manuscript review:
   presentational only — a tip never influences a tier and `evaluate()` does not
   read the field. The v1 bundle ships `healthTips: []`: **tip content is medical
   guidance and still needs clinical review before anything is written.**
-- **Staff auth has no token table.** No `personal_access_tokens` in the
-  dictionary. Phase 4 must choose stateless JWT (no table, no amendment) or
-  Sanctum (+1 table, amendment). Not decided.
+- ~~**Staff auth has no token table.**~~ **Resolved 2026-09-14 (ADR-0004).**
+  The framing was slightly wrong: Sanctum is two modes, and only the token one
+  needs a table. **SPA cookie mode** was chosen — no table, no amendment,
+  schema still exactly 20 entities. **It carries one deployment precondition:
+  the portal/console and the API must share a registrable domain**
+  (`SESSION_DOMAIN=.example`). If Phase 9 puts them on unrelated domains this
+  has to be revisited, and the fallback is token mode plus the amendment.
 - **Does a true zero suppress?** `SuppressionRule::render(0)` returns `<5`,
   following CLAUDE.md literally. Arguable either way — showing a bare 0
   discloses absence just as a 1 discloses presence. **Still needs your call.**
@@ -328,7 +346,7 @@ npm run purity -w @mycare/triage-engine
 cd apps/api
 composer install
 php artisan migrate:fresh --seed --force
-./vendor/bin/pest                      # 70 passed, 249 assertions
+./vendor/bin/pest                      # 88 passed, 309 assertions
 ```
 
 ## Repo pointers

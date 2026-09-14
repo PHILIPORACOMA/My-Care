@@ -22,10 +22,10 @@ do not let this drift from the code.
 | UT-013 | Sync & Data Aggregation | Version Sync | Device checks for rule/lexicon updates | Latest published version is downloaded and cached locally | **Partially implemented** — `GET /api/v1/ruleset/current` serves the latest published bundle and never a draft; assembly is deterministic so a version rebuilds identically every time. **Caching locally** is the device's half, Phase 6 | `apps/api/tests/Feature/Api/RulesetBundleTest.php` (7 tests), `apps/api/app/Domain/Ruleset/BundleAssembler.php` |
 | UT-014 | Sync & Data Aggregation | Sync Status Monitoring | Sub-admin opens the Sync Status screen | Last sync timestamp and device/session counts display correctly | Pending — Phase 7 (sub-admin dashboard) | — |
 | UT-015 | Sync & Data Aggregation | Deduplication | Same triage session is submitted twice due to a retry | Duplicate is detected and not double-counted in aggregates | **Implemented.** Both halves now hold: UNIQUE on `sync_batches.client_batch_uuid` and `triage_sessions.client_session_uuid` at the database, and the endpoint contract above it — a replayed POST returns **200 with the original result, never 409**, and four identical POSTs still yield one batch and one session. A session already stored keeps its original batch rather than moving between uploads | `apps/api/tests/Feature/Api/SyncBatchTest.php` (replay, double-count, attempt-count and original-batch tests), `apps/api/tests/Feature/SchemaTest.php` (the two index tests) |
-| UT-016 | Sync & Data Aggregation | Barangay-Scoped Isolation | Sub-admin account is scoped to Barangay X | Only Barangay X aggregates are visible to that account | Pending — Phase 3/7 | — |
+| UT-016 | Sync & Data Aggregation | Barangay-Scoped Isolation | Sub-admin account is scoped to Barangay X | Only Barangay X aggregates are visible to that account | **Partially implemented** — `Domain/Auth/BarangayScope` is the single implementation and is tested, including that a super-admin is unscoped and that a sub-admin with no barangay assigned sees **nothing** rather than everything. The aggregate screens that must call it are Phase 7 | `apps/api/app/Domain/Auth/BarangayScope.php`, `apps/api/tests/Feature/BarangayScopeTest.php` (5 tests) |
 | UT-017 | Dashboard, Reporting & Account Management | Trends Dashboard | Sub-admin opens the Trends & Surveillance dashboard | Correct tier counts and top-symptom trends are displayed | Pending — Phase 7 | — |
 | UT-018 | Dashboard, Reporting & Account Management | Report Export | Sub-admin generates a CSV/PDF report | File downloads with correct date range and de-identified content | Pending — Phase 3/7 (`Domain/Aggregation/SuppressionRule`) | — |
-| UT-019 | Dashboard, Reporting & Account Management | Account Management | Super-admin creates a new sub-admin account | Account is created and correctly scoped to its assigned barangay | Pending — Phase 3/4 | — |
+| UT-019 | Dashboard, Reporting & Account Management | Account Management | Super-admin creates a new sub-admin account | Account is created and correctly scoped to its assigned barangay | **Partially implemented** — the authorisation primitives exist and are tested: `EnsureRole` gates routes by ROLE.name, `USER.barangay_id` carries the scope, and account creation is audited. The **create-account UI and endpoint** are Phase 4 | `apps/api/app/Http/Middleware/EnsureRole.php`, `apps/api/tests/Feature/AuditObserverTest.php` ("attributes a change to the acting user") |
 | UT-020 | Dashboard, Reporting & Account Management | Suppression Rule | Aggregate count for a symptom/barangay falls below 5 | Value is suppressed rather than displayed, per the less-than-5 privacy rule | **Implemented** at the domain level — the rule itself is built, single-implementation, and fully tested, including the boundary (5 displays, 4 suppresses) and a true zero. The read paths that must call it — dashboard, trends, map, CSV, PDF — are Phase 7 | `apps/api/app/Domain/Aggregation/SuppressionRule.php`, `apps/api/tests/Unit/SuppressionRuleTest.php` (7 tests) |
 
 ## Notes
@@ -46,6 +46,12 @@ do not let this drift from the code.
   UNIQUE indexes were always the load-bearing half, but the HTTP contract they
   support — a replay answering 200 with the original result — had nothing
   exercising it. It does now, so UT-015 is Implemented.
+- **Staff authentication is in place as of 2026-09-14** (ADR-0004): Sanctum in
+  SPA cookie mode, which adds no table and needed no manuscript amendment.
+  Logins, logouts, failed attempts and throttle lockouts are all audited.
+  A failed attempt records `actor_id` as **null** — whoever typed the wrong
+  password did not prove they are the account holder, and an audit trail that
+  can put an action in an innocent person's history is worth less than none.
 - **UT-012 and UT-013 are half-tests by nature.** Both describe a *device*
   doing something: regaining connectivity and uploading, checking for updates
   and caching locally. Phase 3 built the server side each one talks to, and
