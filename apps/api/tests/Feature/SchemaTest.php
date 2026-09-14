@@ -50,7 +50,15 @@ it('creates all 20 Data Dictionary entities and nothing else', function () {
     // No cache / jobs / sessions / password_reset_tokens: the drivers are set
     // to file, sync and array precisely so the schema stays equal to the
     // manuscript's entity list plus Laravel's own `migrations` bookkeeping.
-    foreach (['cache', 'cache_locks', 'jobs', 'job_batches', 'failed_jobs', 'sessions', 'password_reset_tokens'] as $absent) {
+    //
+    // personal_access_tokens is on this list for a sharper reason. Sanctum IS
+    // installed, but in SPA (cookie) mode, which issues no tokens and needs no
+    // table. Sanctum 4.x only *publishes* that migration rather than loading
+    // it, so the table appears the moment someone runs `install:api` or
+    // `vendor:publish --tag=sanctum-migrations` — and a 21st table would break
+    // the manuscript's 20-entity Data Dictionary without anyone noticing.
+    // This assertion is the thing that notices. See ADR-0004.
+    foreach (['cache', 'cache_locks', 'jobs', 'job_batches', 'failed_jobs', 'sessions', 'password_reset_tokens', 'personal_access_tokens'] as $absent) {
         expect(Schema::hasTable($absent))->toBeFalse("unexpected framework table: {$absent}");
     }
 });
