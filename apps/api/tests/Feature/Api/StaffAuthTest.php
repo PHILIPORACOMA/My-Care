@@ -161,6 +161,27 @@ it('rejects /me when not signed in', function () {
     $this->getJson('/api/v1/staff/me')->assertStatus(401);
 });
 
+/*
+ * Every other test here uses getJson(), which sends Accept: application/json.
+ * Postman and plain curl send a wildcard Accept header instead. Laravel's
+ * default redirectGuestsTo(fn () => route('login')) fired for any request that
+ * did not expectsJson(), and this API has no route named `login`, so an
+ * unauthenticated request without the header died with a 500
+ * (RouteNotFoundException) instead of a 401.
+ */
+it('rejects an unauthenticated staff request with 401 whatever it accepts', function (?string $accept) {
+    $headers = $accept === null ? [] : ['Accept' => $accept];
+
+    $response = $this->get('/api/v1/staff/me', $headers);
+
+    $response->assertStatus(401)
+        ->assertJson(['message' => 'Unauthenticated.']);
+})->with([
+    'no Accept header' => null,
+    'Postman default' => '*/*',
+    'browser navigation' => 'text/html',
+]);
+
 it('returns the signed-in account from /me', function () {
     $user = makeStaff('super_admin');
 

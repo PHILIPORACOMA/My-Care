@@ -10,11 +10,11 @@ use Illuminate\Http\Request;
 return Application::configure(basePath: dirname(__DIR__))
     /*
     | routes/api.php is registered by hand rather than by `php artisan
-    | install:api`, because that command also installs Laravel Sanctum — which
-    | would add a personal_access_tokens table the Data Dictionary does not
-    | have, and would pre-empt the staff-auth decision (JWT vs Sanctum) that is
-    | still open for Phase 4. Device endpoints need neither: they authenticate
-    | against DEVICE.api_token, a column the manuscript already specifies.
+    | install:api`, because that command also publishes Sanctum's migration —
+    | which would add a personal_access_tokens table the Data Dictionary does
+    | not have. Staff use Sanctum's SPA cookie mode, which needs no table
+    | (ADR-0004); devices authenticate against DEVICE.api_token, a column the
+    | manuscript already specifies (ADR-0003).
     */
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -36,6 +36,17 @@ return Application::configure(basePath: dirname(__DIR__))
         | never reach a staff endpoint (ADR-0003).
         */
         $middleware->statefulApi();
+
+        /*
+        | No guest redirect. Laravel's default is route('login'), called for any
+        | unauthenticated request that does not send Accept: application/json —
+        | and this API has no route named `login`, so Postman's default
+        | wildcard Accept header turned every unauthenticated staff request
+        | into a 500 (RouteNotFoundException). With no redirect, the exception
+        | handler falls through to shouldRenderJsonWhen() below and answers a
+        | JSON 401. The SPAs route their own login screens client-side.
+        */
+        $middleware->redirectGuestsTo(null);
 
         $middleware->alias([
             'device' => AuthenticateDevice::class,
