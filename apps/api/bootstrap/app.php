@@ -1,6 +1,6 @@
 <?php
 
-use App\Domain\Ruleset\RulesetException;
+use App\Domain\DomainActionException;
 use App\Http\Middleware\AuthenticateDevice;
 use App\Http\Middleware\EnsureRole;
 use Illuminate\Foundation\Application;
@@ -61,7 +61,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // A refused lifecycle action or invalid ruleset content is an expected
         // outcome of authoring, not a server fault: 409 or 422 with the reason.
-        $exceptions->render(fn (RulesetException $e) => response()->json(
+        $exceptions->render(fn (DomainActionException $e) => response()->json(
             array_filter(['message' => $e->getMessage(), 'errors' => $e->errors ?: null]),
             $e->status,
         ));

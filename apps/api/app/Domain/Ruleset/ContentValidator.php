@@ -2,6 +2,7 @@
 
 namespace App\Domain\Ruleset;
 
+use App\Domain\DomainActionException;
 use App\Models\SymptomCode;
 use Illuminate\Support\Facades\Validator;
 
@@ -42,7 +43,7 @@ final class ContentValidator
      * @param  array<string, mixed>  $content
      * @param  bool  $forRelease  Also require what a publishable version needs.
      *
-     * @throws RulesetException
+     * @throws DomainActionException
      */
     public function validate(array $content, bool $forRelease = false): void
     {
@@ -55,7 +56,7 @@ final class ContentValidator
         }
 
         if ($errors !== []) {
-            throw RulesetException::invalid($errors);
+            throw DomainActionException::invalid($errors);
         }
     }
 

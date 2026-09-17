@@ -2,6 +2,7 @@
 
 namespace App\Domain\Ruleset;
 
+use App\Domain\DomainActionException;
 use App\Models\ClarificationQuestion;
 use App\Models\HealthTip;
 use App\Models\LexiconTerm;
@@ -25,7 +26,7 @@ final class SymptomCodeRegistry
     /**
      * @param  array<string, mixed>  $data
      *
-     * @throws RulesetException
+     * @throws DomainActionException
      */
     public function create(array $data): SymptomCode
     {
@@ -36,7 +37,7 @@ final class SymptomCodeRegistry
         ]);
 
         if ($validator->fails()) {
-            throw RulesetException::invalid($validator->errors()->toArray());
+            throw DomainActionException::invalid($validator->errors()->toArray());
         }
 
         return SymptomCode::create([
@@ -49,7 +50,7 @@ final class SymptomCodeRegistry
     /**
      * @param  array<string, mixed>  $data
      *
-     * @throws RulesetException
+     * @throws DomainActionException
      */
     public function update(SymptomCode $code, array $data): SymptomCode
     {
@@ -59,11 +60,11 @@ final class SymptomCodeRegistry
         ]);
 
         if ($validator->fails()) {
-            throw RulesetException::invalid($validator->errors()->toArray());
+            throw DomainActionException::invalid($validator->errors()->toArray());
         }
 
         if ($this->isFrozen($code)) {
-            throw RulesetException::conflict(
+            throw DomainActionException::conflict(
                 "\"{$code->code}\" is used by a version that is in review, published or retired, so it can no "
                 .'longer change. Create a new symptom code instead.'
             );

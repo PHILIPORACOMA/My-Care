@@ -2,6 +2,7 @@
 
 namespace App\Domain\Ruleset;
 
+use App\Domain\DomainActionException;
 use App\Domain\Audit\Recorder;
 use App\Models\RulesetVersion;
 use App\Models\User;
@@ -59,7 +60,7 @@ final class RulesetLifecycle
             $locked = $this->lock($draft);
 
             if ($locked->status !== RulesetStatus::DRAFT) {
-                throw RulesetException::conflict(
+                throw DomainActionException::conflict(
                     "{$locked->label} is {$locked->status}, not a draft. Open the latest draft and save again."
                 );
             }
@@ -100,14 +101,14 @@ final class RulesetLifecycle
     public function publish(RulesetVersion $version, User $by, bool $clinicalReviewConfirmed): RulesetVersion
     {
         if (! $clinicalReviewConfirmed) {
-            throw RulesetException::conflict('Publishing requires confirming that clinical review took place.');
+            throw DomainActionException::conflict('Publishing requires confirming that clinical review took place.');
         }
 
         return DB::transaction(function () use ($version, $by): RulesetVersion {
             $locked = $this->lock($version);
 
             if ($locked->status !== RulesetStatus::IN_REVIEW) {
-                throw RulesetException::conflict("Only a version in review can be published; {$locked->label} is {$locked->status}.");
+                throw DomainActionException::conflict("Only a version in review can be published; {$locked->label} is {$locked->status}.");
             }
 
             $this->retireCurrent();
@@ -134,7 +135,7 @@ final class RulesetLifecycle
     public function rollbackTo(RulesetVersion $target, User $by): RulesetVersion
     {
         if ($target->status !== RulesetStatus::RETIRED) {
-            throw RulesetException::conflict('Only a previously published (retired) version can be rolled back to.');
+            throw DomainActionException::conflict('Only a previously published (retired) version can be rolled back to.');
         }
 
         return DB::transaction(function () use ($target, $by): RulesetVersion {
@@ -174,7 +175,7 @@ final class RulesetLifecycle
             $locked = $this->lock($version);
 
             if (! in_array($locked->status, $from, true)) {
-                throw RulesetException::conflict("{$locked->label} is {$locked->status}; it cannot move to {$to}.");
+                throw DomainActionException::conflict("{$locked->label} is {$locked->status}; it cannot move to {$to}.");
             }
 
             $locked->update(['status' => $to]);

@@ -2,6 +2,7 @@
 
 namespace App\Domain\Ruleset;
 
+use App\Domain\DomainActionException;
 use App\Models\RulesetVersion;
 use App\Models\SymptomCode;
 use Illuminate\Support\Facades\DB;
@@ -34,14 +35,14 @@ final class BundleImporter
     /**
      * @param  array<string, mixed>  $bundle
      *
-     * @throws RulesetException
+     * @throws DomainActionException
      */
     public function import(array $bundle): RulesetVersion
     {
         $symptomCodes = $bundle['symptomCodes'] ?? null;
 
         if (! is_array($symptomCodes)) {
-            throw RulesetException::invalid(['symptomCodes' => ['A bundle must contain a symptomCodes array.']]);
+            throw DomainActionException::invalid(['symptomCodes' => ['A bundle must contain a symptomCodes array.']]);
         }
 
         $content = array_intersect_key($bundle + RulesetLifecycle::emptyContent(), RulesetLifecycle::emptyContent());
@@ -61,7 +62,7 @@ final class BundleImporter
     private function ensureCode($code, int $index): void
     {
         if (! is_array($code) || ! isset($code['code'])) {
-            throw RulesetException::invalid(["symptomCodes.{$index}" => ['Each symptom code needs a code.']]);
+            throw DomainActionException::invalid(["symptomCodes.{$index}" => ['Each symptom code needs a code.']]);
         }
 
         $existing = SymptomCode::where('code', $code['code'])->first();
@@ -74,7 +75,7 @@ final class BundleImporter
 
         if ($existing->display_name !== ($code['displayName'] ?? null)
             || (bool) $existing->needs_clarification !== (bool) ($code['needsClarification'] ?? false)) {
-            throw RulesetException::invalid(["symptomCodes.{$index}" => [
+            throw DomainActionException::invalid(["symptomCodes.{$index}" => [
                 "Symptom code \"{$code['code']}\" already exists with a different display name or clarification flag. "
                 .'Existing codes are not overwritten by an import.',
             ]]);

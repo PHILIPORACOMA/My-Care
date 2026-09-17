@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Console\DeviceController;
 use App\Http\Controllers\Api\V1\Console\RulesetVersionController;
 use App\Http\Controllers\Api\V1\Console\SymptomCodeController;
+use App\Http\Controllers\Api\V1\Console\UserController;
 use App\Http\Controllers\Api\V1\DeviceRegistrationController;
 use App\Http\Controllers\Api\V1\ReferenceDataController;
 use App\Http\Controllers\Api\V1\RulesetController;
@@ -75,6 +77,18 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/symptom-codes', [SymptomCodeController::class, 'index'])->name('symptom-codes.index');
             Route::post('/symptom-codes', [SymptomCodeController::class, 'store'])->name('symptom-codes.store');
             Route::patch('/symptom-codes/{symptomCode:code}', [SymptomCodeController::class, 'update'])->name('symptom-codes.update');
+
+            // Figure 38 / UT-019.
+            Route::get('/users', [UserController::class, 'index'])->name('users.index');
+            Route::post('/users', [UserController::class, 'store'])->name('users.store');
+            Route::post('/users/{user}/deactivate', [UserController::class, 'deactivate'])->name('users.deactivate');
+            Route::put('/users/{user}/password', [UserController::class, 'password'])->name('users.password');
+            Route::put('/users/{user}/barangay', [UserController::class, 'barangay'])->name('users.barangay');
+
+            // ADR-0005: enrolled devices and revocation.
+            Route::get('/devices', [DeviceController::class, 'index'])->name('devices.index');
+            Route::post('/devices/{device}/revoke', [DeviceController::class, 'revoke'])->name('devices.revoke');
+            Route::post('/devices/{device}/reinstate', [DeviceController::class, 'reinstate'])->name('devices.reinstate');
         });
 
     /*

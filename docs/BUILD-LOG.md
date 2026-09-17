@@ -137,3 +137,33 @@ the primary key is the sequence.
 - Clinical review of v1 before anyone publishes it.
 - Lexicon terms, clarification questions and health tips — the console can hold
   them; the content has to come from the team.
+
+### 3 — Account and device management (Figure 38, UT-019)
+
+**Done.** Pest 148 passed / 559 assertions.
+
+What exists now (`/api/v1/console/`, super-admin only):
+
+- Create a sub-admin with an email, a password (12+ characters, letters and
+  numbers) and one barangay. Signing in as that account returns the barangay
+  scope — asserted end to end.
+- Deactivate, reactivate (by setting a new password), reset a password, move a
+  sub-admin to another barangay. A super-admin cannot deactivate themselves.
+- List devices, revoke and reinstate them (audited).
+- `php artisan mycare:staff:create-super-admin <email>` creates the first
+  development-team account on a fresh server. The password is prompted, never
+  typed on the command line.
+
+How Figure 38's columns work **without** new columns:
+
+- **Status** — `USER` has no status column. Deactivating replaces the password
+  digest with a locked, bcrypt-shaped value no password can match (the old Unix
+  account-locking trick). Sanctum's session check sees the digest change and
+  ends the person's existing sessions on their next request. A test proves the
+  session really ends, and was checked by removing the deactivation and watching
+  it fail.
+- **Creation date** — read from the audit log's `created` entry for the account.
+- **"Sub-admin · RHU" vs "Sub-admin · LGU"** — **not implemented.** `ROLE` has a
+  single `sub_admin` role (Figure 38's own caption says RHU and LGU share it) and
+  `USER` has nowhere to store which one a person belongs to. The console shows
+  "Sub-admin". This is the one Figure 38 detail the schema cannot express.

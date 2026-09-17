@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Domain\Ruleset\BundleImporter;
-use App\Domain\Ruleset\RulesetException;
+use App\Domain\DomainActionException;
 use Illuminate\Console\Command;
 
 /**
@@ -43,7 +43,7 @@ class ImportRuleset extends Command
 
         try {
             $version = $importer->import($bundle);
-        } catch (RulesetException $e) {
+        } catch (DomainActionException $e) {
             $this->error($e->getMessage());
 
             foreach ($e->errors as $field => $messages) {

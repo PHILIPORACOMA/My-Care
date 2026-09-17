@@ -1,15 +1,16 @@
 <?php
 
-namespace App\Domain\Ruleset;
+namespace App\Domain;
 
 use RuntimeException;
 
 /**
- * A lifecycle action that is not allowed from the version's current state, or
- * content that fails validation. Rendered by the console controllers as 409 or
- * 422 with the reason, never as a 500.
+ * An action a domain service refuses — a lifecycle move not allowed from the
+ * current state (409), or input that fails validation (422). Expected outcomes
+ * of authoring and administration, not server faults: bootstrap/app.php renders
+ * them as JSON with the reason, never as a 500.
  */
-final class RulesetException extends RuntimeException
+final class DomainActionException extends RuntimeException
 {
     /** @param array<string, list<string>> $errors */
     private function __construct(string $message, public readonly int $status, public readonly array $errors = [])
@@ -25,6 +26,6 @@ final class RulesetException extends RuntimeException
     /** @param array<string, list<string>> $errors */
     public static function invalid(array $errors): self
     {
-        return new self('The ruleset content is invalid.', 422, $errors);
+        return new self('The submitted data is invalid.', 422, $errors);
     }
 }
