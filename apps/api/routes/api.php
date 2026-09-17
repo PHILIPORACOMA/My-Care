@@ -28,14 +28,23 @@ Route::prefix('v1')->group(function (): void {
     /*
     | Staff — session cookie (Sanctum SPA mode).
     |
-    | login is intentionally outside auth:sanctum (you cannot be authenticated
+    | login is intentionally outside auth:web (you cannot be authenticated
     | before authenticating) and carries its own per-email+IP throttle plus an
     | audit entry for every failure.
+    |
+    | auth:web, NOT auth:sanctum. Sanctum's guard falls through to a bearer-token
+    | lookup against personal_access_tokens whenever an Authorization header is
+    | present — a table SPA mode deliberately never creates — so any stray
+    | `Authorization: Bearer` header on a staff route became an unauthenticated
+    | 500 that echoed SQL in debug mode. No token is ever issued here, so the
+    | token path could only fail. The web guard reads the same session that
+    | statefulApi() starts, which is the only way staff authenticate
+    | (ADR-0004).
     */
     Route::prefix('staff')->group(function (): void {
         Route::post('/login', [AuthController::class, 'login'])->name('api.v1.staff.login');
 
-        Route::middleware('auth:sanctum')->group(function (): void {
+        Route::middleware('auth:web')->group(function (): void {
             Route::post('/logout', [AuthController::class, 'logout'])->name('api.v1.staff.logout');
             Route::get('/me', [AuthController::class, 'me'])->name('api.v1.staff.me');
         });

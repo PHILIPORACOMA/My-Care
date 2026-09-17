@@ -189,12 +189,14 @@ it('signs out, audits it, and stops accepting the session', function () {
 
     expect(AuditLog::where('action_type', 'logout')->where('actor_id', $user->getKey())->count())->toBe(1);
 
-    // The session guard is genuinely cleared. This is asserted against the web
-    // guard rather than by re-calling /me: Laravel reuses one container across
-    // requests within a test, and Sanctum's guard caches the user it resolved,
-    // so /me would answer from that cache. A browser gets a fresh process per
-    // request and the invalidated cookie simply fails.
+    // The session guard is genuinely cleared, and the route says so. Under
+    // auth:sanctum this could only be asserted against the web guard, because
+    // Sanctum's guard cached the user it resolved and /me kept answering 200
+    // from that cache within one test. Staff routes now use auth:web, whose
+    // logout() clears that same instance, so /me can be asserted directly.
     expect(Auth::guard('web')->check())->toBeFalse();
+
+    $this->getJson('/api/v1/staff/me')->assertStatus(401);
 });
 
 /*
@@ -205,6 +207,41 @@ it('does not let a staff session reach a device route', function () {
     $this->actingAs(makeStaff('super_admin'));
 
     $this->getJson('/api/v1/ruleset/current')->assertStatus(401);
+});
+
+/*
+ * The reverse direction of the test above, and the one the suite originally
+ * lacked. Found by manual API testing: under auth:sanctum, any Authorization
+ * header sent Sanctum down its token path, which queries personal_access_tokens
+ * — a table SPA mode never creates — and the request died with a 500 that
+ * named the table and database. A staff route must treat a bearer token as
+ * what it is here: no credential at all.
+ */
+it('rejects a bearer token on a staff route with 401, not a token-table lookup', function (string $token) {
+    $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+        ->getJson('/api/v1/staff/me');
+
+    $response->assertStatus(401);
+
+    expect($response->getContent())->not->toContain('personal_access_tokens');
+})->with([
+    'arbitrary string' => 'foo',
+    // Sanctum's own token format is "{id}|{secret}"; the id half is what would
+    // have been looked up first.
+    'sanctum-shaped' => '1|'.str_repeat('a', 40),
+]);
+
+it('does not let a bearer token override a signed-in staff session', function () {
+    $user = makeStaff('super_admin');
+
+    $this->postJson('/api/v1/staff/login', [
+        'email' => 'nurse@example.test', 'password' => 'correct-horse',
+    ])->assertStatus(200);
+
+    $this->withHeaders(['Authorization' => 'Bearer foo'])
+        ->getJson('/api/v1/staff/me')
+        ->assertStatus(200)
+        ->assertJsonPath('user.id', $user->getKey());
 });
 
 /*
