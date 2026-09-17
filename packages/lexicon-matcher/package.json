@@ -1,0 +1,17 @@
+{
+  "name": "@mycare/lexicon-matcher",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "description": "On-device lexicon NLP: proposes symptom codes from free text. Never assigns a tier.",
+  "scripts": {
+    "test": "tsx --test src/match.test.ts",
+    "typecheck": "tsc --noEmit",
+    "purity": "node ../../scripts/check-purity.mjs"
+  },
+  "devDependencies": {
+    "@mycare/ruleset": "*"
+  }
+}

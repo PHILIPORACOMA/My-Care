@@ -205,3 +205,34 @@ What exists now:
 **Deviations from the figures (no column exists):** Figure 37's "report worker"
 is replaced by the aggregation job and engine replay in the service panel
 (there is no queue worker); audit categories are derived, not stored.
+
+### 5 — Shared frontend packages (UT-002, UT-003, UT-004)
+
+**Done.** lexicon-matcher 11/11, api-client 5/5, ui 9/9; typecheck and purity
+clean; engine still 12/12.
+
+- **`packages/lexicon-matcher`** — the on-device NLP layer. Pure and
+  dependency-free like the engine, and checked by the same purity script (now
+  shared at `scripts/check-purity.mjs`). It normalises text (case, accents,
+  hyphens: `sip-on` → `sipon`), tolerates typos on words of five letters or
+  more (never on short words, so `ubo` can never become `ulo`), handles split
+  and run-together words, and treats **negation as lexicon content** — a term
+  flagged `isNegation` like the manuscript's `walay hilanat`. It contains **no
+  Cebuano or Tagalog vocabulary of its own**; every word comes from the
+  published lexicon. If a symptom is mentioned both negated and plainly it is
+  reported present, erring toward escalation. It proposes symptom codes only —
+  it never assigns a tier. UT-003 and UT-004 are tested with the manuscript's
+  own examples mapped to fixture codes.
+- **`packages/api-client`** — typed client for the staff and console API.
+  Cookie-based Sanctum: no token ever lives in JavaScript. Handles the CSRF
+  cookie, retries once on an expired token (419), surfaces field errors.
+- **`packages/ui`** — tokens and components for the portal (light, teal) and
+  console (dark), following the storyboards. A `<Count>` component renders a
+  suppressed cell as `<5` with an explanation; the chart draws a masked day as a
+  fixed hatched block, never a bar sized to a hidden count.
+
+**Dependencies:** the first set of frontend tools came back from `npm audit`
+with a critical and a high advisory (old Vitest and Vite). They were replaced
+with the current patched releases that still run on Node 20 — Vite 8,
+Vitest 4, React Router 7, React 18.3.1 (the manuscript's pinned version).
+`npm audit`: **0 vulnerabilities.**

@@ -1,14 +1,20 @@
 #!/usr/bin/env node
-// Enforces the project rule that packages/triage-engine has zero runtime
-// dependencies and never touches React, fetch, localStorage, indexedDB,
-// Date.now(), or Math.random(). Run via `npm run purity`.
+// Enforces the purity rule for the on-device logic packages: zero runtime
+// dependencies, and no React, fetch, localStorage, indexedDB, Date.now() or
+// Math.random() anywhere in src/. Run from a package directory:
+//
+//     node ../../scripts/check-purity.mjs
+//
+// Used by packages/triage-engine (the clinical safety argument, ADR-0001) and
+// packages/lexicon-matcher (the NLP layer that proposes symptom codes). Both
+// must return the same output for the same input, every time, on any device.
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { basename, join } from "node:path";
 
-const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
+const packageRoot = process.cwd();
 const srcDir = join(packageRoot, "src");
+const name = basename(packageRoot);
 
 const errors = [];
 
@@ -16,7 +22,7 @@ const pkg = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
 if (pkg.dependencies && Object.keys(pkg.dependencies).length > 0) {
   errors.push(
     `package.json has runtime dependencies: ${Object.keys(pkg.dependencies).join(", ")}. ` +
-      "packages/triage-engine must have zero runtime dependencies."
+      `packages/${name} must have zero runtime dependencies.`
   );
 }
 
@@ -52,8 +58,8 @@ for (const file of walk(srcDir)) {
 }
 
 if (errors.length > 0) {
-  console.error("engine-purity check failed:\n" + errors.map((e) => `  - ${e}`).join("\n"));
+  console.error(`${name} purity check failed:\n` + errors.map((e) => `  - ${e}`).join("\n"));
   process.exit(1);
 }
 
-console.log("engine-purity check passed: zero runtime dependencies, no banned APIs.");
+console.log(`${name} purity check passed: zero runtime dependencies, no banned APIs.`);

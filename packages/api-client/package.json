@@ -1,0 +1,16 @@
+{
+  "name": "@mycare/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "description": "Typed fetch wrapper for the staff and console API (portal and console only, never the PWA).",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@mycare/ruleset": "*"
+  }
+}

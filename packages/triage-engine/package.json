@@ -8,7 +8,7 @@
   "scripts": {
     "test": "tsx --test src/evaluate.test.ts",
     "typecheck": "tsc --noEmit",
-    "purity": "node scripts/check-purity.mjs"
+    "purity": "node ../../scripts/check-purity.mjs"
   },
   "devDependencies": {
     "@mycare/ruleset": "*"
