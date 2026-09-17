@@ -43,6 +43,22 @@ class User extends Authenticatable
         return $this->password_hash;
     }
 
+    /**
+     * Remember-me is not supported: Table 17 has no remember_token column, and
+     * neither staff login screen (Figures 30, 36) offers the option.
+     *
+     * An empty name makes Laravel's remember-me machinery a no-op rather than a
+     * SQL error — setRememberToken() writes nothing and getRememberToken()
+     * returns null, so a recall cookie can never authenticate. This guards any
+     * future caller of Auth::login($user, remember: true), not only /login.
+     * Overridden as a method because redeclaring the trait's
+     * $rememberTokenName property with a different default is a fatal error.
+     */
+    public function getRememberTokenName(): string
+    {
+        return '';
+    }
+
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);

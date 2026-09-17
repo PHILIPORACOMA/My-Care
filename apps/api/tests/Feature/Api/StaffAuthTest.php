@@ -245,6 +245,45 @@ it('does not let a bearer token override a signed-in staff session', function ()
 });
 
 /*
+ * Remember-me is not supported (Table 17 has no remember_token; Figures 30 and
+ * 36 offer no such option). Found by probing: "remember": true used to reach
+ * Auth::attempt(..., true), which wrote a column that does not exist and died
+ * with a 500. A client that still sends the flag must simply be signed in for
+ * the session, with no recall cookie.
+ */
+it('ignores a remember flag and issues no recall cookie', function () {
+    $user = makeStaff();
+
+    $response = $this->postJson('/api/v1/staff/login', [
+        'email' => 'nurse@example.test',
+        'password' => 'correct-horse',
+        'remember' => true,
+    ])->assertStatus(200)
+        ->assertJsonPath('user.id', $user->getKey());
+
+    $response->assertCookieMissing(Auth::guard('web')->getRecallerName());
+});
+
+it('makes remember-me a no-op at the model, not a SQL error', function () {
+    $user = makeStaff();
+
+    // Any future caller, not just /login.
+    Auth::guard('web')->login($user, remember: true);
+
+    expect($user->fresh()->getRememberToken())->toBeNull()
+        ->and(Auth::guard('web')->check())->toBeTrue();
+});
+
+it('never authenticates a recall cookie', function () {
+    $user = makeStaff();
+
+    $this->withCookie(
+        Auth::guard('web')->getRecallerName(),
+        $user->getKey().'|forged-token|'.$user->getAuthPassword(),
+    )->getJson('/api/v1/staff/me')->assertStatus(401);
+});
+
+/*
  * The whole point of choosing SPA mode: authentication that adds no table to a
  * schema the manuscript fixes at 20 entities.
  */

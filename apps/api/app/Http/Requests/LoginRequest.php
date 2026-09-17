@@ -23,9 +23,10 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email', 'max:150'],
             'password' => ['required', 'string', 'max:255'],
-            // Cookie-mode Sanctum rides Laravel's session, so "remember me" is
-            // the framework's long-lived recall cookie, not a stored token.
-            'remember' => ['sometimes', 'boolean'],
+            // No "remember" field. Remember-me needs USER.remember_token, which
+            // Table 17 does not have, and neither login mockup (Figures 30, 36)
+            // offers it. A client that sends one is ignored like any other
+            // unknown field — the session lifetime is the only persistence.
         ];
     }
 }

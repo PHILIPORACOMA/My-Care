@@ -54,9 +54,9 @@ class AuthController extends Controller
 
         // USER.password_hash, not Laravel's `password`; the User model points
         // getAuthPassword() at it, so the standard guard works unmodified.
+        // No remember-me: see User::getRememberTokenName().
         if (! Auth::attempt(
             ['email' => $credentials['email'], 'password' => $credentials['password']],
-            (bool) ($credentials['remember'] ?? false),
         )) {
             RateLimiter::hit($key, self::DECAY_SECONDS);
             $this->recordAttempt('login_failed', $credentials['email']);
