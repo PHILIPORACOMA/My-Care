@@ -26,6 +26,23 @@ final class BundleAssembler
     /** @return array<string, mixed> */
     public function assemble(RulesetVersion $version): array
     {
+        return [
+            'versionLabel' => $version->label,
+            'symptomCodes' => $this->symptomCodes(),
+            ...$this->content($version),
+        ];
+    }
+
+    /**
+     * Only the version-scoped part of a bundle — what the console edits and
+     * what a new draft or a rollback copies. Same shape and order as the bundle,
+     * so copying a version and re-assembling it produces an identical bundle
+     * apart from the label.
+     *
+     * @return array<string, list<array<string, mixed>>>
+     */
+    public function content(RulesetVersion $version): array
+    {
         $version->loadMissing([
             'lexiconTerms.symptomCode',
             'severityThresholds',
@@ -36,8 +53,6 @@ final class BundleAssembler
         ]);
 
         return [
-            'versionLabel' => $version->label,
-            'symptomCodes' => $this->symptomCodes(),
             'lexiconTerms' => $this->lexiconTerms($version),
             'severityThresholds' => $this->severityThresholds($version),
             'clarificationQuestions' => $this->clarificationQuestions($version),
@@ -140,11 +155,11 @@ final class BundleAssembler
      *
      * RULE_CONDITION (Table 10) has no sequence column, so insertion order —
      * the primary key — is the only ordering the schema offers. Sorting by `id`
-     * is therefore not an arbitrary tie-break but the actual contract, and it
-     * is stable for as long as conditions are only ever appended. A rule-
-     * authoring UI that lets a super-admin reorder conditions (Phase 4, UT-007)
-     * will need either a sequence column by amendment, or delete-and-reinsert
-     * semantics. Flagged in docs/STATUS.md.
+     * is therefore not an arbitrary tie-break but the actual contract. It is
+     * stable because conditions are never edited in place: every save writes a
+     * whole new version, inserting conditions in the order the author arranged
+     * them (Domain/Ruleset/VersionWriter). Reordering is delete-and-reinsert by
+     * construction, so no sequence column — and no amendment — is needed.
      *
      * @return list<array<string, mixed>>
      */

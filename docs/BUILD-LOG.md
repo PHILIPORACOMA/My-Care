@@ -104,3 +104,36 @@ What exists now:
 - Confirm the 15 barangay names against the City Health Office's own list.
 - Accept, for the defence, that self-registration means surveillance figures
   are indicative: anyone can register a device. Revocation exists.
+
+### 2 — Ruleset lifecycle (Figure 39, UT-007–UT-011)
+
+**Done.** Pest 136 passed / 512 assertions. Full reasoning in
+`docs/adr/0006-ruleset-lifecycle.md`.
+
+What exists now (all under `/api/v1/console/`, super-admin only):
+
+- Draft → review → publish, with rollback. Every save writes a **new version**
+  (UT-010); nothing is edited in place or deleted. Exactly one version is
+  published at a time.
+- Publishing requires ticking "clinical review took place". The software cannot
+  verify a clinician; it records who attested.
+- Rule expressions (`IF a AND NOT b THEN rhu`) are generated from the
+  conditions, so the explanation can never disagree with the logic.
+- Content validation catches the mistakes that would give a *wrong tier*
+  silently: unknown codes, half-built conditions, non-numeric thresholds,
+  red-flag answers that are not allowed answers, and language variants of a
+  question that disagree on where the red-flag answer is.
+- Symptom codes lock once a reviewed or published version uses them.
+- **v1 import:** `npm run export:v1 -w @mycare/ruleset`, then
+  `php artisan mycare:ruleset:import ../../packages/ruleset/dist/v1.json`.
+  Verified with the real file: 23 rules, 9 emergency. It lands as a **draft**.
+
+Schema gap closed without an amendment: **condition order.** Because conditions
+are only ever inserted in the author's order into a version that never changes,
+the primary key is the sequence.
+
+**Needs a human:**
+
+- Clinical review of v1 before anyone publishes it.
+- Lexicon terms, clarification questions and health tips — the console can hold
+  them; the content has to come from the team.

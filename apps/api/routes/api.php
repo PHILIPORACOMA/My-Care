@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Console\RulesetVersionController;
+use App\Http\Controllers\Api\V1\Console\SymptomCodeController;
 use App\Http\Controllers\Api\V1\DeviceRegistrationController;
 use App\Http\Controllers\Api\V1\ReferenceDataController;
 use App\Http\Controllers\Api\V1\RulesetController;
@@ -51,6 +53,29 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/me', [AuthController::class, 'me'])->name('api.v1.staff.me');
         });
     });
+
+    /*
+    | Console — super-admin only (Figures 36–41).
+    */
+    Route::prefix('console')
+        ->middleware(['auth:web', 'role:super_admin'])
+        ->name('api.v1.console.')
+        ->group(function (): void {
+            // Figure 39 / UT-007–UT-011.
+            Route::get('/ruleset-versions', [RulesetVersionController::class, 'index'])->name('ruleset-versions.index');
+            Route::post('/ruleset-versions', [RulesetVersionController::class, 'store'])->name('ruleset-versions.store');
+            Route::post('/ruleset-versions/import', [RulesetVersionController::class, 'import'])->name('ruleset-versions.import');
+            Route::get('/ruleset-versions/{version}', [RulesetVersionController::class, 'show'])->name('ruleset-versions.show');
+            Route::put('/ruleset-versions/{version}/content', [RulesetVersionController::class, 'saveContent'])->name('ruleset-versions.content');
+            Route::post('/ruleset-versions/{version}/submit', [RulesetVersionController::class, 'submit'])->name('ruleset-versions.submit');
+            Route::post('/ruleset-versions/{version}/return-to-draft', [RulesetVersionController::class, 'returnToDraft'])->name('ruleset-versions.return');
+            Route::post('/ruleset-versions/{version}/publish', [RulesetVersionController::class, 'publish'])->name('ruleset-versions.publish');
+            Route::post('/ruleset-versions/{version}/rollback', [RulesetVersionController::class, 'rollback'])->name('ruleset-versions.rollback');
+
+            Route::get('/symptom-codes', [SymptomCodeController::class, 'index'])->name('symptom-codes.index');
+            Route::post('/symptom-codes', [SymptomCodeController::class, 'store'])->name('symptom-codes.store');
+            Route::patch('/symptom-codes/{symptomCode:code}', [SymptomCodeController::class, 'update'])->name('symptom-codes.update');
+        });
 
     /*
     | Public — no credential. Rate-limited.
