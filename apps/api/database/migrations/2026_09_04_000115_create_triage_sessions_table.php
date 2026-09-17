@@ -13,15 +13,11 @@ use Illuminate\Support\Facades\Schema;
  * this table; only resolved symptom codes do, via session_symptoms.
  *
  * There is deliberately no outcome_tier column — the Data Dictionary does not
- * define one, and it is not needed for the v1 bundle. The tier is derived by
- * App\Domain\Triage\SessionTierResolver, which mirrors ADR-0001 precedence.
- *
- * KNOWN LIMIT, blocks Phase 4: derivation cannot recover a tier that came from
- * an is_override severity threshold, because no column links a session to the
- * threshold that fired. The v1 bundle ships zero override thresholds so this
- * is unreachable today, but UT-009 has a super-admin authoring them in the
- * console. The first authored override threshold makes this a live defect —
- * such sessions would silently read as `rhu`. See docs/STATUS.md.
+ * define one. The tier is recovered by replaying the stored inputs through the
+ * real triage engine against this row's ruleset version
+ * (App\Domain\Triage\EngineReplayer, ADR-0007), which is exact for every
+ * resolution path including is_override thresholds. (Comment updated
+ * 2026-09-17; the migration itself is unchanged.)
  *
  * client_session_uuid is UNIQUE for the same reason sync_batches.client_batch_uuid
  * is: a retried upload must not create a second copy of the same session.

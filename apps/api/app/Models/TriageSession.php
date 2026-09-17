@@ -9,8 +9,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * Data Dictionary Table 13: TRIAGE_SESSION.
  *
- * Anonymous by construction. There is no tier column — use
- * App\Domain\Triage\SessionTierResolver, which applies ADR-0001 precedence.
+ * Anonymous by construction. There is no tier column: the tier is recovered by
+ * replaying the session through the triage engine (Domain/Triage/EngineReplayer,
+ * ADR-0007), and aggregates are read from AGGREGATE_STAT.
  *
  * All three timestamps are UTC. Convert to Asia/Manila at display only.
  */

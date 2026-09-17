@@ -167,3 +167,41 @@ How Figure 38's columns work **without** new columns:
   single `sub_admin` role (Figure 38's own caption says RHU and LGU share it) and
   `USER` has nowhere to store which one a person belongs to. The console shows
   "Sub-admin". This is the one Figure 38 detail the schema cannot express.
+
+### 4 — Engine replay, aggregation, surveillance endpoints (UT-014, 016, 017, 018, 020)
+
+**Done.** Pest 174 passed / 708 assertions; `@mycare/engine-replay` 5/5. Full
+reasoning in `docs/adr/0007-replay-aggregation-and-surveillance.md`.
+
+**The Phase 4 tripwire is closed without an amendment.** `TRIAGE_SESSION` has no
+tier column, and the old `SessionTierResolver` read a session escalated by an
+override threshold as `rhu`. Now the server replays each stored session through
+the *same* triage engine the phone ran, against the exact ruleset version it
+used. Because the engine is deterministic and published versions never change,
+the replayed tier is the tier the patient saw. A test covers exactly the case the
+old resolver got wrong. The old resolver is deleted.
+
+What exists now:
+
+- `php artisan mycare:aggregate` — scheduled every 10 minutes; rebuilds the last
+  60 days of `AGGREGATE_STAT`. Idempotent. Days are Manila days.
+- Portal endpoints (`/api/v1/staff/…`, sub-admin and super-admin): `dashboard`,
+  `trends` (14-day chart, cluster banner, watch list), `sync-status`, `map`,
+  `barangays`, `reports` (CSV/PDF generate, list, download).
+- Console endpoints: `system-health` (Figures 37/40), `audit-logs` (Figure 41,
+  read-only, filter by category), audit export as a de-identified report.
+- **Privacy on every read path:** counts under 5 come out as
+  `{display: "<5", value: null}` — the raw number is never in the response.
+  When one part of a shown total is masked, a second part is masked too so
+  nobody can subtract. Sub-admins only ever see their own barangay.
+
+**Needs a human:**
+
+- **Server needs Node 20** and `npm run build -w @mycare/engine-replay` for
+  dashboards to refresh (deployment guide covers it).
+- Review the cluster-detection thresholds (`config/mycare.php`) with the City
+  Health Office's surveillance officer.
+
+**Deviations from the figures (no column exists):** Figure 37's "report worker"
+is replaced by the aggregation job and engine replay in the service panel
+(there is no queue worker); audit categories are derived, not stored.

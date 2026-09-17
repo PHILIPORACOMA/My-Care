@@ -84,11 +84,11 @@ it('carries no Eloquent timestamp columns, per the Data Dictionary', function ()
         ->and(Schema::hasColumn('audit_logs', 'updated_at'))->toBeFalse();
 });
 
-it('has no outcome_tier on triage_sessions, so derivation stays the only path', function () {
+it('has no outcome_tier on triage_sessions, so engine replay stays the only path', function () {
     // Documents a deliberate decision, not an oversight: Table 13 defines no
-    // tier column, so SessionTierResolver reconstructs it. If this ever starts
-    // failing, the manuscript amendment has landed and the resolver's known
-    // limit should be revisited.
+    // tier column, and no amendment adds one. The tier is recovered by
+    // replaying the session through the real triage engine
+    // (Domain/Triage/EngineReplayer, ADR-0007).
     expect(Schema::hasColumn('triage_sessions', 'outcome_tier'))->toBeFalse();
 });
 

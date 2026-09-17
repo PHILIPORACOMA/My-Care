@@ -1,0 +1,16 @@
+{
+  "name": "@mycare/engine-replay",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Replays stored triage sessions through the real triage engine for server-side aggregation (ADR-0007).",
+  "scripts": {
+    "build": "esbuild src/cli.ts --bundle --platform=node --format=esm --target=node20 --outfile=dist/replay.mjs",
+    "test": "tsx --test src/replay.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@mycare/ruleset": "*",
+    "@mycare/triage-engine": "*"
+  }
+}

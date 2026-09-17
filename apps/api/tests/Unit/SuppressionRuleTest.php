@@ -55,6 +55,31 @@ it('renders a keyed set in one pass, preserving keys', function () {
     ]);
 });
 
+it('never puts a suppressed raw count into an API cell', function () {
+    expect(SuppressionRule::cell(3))->toBe(['display' => '<5', 'suppressed' => true, 'value' => null])
+        ->and(SuppressionRule::cell(9))->toBe(['display' => '9', 'suppressed' => false, 'value' => 9]);
+});
+
+/*
+ * Total 12 shown, home 7, rhu 5, emergency <5: subtraction reveals emergency
+ * is 0. Complementary suppression masks the next-smallest part as well.
+ */
+it('suppresses a second part when exactly one part of a shown total is masked', function () {
+    $cells = SuppressionRule::partition(['home' => 7, 'rhu' => 5, 'emergency' => 0]);
+
+    expect($cells['emergency']['suppressed'])->toBeTrue()
+        ->and($cells['rhu']['suppressed'])->toBeTrue()
+        ->and($cells['rhu']['value'])->toBeNull()
+        ->and($cells['home'])->toBe(['display' => '7', 'suppressed' => false, 'value' => 7]);
+});
+
+it('adds no extra suppression when none or several parts are already masked', function () {
+    expect(array_column(SuppressionRule::partition(['a' => 8, 'b' => 9, 'c' => 10]), 'suppressed'))
+        ->toBe([false, false, false])
+        ->and(array_column(SuppressionRule::partition(['a' => 1, 'b' => 2, 'c' => 10]), 'suppressed'))
+        ->toBe([true, true, false]);
+});
+
 it('exposes the threshold as a constant so no caller hardcodes 5', function () {
     expect(SuppressionRule::THRESHOLD)->toBe(5)
         ->and(SuppressionRule::MASK)->toBe('<5');

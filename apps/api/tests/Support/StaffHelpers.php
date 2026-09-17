@@ -43,8 +43,18 @@ trait StaffHelpers
         ]);
     }
 
+    /**
+     * Switching accounts inside one test must also switch sessions. The test
+     * harness keeps one in-memory session across requests; left alone, it still
+     * holds the previous account's password fingerprint, and Sanctum's
+     * AuthenticateSession would (correctly) sign the new account out — the same
+     * check that ends a deactivated account's sessions. A real browser has one
+     * session per person, so starting a fresh one here is the faithful model.
+     */
     protected function actingAsStaff(User $user): static
     {
+        $this->flushSession();
+
         return $this->withHeaders(['Origin' => 'http://localhost'])->actingAs($user, 'web');
     }
 }

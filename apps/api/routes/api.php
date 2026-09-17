@@ -1,13 +1,17 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Console\AuditLogController;
 use App\Http\Controllers\Api\V1\Console\DeviceController;
 use App\Http\Controllers\Api\V1\Console\RulesetVersionController;
 use App\Http\Controllers\Api\V1\Console\SymptomCodeController;
+use App\Http\Controllers\Api\V1\Console\SystemHealthController;
 use App\Http\Controllers\Api\V1\Console\UserController;
 use App\Http\Controllers\Api\V1\DeviceRegistrationController;
 use App\Http\Controllers\Api\V1\ReferenceDataController;
 use App\Http\Controllers\Api\V1\RulesetController;
 use App\Http\Controllers\Api\V1\Staff\AuthController;
+use App\Http\Controllers\Api\V1\Staff\ReportController;
+use App\Http\Controllers\Api\V1\Staff\SurveillanceController;
 use App\Http\Controllers\Api\V1\SyncBatchController;
 use Illuminate\Support\Facades\Route;
 
@@ -54,6 +58,22 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/logout', [AuthController::class, 'logout'])->name('api.v1.staff.logout');
             Route::get('/me', [AuthController::class, 'me'])->name('api.v1.staff.me');
         });
+
+        /*
+        | Surveillance — sub-admins (own barangay) and super-admins (all).
+        | Figures 31–35. Every count is suppressed and every query scoped.
+        */
+        Route::middleware(['auth:web', 'role:super_admin,sub_admin'])->name('api.v1.staff.')->group(function (): void {
+            Route::get('/barangays', [SurveillanceController::class, 'barangays'])->name('barangays');
+            Route::get('/dashboard', [SurveillanceController::class, 'dashboard'])->name('dashboard');
+            Route::get('/trends', [SurveillanceController::class, 'trends'])->name('trends');
+            Route::get('/sync-status', [SurveillanceController::class, 'syncStatus'])->name('sync-status');
+            Route::get('/map', [SurveillanceController::class, 'map'])->name('map');
+
+            Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+            Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
+            Route::get('/reports/{report}/download', [ReportController::class, 'download'])->name('reports.download');
+        });
     });
 
     /*
@@ -84,6 +104,12 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/users/{user}/deactivate', [UserController::class, 'deactivate'])->name('users.deactivate');
             Route::put('/users/{user}/password', [UserController::class, 'password'])->name('users.password');
             Route::put('/users/{user}/barangay', [UserController::class, 'barangay'])->name('users.barangay');
+
+            // Figures 37 and 40.
+            Route::get('/system-health', SystemHealthController::class)->name('system-health');
+
+            // Figure 41. Read-only; export via POST /staff/reports type=audit_log.
+            Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
 
             // ADR-0005: enrolled devices and revocation.
             Route::get('/devices', [DeviceController::class, 'index'])->name('devices.index');

@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\Schema;
  *
  * A patient's answer to one follow-up question. `is_red_flag` is what makes a
  * red-flag escalation reconstructible after the fact: it is the only stored
- * trace that ADR-0001 step 1 fired, and SessionTierResolver relies on it.
+ * trace that ADR-0001 step 1 fired. Engine replay (ADR-0007) re-evaluates the
+ * answer itself against the session's ruleset version.
  */
 return new class extends Migration
 {
