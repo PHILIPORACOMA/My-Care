@@ -7,9 +7,8 @@ and 7 are unblocked.
 
 ✅ The `Authorization: Bearer` → 500 defect on staff routes is **fixed**
 (2026-09-17): staff routes now use `auth:web`. Verifying it surfaced two more
-500s, both older than the fix. **Remember-me is dropped** (2026-09-17), which
-closes one; **the other is still open** — see Known gaps. Open items are being
-worked **one at a time**, in the order under Next steps.
+500s, both older than the fix, and **both are now fixed** (remember-me dropped;
+no guest redirect). Phases 4–9 are being built next — see `docs/BUILD-LOG.md`.
 
 Update this file at the end of any session that changes phase status, adds a
 major decision, or closes/opens a known gap — don't let it drift.
@@ -22,15 +21,13 @@ Paste this into a new chat session to pick up where this one left off:
 > `docs/data-dictionary.md`, and all four ADRs in `docs/adr/` before doing
 > anything else.
 >
-> Phase 3 is feature-complete and verified (Pest 95/329): the 20-table schema,
+> Phase 3 is feature-complete and verified (Pest 98/335): the 20-table schema,
 > the device endpoints (ruleset pull + idempotent sync), staff auth via Sanctum
 > SPA cookie mode with staff routes on `auth:web` and no remember-me, and audit
 > observers. PR #1 is open.
 >
-> We are clearing the open items **one at a time**, in the order listed under
-> "Next steps". First is a confirmed 500 on staff auth: an unauthenticated
-> request without `Accept: application/json` (`Route [login] not defined`). It
-> touches auth, so it needs a plan and my go-ahead.
+> All known staff-auth 500s are fixed. Phases 4–9 are in progress; read
+> `docs/BUILD-LOG.md` for what has been built and every decision taken.
 >
 > Tell me what you understand the current state to be, and wait for direction —
 > don't start new work yet.
@@ -49,7 +46,7 @@ specification.
 | 0 | Monorepo, CI, conventions | ✅ workspaces + two CI workflows: `engine-purity` and `api`, **both green on PR #1**. Note both trigger only on `push` to `main` or on `pull_request` — a feature-branch push alone runs nothing. |
 | 1 | Triage engine + ruleset schema | ✅ |
 | 2 | Ruleset v1 from the Clinical Appraisal Form | ✅ 23 presentations encoded and tested; ⚠️ **not yet clinician-reviewed** |
-| 3 | Laravel API + 20 migrations | ✅ feature-complete, Pest **95/329** — ⚠️ one open auth 500, see Known gaps |
+| 3 | Laravel API + 20 migrations | ✅ feature-complete, Pest **98/335**, no open defects |
 | 4 | Super-admin console | ⬜ not started — **now unblocked** |
 | 5 | Patient PWA | ⬜ not started |
 | 6 | Offline sync layer | ⬜ not started |
@@ -79,7 +76,7 @@ Phase 3 schema — **verified by execution, not just written**:
   for a published ruleset version plus two staff accounts, so the API can be
   driven by hand before the console exists — also outside the default chain,
   because it mints a staff password. Both refuse to run in production.
-- **Pest: 95 passed, 329 assertions** (2026-09-17).
+- **Pest: 98 passed, 335 assertions** (2026-09-17).
 - Confirmed directly in MySQL, not merely via test names:
   - **21 tables** = the 20 Data Dictionary entities + Laravel's `migrations`.
     No `cache`, `jobs`, `sessions`, or `password_reset_tokens`.
@@ -185,14 +182,12 @@ Phase 3:
 
 ## Known gaps / open items
 
-### ⚠️ Open defect — staff auth, next in line
+### ~~Open defect: unauthenticated staff request without `Accept: application/json` → 500~~
 
-Found 2026-09-17 while verifying the `auth:web` fix below, reproduced in a test
-and against a live server. **Not caused by that fix** — it lives in the
-`Authenticate` middleware both guards share. It touches auth, so it needs a plan
-and approval before code.
+**Fixed 2026-09-17** — `redirectGuestsTo(null)` in `bootstrap/app.php`; tests
+for no header, `*/*` and `text/html` were red (500) before, green (401) after,
+and confirmed live with curl. Original write-up:
 
-**Unauthenticated staff request without `Accept: application/json` → 500.**
 `RouteNotFoundException: Route [login] not defined`. Laravel's
 `ApplicationBuilder` registers `redirectGuestsTo(fn () => route('login'))` by
 default, and `Authenticate` calls it for any request that does not
@@ -227,7 +222,7 @@ the missing direction; confirmed red (500) under `auth:sanctum` and green under
 alternative are in ADR-0004.
 
 **Still for the Phase 9 checklist: `APP_DEBUG=false` in production.** Any 500
-leaks internals otherwise — and one is still open above.
+leaks internals otherwise.
 
 Carried forward:
 
@@ -399,8 +394,8 @@ Open items are being cleared **one at a time**, each with its own plan and
 approval.
 
 1. ~~**Fix the `auth:sanctum` 500.**~~ **Done 2026-09-17** — `auth:web`.
-2. **Unauthenticated request without `Accept: application/json` → 500**
-   (Known gaps, open defect). **Next.**
+2. ~~**Unauthenticated request without `Accept: application/json` → 500.**~~
+   **Done 2026-09-17** — no guest redirect.
 3. ~~**`"remember": true` on login → 500.**~~ **Done 2026-09-17** —
    remember-me dropped, no amendment.
 4. **A ruleset importer/publisher** — nothing currently gets
@@ -422,7 +417,7 @@ npm run purity -w @mycare/triage-engine
 cd apps/api
 composer install
 php artisan migrate:fresh --seed --force
-./vendor/bin/pest                      # 95 passed, 329 assertions
+./vendor/bin/pest                      # 98 passed, 335 assertions
 ```
 
 ## Repo pointers

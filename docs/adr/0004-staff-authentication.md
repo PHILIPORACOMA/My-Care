@@ -2,9 +2,9 @@
 
 ## Status
 
-Accepted 2026-09-14; amended 2026-09-17 (staff guard; no remember-me).
-Implemented in `apps/api`, verified against MySQL 8 — **Pest 95 passed, 329
-assertions** as of the amendments, and `migrate:fresh --seed` still produces
+Accepted 2026-09-14; amended 2026-09-17 (staff guard; no remember-me; no guest
+redirect). Implemented in `apps/api`, verified against MySQL 8 — **Pest 98
+passed, 335 assertions** as of the amendments, and `migrate:fresh --seed` still produces
 exactly **21 tables** (the 20 Data Dictionary entities plus Laravel's
 `migrations`).
 
@@ -216,11 +216,13 @@ everything. A test pins that.
   **not caused by it**. The first comes from the `Authenticate` middleware
   both guards share; the second is on `/login`, which sits outside the guard
   entirely. Both were reproduced under `auth:web`:
-  - An unauthenticated staff request **without `Accept: application/json`**
-    returns 500, `Route [login] not defined`. Laravel's default
-    `redirectGuestsTo(fn () => route('login'))` runs before the JSON renderer
-    gets a chance, and this API has no `login` route. A browser SPA sends the
-    header; Postman's default `Accept: */*` does not.
+  - ~~An unauthenticated staff request **without `Accept: application/json`**
+    returns 500, `Route [login] not defined`.~~ **Resolved 2026-09-17.**
+    Laravel's default `redirectGuestsTo(fn () => route('login'))` ran before
+    the JSON renderer, and this API has no `login` route. `bootstrap/app.php`
+    now calls `redirectGuestsTo(null)`, so the handler falls through to
+    `shouldRenderJsonWhen('api/*')` and answers a JSON 401. Tested with no
+    Accept header, `*/*` and `text/html` — all three were 500 before.
   - ~~**`"remember": true` on login returns 500**, `Unknown column`.~~
     **Resolved 2026-09-17 — remember-me dropped.** See "No remember-me" under
     Supporting decisions.
