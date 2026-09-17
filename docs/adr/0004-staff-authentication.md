@@ -2,8 +2,9 @@
 
 ## Status
 
-Accepted 2026-09-14. Implemented in `apps/api`, verified against MySQL 8 —
-**Pest 88 passed, 309 assertions**, and `migrate:fresh --seed` still produces
+Accepted 2026-09-14; amended 2026-09-17 (staff guard, below). Implemented in
+`apps/api`, verified against MySQL 8 — **Pest 92 passed, 323 assertions** as of
+the amendment, and `migrate:fresh --seed` still produces
 exactly **21 tables** (the 20 Data Dictionary entities plus Laravel's
 `migrations`).
 
@@ -84,6 +85,47 @@ behind `device`, or the reverse. Two tests pin the boundary from both sides.
 only for the token mode that was not chosen, and its presence would invite
 someone to call `createToken()` later and silently create the table.
 
+### Staff routes use `auth:web`, not `auth:sanctum`
+
+Amended 2026-09-17, after manual API testing found an unauthenticated 500.
+
+`auth:sanctum` is a dual guard. It tries the session first, but the moment a
+request carries an `Authorization: Bearer` header it falls through to the
+**token** path and queries `personal_access_tokens` — the table this decision
+exists to avoid. Any stray bearer header on a staff route therefore died with
+`SQLSTATE[42S02]` and a 500, and with `APP_DEBUG=true` the response named the
+table, the database and the SQL to a caller who had not authenticated.
+
+The suite missed it because it only tested one direction of the population
+boundary (a staff session must not reach a device route). Nothing sent a bearer
+token *to* a staff route.
+
+Two fixes were considered:
+
+1. **Switch the staff group to `auth:web`.** Chosen. No token is ever issued in
+   SPA mode, so the token path could only ever fail. The web guard reads the
+   same session `statefulApi()` starts, which is the only way staff
+   authenticate. One line in `routes/api.php`.
+2. **Keep `auth:sanctum`** and add middleware rejecting `Authorization` headers
+   on staff routes. Rejected: it keeps a code path that has no legitimate use
+   and guards it with a second piece of code that has to stay in step.
+
+Sanctum stays installed. It still provides `statefulApi()`, the
+`/sanctum/csrf-cookie` route and the first-party origin check; only its guard
+is out of the request path.
+
+Verified: `StaffAuthTest` now sends a bearer token (an arbitrary string, and one
+shaped like a Sanctum `id|secret` token) to `/staff/me` and asserts **401**
+with no mention of `personal_access_tokens`. Those tests failed with the
+original 500 under `auth:sanctum` before the switch, and pass after it. A
+second test pins that a stray bearer header does not break a valid signed-in
+session. The logout test now asserts `/me` returns 401 directly — under
+`auth:sanctum` it could not, because Sanctum's guard cached the resolved user
+within a test.
+
+**Production still needs `APP_DEBUG=false`.** This fix closes one 500; it does
+not stop some other 500 from leaking internals.
+
 ### Logins are audited, including failures
 
 Approved alongside the mode decision. `AUDIT_LOG` is shaped around a target row,
@@ -149,6 +191,18 @@ everything. A test pins that.
   `personal_access_tokens`. Nothing was weakened.
 - UT-016 and UT-019 are now partially covered — the authorisation primitives
   exist and are tested, but the screens that use them are Phase 4/7.
+- Found while verifying the `auth:web` switch (2026-09-17), both still open and
+  **not caused by it**. The first comes from the `Authenticate` middleware
+  both guards share; the second is on `/login`, which sits outside the guard
+  entirely. Both were reproduced under `auth:web`:
+  - An unauthenticated staff request **without `Accept: application/json`**
+    returns 500, `Route [login] not defined`. Laravel's default
+    `redirectGuestsTo(fn () => route('login'))` runs before the JSON renderer
+    gets a chance, and this API has no `login` route. A browser SPA sends the
+    header; Postman's default `Accept: */*` does not.
+  - **`"remember": true` on login returns 500**, `Unknown column`. Laravel's
+    remember-me writes `USER.remember_token`, which Table 17 does not have.
+    `LoginRequest` accepts the flag anyway.
 
 ## Traceability
 
