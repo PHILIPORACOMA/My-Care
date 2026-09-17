@@ -2,9 +2,9 @@
 
 ## Status
 
-Accepted 2026-09-14; amended 2026-09-17 (staff guard, below). Implemented in
-`apps/api`, verified against MySQL 8 — **Pest 92 passed, 323 assertions** as of
-the amendment, and `migrate:fresh --seed` still produces
+Accepted 2026-09-14; amended 2026-09-17 (staff guard; no remember-me).
+Implemented in `apps/api`, verified against MySQL 8 — **Pest 95 passed, 329
+assertions** as of the amendments, and `migrate:fresh --seed` still produces
 exactly **21 tables** (the 20 Data Dictionary entities plus Laravel's
 `migrations`).
 
@@ -53,7 +53,10 @@ things decided it:
 **Cookie auth requires the SPAs and the API to share a registrable domain** —
 `api.mycare.example` and `portal.mycare.example` with
 `SESSION_DOMAIN=.mycare.example`. Phase 9 has not chosen a deployment topology
-yet. **If deployment puts the portal on an unrelated domain, this decision has
+yet. The manuscript's own mockups are consistent with it: Figure 30 shows the
+portal at `mycare.doh.gov.ph/portal` and Figure 36 the console at
+`admin.mycare.doh.gov.ph`, both under `mycare.doh.gov.ph` — though those are
+illustrations, not a deployment decision. **If deployment puts the portal on an unrelated domain, this decision has
 to be revisited**, and the fallback is API token mode plus the amendment this
 ADR avoided. That condition is the one thing to carry forward.
 
@@ -160,6 +163,24 @@ patient data.
   `$request->session()` and died with a 500 that told the operator nothing.
 - **`SESSION_DRIVER` stays `file`.** A database driver would add a `sessions`
   table and break the same 20-entity promise this decision exists to protect.
+- **No remember-me** (added 2026-09-17). The original `LoginRequest` accepted a
+  `remember` flag and passed it to `Auth::attempt()`, which writes
+  `USER.remember_token` — a column Table 17 does not have — so
+  `"remember": true` was a 500. The alternative was adding
+  `remember_token VARCHAR(100) NULL` to Table 17 by amendment. Rejected: the
+  manuscript never asks for it. Neither login mockup offers the option —
+  Figure 30 shows only email, password and "Log in"; Figure 36 the same with
+  "Sign in" — so dropping it makes the code match the specification rather
+  than departing from it. The session lifetime is the only persistence.
+  - `LoginRequest` no longer declares the field; a client that sends it is
+    ignored like any other unknown key.
+  - `User::getRememberTokenName()` returns `''`, which makes Laravel's
+    remember-me machinery a no-op instead of a SQL error for **any** caller of
+    `Auth::login($user, remember: true)`, and means a recall cookie can never
+    authenticate (`getRememberToken()` is null).
+  - Tests: the flag is ignored with no recall cookie issued, a model-level
+    remember-login does not throw, and a forged recall cookie gets 401. The
+    first two failed with `Unknown column 'remember_token'` before the change.
 
 ### Barangay scoping has one implementation
 
@@ -200,9 +221,9 @@ everything. A test pins that.
     `redirectGuestsTo(fn () => route('login'))` runs before the JSON renderer
     gets a chance, and this API has no `login` route. A browser SPA sends the
     header; Postman's default `Accept: */*` does not.
-  - **`"remember": true` on login returns 500**, `Unknown column`. Laravel's
-    remember-me writes `USER.remember_token`, which Table 17 does not have.
-    `LoginRequest` accepts the flag anyway.
+  - ~~**`"remember": true` on login returns 500**, `Unknown column`.~~
+    **Resolved 2026-09-17 — remember-me dropped.** See "No remember-me" under
+    Supporting decisions.
 
 ## Traceability
 
