@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api;
 
+use App\Domain\Device\DeviceToken;
 use App\Models\Barangay;
 use App\Models\ClarificationQuestion;
 use App\Models\Device;
@@ -21,6 +22,15 @@ use Illuminate\Support\Str;
  */
 trait ApiTestHelpers
 {
+    /**
+     * Plain device tokens by device id. DEVICE.api_token stores only a prefix
+     * and a digest (Domain/Device/DeviceToken), so the plain value a device
+     * presents exists nowhere but here once issued.
+     *
+     * @var array<int, string>
+     */
+    protected array $deviceTokens = [];
+
     protected function makeBarangay(string $name = 'Valladolid'): Barangay
     {
         return Barangay::create([
@@ -37,15 +47,26 @@ trait ApiTestHelpers
         // the (name, city, region) unique index.
         $overrides['barangay_id'] ??= $this->makeBarangay()->getKey();
 
-        return Device::create(array_merge([
-            'type' => 'shared',
+        $token = DeviceToken::issue();
+
+        $device = Device::create(array_merge([
+            'type' => 'bhw_phone',
             'label' => 'BHW handset',
-            'api_token' => Str::random(80),
+            'api_token' => $token['stored'],
             'status' => 'active',
             'is_approved' => true,
             'registered_at' => CarbonImmutable::parse('2026-09-01T00:00:00Z'),
             'last_sync_at' => null,
         ], $overrides));
+
+        $this->deviceTokens[$device->getKey()] = $token['plain'];
+
+        return $device;
+    }
+
+    protected function plainTokenFor(Device $device): string
+    {
+        return $this->deviceTokens[$device->getKey()];
     }
 
     protected function makePublishedVersion(string $label = 'v1-published'): RulesetVersion
@@ -135,6 +156,6 @@ trait ApiTestHelpers
 
     protected function asDevice(Device $device): array
     {
-        return ['Authorization' => 'Bearer '.$device->api_token];
+        return ['Authorization' => 'Bearer '.$this->plainTokenFor($device)];
     }
 }

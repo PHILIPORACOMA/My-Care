@@ -6,7 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 /**
- * Reference data only.
+ * Reference data only: the two staff roles and Carcar City's barangays.
  *
  * Nothing clinical is seeded here. Symptom codes, lexicon terms, triage rules,
  * severity thresholds and health tips are all versioned content that must come
@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RoleSeeder::class,
+            BarangaySeeder::class,
         ]);
     }
 }

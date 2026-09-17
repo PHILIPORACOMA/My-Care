@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Domain\Device\DeviceToken;
 use App\Models\Barangay;
 use App\Models\Device;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 /**
  * Enrols one approved device for local development, so the sync and ruleset
@@ -18,9 +18,9 @@ use Illuminate\Support\Str;
  *
  *     php artisan db:seed --class=DeviceSeeder
  *
- * The token is random per run and printed once. It is not stored anywhere else,
- * and nothing in the repo depends on its value — tests build their own devices
- * rather than relying on this.
+ * The token is random per run and printed once. Only its prefix and a digest
+ * are stored (Domain/Device/DeviceToken), so it cannot be shown again. Real
+ * devices register themselves through POST /api/v1/devices (ADR-0005).
  */
 class DeviceSeeder extends Seeder
 {
@@ -36,13 +36,13 @@ class DeviceSeeder extends Seeder
             ['name' => 'Valladolid', 'city' => 'Carcar City', 'region' => 'Region VII'],
         );
 
-        $token = Str::random(80);
+        $token = DeviceToken::issue();
 
         Device::create([
             'barangay_id' => $barangay->getKey(),
-            'type' => 'shared',
+            'type' => 'health_station',
             'label' => 'Local development handset',
-            'api_token' => $token,
+            'api_token' => $token['stored'],
             'status' => 'active',
             'is_approved' => true,
             'registered_at' => CarbonImmutable::now('UTC'),
@@ -50,6 +50,6 @@ class DeviceSeeder extends Seeder
         ]);
 
         $this->command?->info('Device enrolled for local development.');
-        $this->command?->warn("API token (shown once): {$token}");
+        $this->command?->warn("API token (shown once): {$token['plain']}");
     }
 }

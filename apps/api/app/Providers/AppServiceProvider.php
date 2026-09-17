@@ -17,6 +17,9 @@ use App\Models\SymptomCode;
 use App\Models\TriageRule;
 use App\Models\User;
 use App\Observers\AuditableObserver;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -70,5 +73,15 @@ class AppServiceProvider extends ServiceProvider
         foreach (self::AUDITED_MODELS as $model) {
             $model::observe(AuditableObserver::class);
         }
+
+        /*
+        | Device self-registration is unauthenticated (ADR-0005), so it is the
+        | endpoint most worth abusing: every call mints an approved credential.
+        | A health station or a family registers once; ten an hour per IP is
+        | generous for real use and tight for a script.
+        */
+        RateLimiter::for('device-registration', fn (Request $request) => Limit::perHour(10)->by($request->ip()));
+
+        RateLimiter::for('public-reference', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
     }
 }

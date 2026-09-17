@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\V1\DeviceRegistrationController;
+use App\Http\Controllers\Api\V1\ReferenceDataController;
 use App\Http\Controllers\Api\V1\RulesetController;
 use App\Http\Controllers\Api\V1\Staff\AuthController;
 use App\Http\Controllers\Api\V1\SyncBatchController;
@@ -51,9 +53,28 @@ Route::prefix('v1')->group(function (): void {
     });
 
     /*
+    | Public — no credential. Rate-limited.
+    |
+    | A device has to choose a barangay and register before it holds a token,
+    | so these two cannot sit behind `device`. Neither returns patient data.
+    */
+    Route::get('/barangays', [ReferenceDataController::class, 'barangays'])
+        ->middleware('throttle:public-reference')
+        ->name('api.v1.barangays.index');
+
+    // ADR-0005: anonymous self-registration, auto-approved, revocable.
+    Route::post('/devices', [DeviceRegistrationController::class, 'store'])
+        ->middleware('throttle:device-registration')
+        ->name('api.v1.devices.store');
+
+    /*
     | Devices — DEVICE.api_token.
     */
     Route::middleware('device')->group(function (): void {
+        // Figure 27's "Call for help": FACILITY (Table 20) contact numbers.
+        Route::get('/facilities', [ReferenceDataController::class, 'facilities'])
+            ->name('api.v1.facilities.index');
+
         // UT-013: a device checks for and downloads the latest published
         // ruleset. Serves the published version only — a draft must never
         // reach a handset.
