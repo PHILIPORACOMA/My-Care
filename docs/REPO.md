@@ -31,6 +31,14 @@ Content Validity Appraisal Form* (6 home / 8 rhu / 9 emergency). It has not
 been through clinician sign-off via that form yet — see the file's header
 comment for what that means for its content.
 
+`src/bundle/v1-lexicon-draft.ts` supplies v1's `lexiconTerms` (English/
+Filipino/Cebuano free-text phrases for each of the 23 presentations, plus a
+handful of negation phrases). Unlike the rest of v1, this is **not** sourced
+from the appraisal form — that form doesn't specify lexicon wording, so this
+is an unvalidated developer guess written to unblock `apps/pwa`'s free-text
+NLP testing. Do not extend it as if it were reviewed content; replace it
+wholesale once a clinician-reviewed source exists.
+
 ## `packages/triage-engine`
 
 The pure deterministic engine. `evaluate(input, bundle)` takes a
