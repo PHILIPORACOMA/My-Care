@@ -1,0 +1,10 @@
+{
+  "name": "My Care",
+  "short_name": "My Care",
+  "description": "Offline health triage for geographically isolated areas.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1c7a4a",
+  "icons": []
+}

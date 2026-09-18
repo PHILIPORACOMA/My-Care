@@ -1,4 +1,5 @@
 import type { RulesetBundle, SymptomCode, Tier, TriageRule } from "../schema.js";
+import { v1LexiconTermsDraft } from "./v1-lexicon-draft.js";
 
 /**
  * v1 draft ruleset: a literal, 1-symptom-to-1-rule encoding of the 23 example
@@ -15,6 +16,11 @@ import type { RulesetBundle, SymptomCode, Tier, TriageRule } from "../schema.js"
  * flow (e.g. Figure 23's "how severe is your chest pain?"), so building that
  * content now would mean inventing clinical logic beyond what the appraisal
  * form actually specifies.
+ *
+ * lexiconTerms is NOT empty, unlike the two above — but it is sourced from
+ * v1-lexicon-draft.ts, an unvalidated developer guess, not from the appraisal
+ * form (which doesn't specify lexicon wording at all). See that file's header
+ * before relying on or extending it.
  */
 
 interface Presentation {
@@ -73,7 +79,7 @@ export const v1Rules: TriageRule[] = PRESENTATIONS.map((p, index) => ({
 export const v1Bundle: RulesetBundle = {
   versionLabel: "v1-draft",
   symptomCodes: v1SymptomCodes,
-  lexiconTerms: [],
+  lexiconTerms: v1LexiconTermsDraft,
   severityThresholds: [],
   clarificationQuestions: [],
   rules: v1Rules,
