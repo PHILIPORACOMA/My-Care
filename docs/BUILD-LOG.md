@@ -444,3 +444,128 @@ replay, which do exist.
 
 Not yet done: nobody has looked at either app in a browser since the restyle.
 Rendering gets verified with Playwright in Milestone 9.
+
+---
+
+### 8b - The patient PWA and the device half of sync (2026-09-18)
+
+`apps/pwa`, Figures 17-29. This is the app the manuscript is actually about:
+everything above it exists so that a patient in a barangay with no signal can
+open a phone and get a tier. **Typecheck clean; 24/24 tests; production build
+59 kB gzipped of JavaScript, 225 KiB precached.**
+
+**What it does not have, on purpose:** no account, no login, no name, no age,
+no GPS, no analytics, no microphone. The only thing the patient chooses about
+themselves is a barangay and a language.
+
+#### The screens
+
+| Figure | Screen | Notes |
+|---|---|---|
+| 17 | Splash | One button. `CareMark` logo, tagline, no sign-in |
+| 18 | Language | First, so every screen after it is in the chosen language |
+| 19 | Adult confirmation | 18+ only (manuscript scope). Declining does not advance; it explains why in a banner rather than erroring |
+| 20 | Barangay | A cached list, never GPS |
+| 21 | Home | Greets the barangay, not a person. Check symptoms, health tips, settings |
+| 22 | Symptom input | Free text **and** chips, both producing the same structured codes |
+| 23 | Clarification | Only for codes whose symptom is flagged `needsClarification` |
+| 24 | Processing | A deliberate 1.1 s pause; the engine answers in microseconds, but the "On-device analysis" badge is the screen's real job |
+| 25/26/27 | Results | home (green), rhu (amber), emergency (red) |
+| 28 | Health tips | Filtered by the tier just given, in the patient's language |
+| 29 | Settings | Language, offline and queue state, about, "start over" (which clears prefs and queue). Barangay is set once during onboarding and only changes via "start over" |
+
+#### The four decisions worth recording
+
+**1. The tier is computed on the device, from a cached bundle.** `runTriage()`
+calls `matchSymptoms()` from `packages/lexicon-matcher`, then `evaluate()` from
+`packages/triage-engine`, with no network in between. The server is only ever
+asked for the ruleset and told the result. This is what makes offline work, and
+it is also the privacy argument: the words never need to leave.
+
+**2. The answer that is sent is the canonical one, not the label tapped.** A
+clarification question exists once per language in the bundle, and `evaluate()`
+resolves it by `question_key` alone, taking the first variant in bundle order.
+So if a patient answers "grabe" in Cebuano and the engine is comparing against
+the English variant's `red_flag_answer` of "severe", a real emergency reads as
+routine. `canonicalAnswer(bundle, key, index)` maps the position the patient
+tapped onto the first variant's answer at that position. There is a test named
+for exactly this, because the failure mode is silent and clinical.
+
+**3. A retry reuses its batch uuid.** A phone cannot tell "my upload was lost"
+from "my acknowledgement was lost". If the uuid changed on retry, the server
+would store the same sessions twice and the surveillance counts would drift up
+with every patch of bad signal. The uuid is generated when the batch is first
+attempted and kept until the server accepts it (UT-015, and the server half is
+the UNIQUE index on `client_batch_uuid`).
+
+**4. A 422 is quarantined, not retried.** A batch the server rejects as invalid
+will be rejected forever; retrying it every reconnect would block the queue
+behind it. It stays stored (nothing is thrown away) but stops being attempted.
+
+#### What syncs
+
+Only this, per session: barangay id, ruleset version label, matched rule code,
+language, started/completed timestamps, the symptom codes with a `negated` flag
+and the **published lexicon term** that matched, and the clarification answers
+with their red-flag flag. Two tests assert the patient's own sentence is absent
+from the payload — one in `triage.test.ts` on the built record, one in
+`app.test.tsx` on the actual outgoing HTTP body after a full journey.
+
+#### Language
+
+English copy is the design's, verbatim. **Tagalog and Cebuano are my drafts and
+are not reviewed** — `src/i18n.ts` opens with a review banner saying so, and
+`docs/ut-matrix.md` repeats it under UT-006. They need a native speaker and a
+clinician before any field use, especially the emergency screen. A test asserts
+all three dictionaries have identical keys, so no screen can half-fall-back to
+English mid-sentence.
+
+The symptom vocabulary itself is **not** in the app. Lexicon terms, clarification
+questions and health tips all come from the published bundle, authored in the
+console (CLAUDE.md: never invent lexicon terms). Until the team enters them,
+free text matches nothing and the chips are the usable path — the chips are
+built from the symptom codes that live rules actually test, so they are never
+empty once a ruleset is published.
+
+#### Offline mechanics
+
+- **IndexedDB** (`src/storage.ts`), two stores: `prefs` (language, barangay,
+  device token, cached bundle) and `queue` (finished sessions). No
+  `localStorage` — it is synchronous, small, and not available to a worker.
+- **Service worker** via `vite-plugin-pwa`/Workbox, `registerSW({immediate:
+  true})`. Precaches the shell, the engine, the matcher and the font: a second
+  visit needs no network at all. Updates apply immediately rather than on next
+  launch, so a handset that just reconnected is not running last month's build
+  against this month's rules.
+- **Poppins is self-hosted**, four weights, 31 kB total, subset to Latin. The
+  staff apps use Google Fonts; the PWA cannot.
+- **Device registration** happens once, in the background, on first connection.
+  It is anonymous and auto-approved (ADR-0005); the token lives in IndexedDB.
+- `X-Pending-Sessions` on every sync tells the server how many records are still
+  waiting, which is what Figures 33 and 40 display.
+
+#### Build budget
+
+Table 27 allows a 2 GB / Snapdragon 400 / Chrome 80 handset with 100 MB free.
+Vite targets `chrome80, safari13`; React 18 and the two workspace packages are
+the whole dependency tree at runtime. 225 KiB precached against a 100 MB budget
+leaves the storage for the queue and the bundle, which is where it should go.
+
+#### Verified
+
+```
+npm run typecheck -w @mycare/pwa     # clean
+npm test -w @mycare/pwa              # 24 passed (triage 13, sync 8, journey 3)
+npm run build -w @mycare/pwa         # 225 KiB precache, 59 kB gzip JS
+```
+
+The three journey tests drive the real UI with `userEvent`, real IndexedDB
+(`fake-indexeddb`), the real matcher and the real engine, stubbing only
+`fetch`: a full Cebuano walk-through from splash to a queued record, a red-flag
+answer escalating to emergency with the 911 fallback, and a triage completed
+with `fetch` throwing on every call, ending with the record waiting in the
+queue.
+
+**Not verified:** the app has not been opened in a real browser, and it has not
+run against a live API yet — MySQL was stopped when the dev server came up, so
+`/api/v1/barangays` returned a 500 from the proxy. Both belong to Milestone 9.

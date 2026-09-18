@@ -92,8 +92,11 @@ hard bundle budget.
   (Figures 36–41). **Built and verified** (see `docs/BUILD-LOG.md`).
 - `apps/portal` — sub-admin (RHU/LGU), read-only (Figures 30–35). **Built and
   verified**; served under `/portal/` as Figure 30 shows.
-- `apps/pwa` — patient-facing, anonymous, offline-first (Figures 17–29). Not
-  started; its NLP layer already exists as `packages/lexicon-matcher`.
+- `apps/pwa` — patient-facing, anonymous, offline-first (Figures 17–29).
+  **Built.** Triage runs on the device: `packages/lexicon-matcher` resolves the
+  text, `packages/triage-engine` assigns the tier, and only a de-identified
+  record syncs. Self-hosts its font and **deliberately imports nothing from
+  `packages/ui`** — different visual language, hard bundle budget.
 
 Dependency direction is unchanged: `apps/*` → `packages/*`, never the reverse.
 

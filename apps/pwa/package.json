@@ -1,0 +1,21 @@
+{
+  "name": "@mycare/pwa",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Patient PWA (Figures 17-29): anonymous, offline-first, on-device triage in English, Tagalog and Cebuano.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mycare/lexicon-matcher": "*",
+    "@mycare/ruleset": "*",
+    "@mycare/triage-engine": "*",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
+}

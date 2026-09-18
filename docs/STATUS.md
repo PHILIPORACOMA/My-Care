@@ -2,11 +2,11 @@
 
 Last updated: **2026-09-18.** Phases 4–9 are being built on branch
 `feat/UT-011-phases-4-to-9`. All backend work for Phases 4, 6 (server side) and
-7 is done and verified, and **both staff front ends — the super-admin console
-and the sub-admin portal — are built and verified**: typecheck, tests,
-production builds, and real sign-ins against a running API with every endpoint
-answering 200. Next: the patient PWA and its offline sync layer (Milestone 8).
-`docs/BUILD-LOG.md` is the long-form record.
+7 is done and verified, and **all three front ends are built** — the super-admin
+console, the sub-admin portal, and now the patient PWA with the device half of
+the sync layer. The team's design canvas has been applied throughout. What
+remains is Milestone 9 (browser + offline E2E, CI) and Milestone 10
+(deployment). `docs/BUILD-LOG.md` is the long-form record.
 
 Update this file at the end of any session that changes phase status, adds a
 major decision, or closes/opens a known gap — don't let it drift.
@@ -22,13 +22,15 @@ Paste this into a new chat session to pick up where this one left off:
 > manuscript amendments**. Backend Milestones 0–4 and the shared packages
 > (Milestone 5) are committed and verified: Pest 176/716, engine 12/12,
 > lexicon-matcher 11/11, engine-replay 5/5, api-client 5/5, ui 9/9,
-> console 4/4, portal 4/4.
+> console 4/4, portal 5/5, pwa 24/24.
 >
-> Milestones 6 (console) and 7 (portal) are committed and verified over HTTP,
-> though nobody has clicked through either UI in a browser yet.
+> Milestones 6 (console), 7 (portal) and 8 (patient PWA + offline sync) are
+> committed, along with the design import. Everything is covered by tests, but
+> **no UI has been opened in a real browser yet**, and the PWA has never run
+> against a live API — that is the first job of Milestone 9.
 >
-> Continue the plan in `docs/BUILD-LOG.md`: patient PWA and offline sync (8),
-> E2E + CI (9), deployment (10), final docs pass.
+> Continue the plan in `docs/BUILD-LOG.md`: E2E + CI (9), deployment (10),
+> final docs pass.
 >
 > Tell me what you understand the current state to be, and wait for direction —
 > don't start new work yet.
@@ -48,8 +50,8 @@ BS Information Technology capstone; the manuscript is the specification.
 | 2 | Ruleset v1 from the Clinical Appraisal Form | ✅ encoded; ⚠️ **not clinician-reviewed** |
 | 3 | Laravel API + 20 migrations | ✅ no open defects |
 | 4 | Super-admin console | ✅ API + UI built and verified (not yet clicked through in a browser) |
-| 5 | Patient PWA | 🔨 lexicon matcher (NLP) ✅; app ⬜ |
-| 6 | Offline sync layer | 🔨 server side ✅ (self-registration, idempotent sync, pending-queue reporting); device side ⬜ |
+| 5 | Patient PWA | ✅ Figures 17–29 built; 24/24 (no browser run yet) |
+| 6 | Offline sync layer | ✅ both halves — server (self-registration, idempotent sync, queue reporting) and device (IndexedDB queue, stable batch uuid, bundle caching) |
 | 7 | Sub-admin dashboard | ✅ API + UI built and verified (not yet clicked through in a browser) |
 | 8 | Integration + offline E2E | ⬜ |
 | 9 | Deployment | ⬜ |
@@ -66,7 +68,8 @@ BS Information Technology capstone; the manuscript is the specification.
 - Every ruleset save writes a new version; publish needs a clinical-review
   attestation; rollback publishes a copy (ADR-0006).
 - Patient UI text in Tagalog/Cebuano: Claude drafts, every string flagged for
-  native + clinical review (not started yet — Milestone 8).
+  native + clinical review. **Done — `apps/pwa/src/i18n.ts` carries the review
+  banner. English is the design's own copy, verbatim.**
 - **No microphone button** (Figure 22): no offline Tagalog/Cebuano speech
   recogniser fits the device limits. Reasoning in BUILD-LOG.
 
@@ -105,9 +108,21 @@ gzipped), and a live sign-in as the sub-admin: every staff endpoint 200, the
 barangay list correctly showing only Valladolid, the console refusing them with
 403, and a CSV report generated and downloaded with every count suppressed.
 
+`apps/pwa` (Figures 17–29) — splash, the three onboarding steps (language,
+18+, barangay), home, symptom input by free text or chips, clarification,
+processing, the three result screens, health tips, settings. **The tier is
+computed on the device** by the real matcher and the real engine against a
+cached bundle; finished sessions queue in IndexedDB and upload with a stable
+batch uuid. **Verified 2026-09-18:** typecheck clean, 24/24 tests (triage 13,
+sync 8, and three full journeys driving the real UI — a Cebuano walk-through, a
+red-flag escalation, and a triage completed with `fetch` throwing on every
+call), production build 59 kB gzipped, 225 KiB precached, Poppins self-hosted
+at 31 kB. **Not yet run against a live API** (MySQL was stopped) and not yet
+opened in a browser.
+
 ## Git state
 
-- **`feat/UT-011-phases-4-to-9`** (local only, **not pushed**): 9 commits,
+- **`feat/UT-011-phases-4-to-9`** (local only, **not pushed**): 10 commits,
   `18acb14` onwards, stacked on the PR #1 branch.
 - **`feat/UT-020-laravel-api-schema`** (PR #1): `5aa26c7` and `7cd72ae` are
   committed locally but **not pushed**. Everything before them is on origin.
@@ -155,7 +170,11 @@ barangay list correctly showing only Valladolid, the console refusing them with
 - **v1 ruleset is not clinician-reviewed**, and no lexicon terms, clarification
   questions or health tips exist yet. The console can hold them; the content
   must come from the team. Until lexicon terms exist, free text matches nothing
-  and patients rely on symptom chips.
+  and patients rely on symptom chips (which the PWA builds from the codes live
+  rules test, so they are never empty).
+- **The PWA's Tagalog and Cebuano interface copy is an unreviewed draft.** It
+  needs a native speaker and a clinician, especially the three verdicts, the
+  advice under each, the disclaimer and the emergency instruction.
 - **Zero suppression** — `SuppressionRule` still renders a true 0 as `<5`.
   Philipo's call, still not made.
 - **Figure 38's "Sub-admin · RHU/LGU" label** cannot be stored (one role, no
@@ -186,12 +205,10 @@ intro sentence that claims only aggregates sync.
 
 1. ~~Milestone 6 (console)~~ and ~~Milestone 7 (portal)~~ **done 2026-09-18.**
    Still worth clicking through Figures 30–41 in a browser once.
-2. **Milestone 8 — patient PWA + offline sync** (`apps/pwa`, Figures 17–29):
-   onboarding, symptom input with chips, clarification, result screens, health
-   tips, settings; IndexedDB queue, device registration, bundle updates,
-   idempotent batch upload; Tagalog/Cebuano drafts flagged for review.
-4. **Milestone 9 — E2E + CI:** Playwright offline triage-and-sync test, CI for
-   the packages and apps, Node in the `api` job.
+2. ~~**Milestone 8 — patient PWA + offline sync**~~ **done 2026-09-18.**
+3. **Milestone 9 — E2E + CI:** Playwright offline triage-and-sync test (which
+   also finally opens all three apps in a real browser), CI for the packages and
+   apps, Node in the `api` job.
 5. **Milestone 10 — deployment:** nginx, PHP-FPM, scheduler cron, Node, HTTPS,
    env checklist, `docs/DEPLOYMENT.md`.
 6. **Final docs pass:** REPO.md, ut-matrix (UT-001, 002, 006, 012, 013 device
@@ -213,7 +230,8 @@ npm run purity -w @mycare/triage-engine
 npm run purity -w @mycare/lexicon-matcher
 
 npm test -w @mycare/console              # 4/4
-npm test -w @mycare/portal               # 4/4
+npm test -w @mycare/portal               # 5/5
+npm test -w @mycare/pwa                  # 24/24
 
 cd apps/api
 php artisan migrate:fresh --seed --force
@@ -223,6 +241,7 @@ php artisan migrate:fresh --seed --force
 php -d variables_order=EGPCS artisan serve --no-reload
 npm run dev -w @mycare/console           # http://localhost:5175
 npm run dev -w @mycare/portal            # http://localhost:5174/portal/
+npm run dev -w @mycare/pwa               # http://localhost:5173
 ```
 
 ## Repo pointers
