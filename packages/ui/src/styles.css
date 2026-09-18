@@ -1,80 +1,98 @@
 /*
  * My Care staff UI — tokens and primitives for apps/portal and apps/console.
  *
- * Two themes, matching the manuscript's storyboards:
- *   light (default)      portal, Figures 30–35 — warm off-white ground, teal accent
- *   [data-theme="dark"]  console, Figures 36–41 — "a darker, more utilitarian tone"
+ * Values come from the team's design canvas, "UI regeneration from
+ * storyboards" (Figures 30–41), imported 2026-09-18. Where a value is not in
+ * that document it follows the nearest one that is; nothing here is invented
+ * freely.
  *
- * Tier colours carry meaning across every screen and follow the patient app's
- * result screens (Figures 25–27): green home, amber RHU, red emergency. They are
+ * Two surfaces, one palette:
+ *   portal  (Figures 30–35) light sidebar, teal accent
+ *   console (Figures 36–41) DARK SIDEBAR, light content — not a dark theme.
+ *     Set data-sidebar="dark" on the shell; only the sidebar changes.
+ *
+ * Tier colours carry meaning on every screen and match the patient result
+ * screens (Figures 25–27): green home, amber RHU, red emergency. They are
  * always paired with a text label, never colour alone.
  */
 
 :root {
-  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+  --font-sans: Poppins, "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
 
-  --bg: #f6f4ef;
+  --bg: #fbfaf7;
   --surface: #ffffff;
-  --surface-muted: #f1eee7;
-  --border: #e3ddd1;
-  --text: #1f1b17;
-  --text-muted: #6b645a;
-  --accent: #0e8a7c;
-  --accent-strong: #0a6f64;
-  --accent-soft: #e2f3f0;
+  --surface-muted: #f0ede6;
+  --surface-input: #faf8f4;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.13);
+
+  --text: #16201e;
+  --text-muted: #8a9491;
+  --text-soft: #6e7a77;
+  --text-faint: #9aa3a0;
+  --label: #4c4437;
+
+  --accent: #0d7c6c;
+  --accent-strong: #0a6a5b;
+  --accent-soft: #eaf4f1;
+  --accent-tint: #dcefea;
   --on-accent: #ffffff;
-  --focus: #0e8a7c;
+  --focus: #0d7c6c;
 
-  --tier-home: #2f8f4e;
-  --tier-home-soft: #e3f3e8;
-  --tier-rhu: #c27c0e;
-  --tier-rhu-soft: #fbf0dc;
-  --tier-emergency: #c2372d;
-  --tier-emergency-soft: #fbe4e2;
+  --tier-home: #1f7a3c;
+  --tier-home-ink: #1f5b33;
+  --tier-home-soft: #e7f3ec;
+  --tier-rhu: #ef7d12;
+  --tier-rhu-ink: #c4620a;
+  --tier-rhu-soft: #fdf2e4;
+  --tier-emergency: #d72b21;
+  --tier-emergency-ink: #b02018;
+  --tier-emergency-soft: #fbe8e6;
 
-  --ok: #2f8f4e;
-  --warn: #c27c0e;
-  --danger: #c2372d;
-  --info: #2b6cb0;
+  --ok: #1f7a3c;
+  --ok-ink: #1f5b33;
+  --warn: #ef7d12;
+  --warn-ink: #c4620a;
+  --danger: #d72b21;
+  --info: #0d7c6c;
 
-  --masked: #8a8276;
-  --masked-bg: repeating-linear-gradient(135deg, #ece8df 0 6px, #e3ddd1 6px 12px);
+  --masked: #9aa3a0;
+  --masked-bg: repeating-linear-gradient(135deg, #f0ede6 0 6px, #e6e1d7 6px 12px);
 
-  --radius-sm: 6px;
-  --radius: 10px;
-  --radius-lg: 14px;
-  --shadow: 0 1px 2px rgba(31, 27, 23, 0.06), 0 2px 8px rgba(31, 27, 23, 0.04);
+  /* Sidebar, overridden by data-sidebar="dark" (the console, Figure 37). */
+  --sidebar-bg: #ffffff;
+  --sidebar-border: rgba(0, 0, 0, 0.08);
+  --sidebar-brand: #16201e;
+  --sidebar-text: #4c5754;
+  --sidebar-hover: #f6f4ef;
+  --sidebar-active-bg: #eaf4f1;
+  --sidebar-active-text: #0a6a5b;
+  --sidebar-active-edge: #0d7c6c;
+  --sidebar-mark-bg: #0d7c6c;
+  --sidebar-mark-ink: #ffffff;
+
+  --radius-sm: 9px;
+  --radius: 13px;
+  --radius-lg: 16px;
+  --radius-pill: 99px;
+  --shadow: 0 1px 2px rgba(22, 32, 30, 0.05);
+  --shadow-lift: 0 10px 30px -14px rgba(22, 32, 30, 0.35);
   --gap: 16px;
 }
 
-[data-theme="dark"] {
-  --bg: #16130f;
-  --surface: #211d18;
-  --surface-muted: #2a2520;
-  --border: #3a342d;
-  --text: #f1ece4;
-  --text-muted: #a89f93;
-  --accent: #e8e1d6;
-  --accent-strong: #ffffff;
-  --accent-soft: #2f2a24;
-  --on-accent: #1f1b17;
-  --focus: #7fd1c6;
-
-  --tier-home: #5cc27d;
-  --tier-home-soft: #1f3326;
-  --tier-rhu: #e6a43a;
-  --tier-rhu-soft: #3a2e1a;
-  --tier-emergency: #ef6b60;
-  --tier-emergency-soft: #3d2220;
-
-  --ok: #5cc27d;
-  --warn: #e6a43a;
-  --danger: #ef6b60;
-  --info: #79a8e0;
-  --masked: #a89f93;
-  --masked-bg: repeating-linear-gradient(135deg, #2a2520 0 6px, #332d27 6px 12px);
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+[data-sidebar="dark"] {
+  --sidebar-bg: #221f1c;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-brand: #f5f1ea;
+  --sidebar-text: #a8a095;
+  --sidebar-hover: #2a2621;
+  --sidebar-active-bg: #302b26;
+  --sidebar-active-text: #f5f1ea;
+  --sidebar-active-edge: #e8e2d8;
+  --sidebar-mark-bg: #f5f1ea;
+  --sidebar-mark-ink: #221f1c;
+  --bg: #f9f8f5;
 }
 
 *,
@@ -95,7 +113,11 @@ body {
 }
 
 a {
-  color: inherit;
+  color: var(--accent);
+}
+
+a:hover {
+  color: var(--accent-strong);
 }
 
 :focus-visible {
@@ -116,14 +138,14 @@ a {
 
 .mc-shell {
   display: grid;
-  grid-template-columns: 232px 1fr;
+  grid-template-columns: 198px 1fr;
   min-height: 100vh;
 }
 
 .mc-sidebar {
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  padding: 20px 14px;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  padding: 22px 0;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -135,70 +157,76 @@ a {
 .mc-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 6px;
+  gap: 9px;
+  padding: 0 18px 4px;
+  color: var(--sidebar-brand);
 }
 
 .mc-brand-mark {
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   border-radius: 9px;
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--sidebar-mark-bg);
+  color: var(--sidebar-mark-ink);
   display: grid;
   place-items: center;
   font-weight: 700;
+  font-size: 12px;
+  flex: none;
 }
 
 .mc-brand-name {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 15px;
 }
 
 .mc-brand-sub {
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--text-faint);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.1em;
+  font-weight: 600;
 }
 
 .mc-nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
 }
 
+/* Figure 37's nav: a 3px left edge marks the active screen, not a pill. */
 .mc-nav a {
   text-decoration: none;
-  padding: 9px 10px;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  font-weight: 500;
+  padding: 13px 18px;
+  border-left: 3px solid transparent;
+  color: var(--sidebar-text);
+  font-weight: 400;
+  font-size: 14px;
 }
 
 .mc-nav a:hover {
-  background: var(--surface-muted);
-  color: var(--text);
+  background: var(--sidebar-hover);
 }
 
 .mc-nav a[aria-current="page"] {
-  background: var(--accent-soft);
-  color: var(--text);
+  background: var(--sidebar-active-bg);
+  border-left-color: var(--sidebar-active-edge);
+  color: var(--sidebar-active-text);
+  font-weight: 600;
 }
 
 .mc-sidebar-foot {
   margin-top: auto;
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--sidebar-text);
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 0 6px;
+  padding: 0 18px;
   word-break: break-all;
 }
 
 .mc-main {
-  padding: 28px 32px 48px;
+  padding: 26px 28px 40px;
   min-width: 0;
 }
 
@@ -214,8 +242,16 @@ a {
     flex-direction: row;
     flex-wrap: wrap;
   }
+  .mc-nav a {
+    border-left: 0;
+    border-bottom: 3px solid transparent;
+    padding: 10px 14px;
+  }
+  .mc-nav a[aria-current="page"] {
+    border-bottom-color: var(--sidebar-active-edge);
+  }
   .mc-main {
-    padding: 20px 16px 40px;
+    padding: 20px 16px 36px;
   }
 }
 
@@ -223,22 +259,25 @@ a {
 
 .mc-page-header {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: var(--gap);
-  margin-bottom: 20px;
+  gap: 18px;
+  margin-bottom: 22px;
   flex-wrap: wrap;
 }
 
 .mc-page-header h1 {
   margin: 0;
   font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   line-height: 1.25;
 }
 
 .mc-page-header p {
   margin: 4px 0 0;
   color: var(--text-muted);
+  font-size: 13px;
 }
 
 .mc-actions {
@@ -257,8 +296,12 @@ a {
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 }
 
+.mc-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .mc-grid-4 {
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
 }
 
 .mc-stack {
@@ -279,7 +322,7 @@ a {
 }
 
 .mc-small {
-  font-size: 12px;
+  font-size: 12.5px;
 }
 
 .mc-mono {
@@ -287,14 +330,26 @@ a {
   font-size: 12.5px;
 }
 
+/* Figure 31's "As of last sync" pill. */
+.mc-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--tier-home-soft);
+  color: var(--tier-home-ink);
+  border-radius: var(--radius-pill);
+  padding: 9px 15px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
 /* -------------------------------------------------------------------- card */
 
 .mc-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
-  padding: 18px 20px;
+  border-radius: var(--radius);
+  padding: 20px;
   min-width: 0;
 }
 
@@ -303,44 +358,52 @@ a {
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .mc-card-title {
   margin: 0;
-  font-size: 15px;
+  font-size: 15.5px;
   font-weight: 600;
 }
 
 .mc-stat {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  border-left: 4px solid var(--border);
+  padding: 18px;
+  border-left: 4px solid var(--border-strong);
 }
 
 .mc-stat-label {
-  color: var(--text-muted);
-  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
   font-weight: 500;
 }
 
 .mc-stat-value {
-  font-size: 28px;
+  font-size: 40px;
   font-weight: 700;
   line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin: 10px 0 6px;
   font-variant-numeric: tabular-nums;
 }
 
 .mc-stat-hint {
-  font-size: 12px;
-  color: var(--text-muted);
+  font-size: 12.5px;
+  color: var(--text-faint);
 }
 
 .mc-tone-home { border-left-color: var(--tier-home); }
 .mc-tone-rhu { border-left-color: var(--tier-rhu); }
 .mc-tone-emergency { border-left-color: var(--tier-emergency); }
 .mc-tone-accent { border-left-color: var(--accent); }
+
+.mc-delta-up-good { color: var(--tier-home); font-weight: 500; font-size: 12.5px; }
+.mc-delta-up-warn { color: var(--tier-rhu-ink); font-weight: 500; font-size: 12.5px; }
+.mc-delta-flat { color: var(--text-faint); font-size: 12.5px; }
 
 /* ---------------------------------------------------------- masked counts */
 
@@ -350,9 +413,6 @@ a {
 
 .mc-count-masked {
   color: var(--masked);
-  background: var(--masked-bg);
-  border-radius: 4px;
-  padding: 0 5px;
   cursor: help;
 }
 
@@ -363,9 +423,9 @@ a {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 1px solid transparent;
+  border: 0;
   border-radius: var(--radius-sm);
-  padding: 8px 14px;
+  padding: 11px 16px;
   font: inherit;
   font-weight: 600;
   cursor: pointer;
@@ -386,11 +446,11 @@ a {
 .mc-button-secondary {
   background: var(--surface);
   color: var(--text);
-  border-color: var(--border);
+  border: 1px solid var(--border-strong);
 }
 
 .mc-button-secondary:hover:not(:disabled) {
-  background: var(--surface-muted);
+  background: var(--surface-input);
 }
 
 .mc-button-danger {
@@ -399,13 +459,12 @@ a {
 }
 
 .mc-button-danger:hover:not(:disabled) {
-  background: var(--danger);
   filter: brightness(0.92);
 }
 
 .mc-button-ghost {
   background: transparent;
-  color: var(--text-muted);
+  color: var(--text-soft);
 }
 
 .mc-button-ghost:hover:not(:disabled) {
@@ -414,8 +473,36 @@ a {
 }
 
 .mc-button-sm {
-  padding: 4px 10px;
+  padding: 6px 11px;
   font-size: 12.5px;
+  border-radius: 8px;
+}
+
+/* Segmented range switch (Figure 31). */
+.mc-segment {
+  display: flex;
+  gap: 4px;
+  background: var(--surface-muted);
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.mc-segment button {
+  border: 0;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-soft);
+  border-radius: 7px;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 12.5px;
+}
+
+.mc-segment button[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: var(--shadow);
 }
 
 /* ------------------------------------------------------------------- badge */
@@ -424,12 +511,12 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  border-radius: 999px;
-  padding: 1px 9px;
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
   font-size: 12px;
   font-weight: 600;
   background: var(--surface-muted);
-  color: var(--text-muted);
+  color: var(--text-soft);
   white-space: nowrap;
 }
 
@@ -441,10 +528,10 @@ a {
   background: currentColor;
 }
 
-.mc-badge-home, .mc-badge-ok { background: var(--tier-home-soft); color: var(--tier-home); }
-.mc-badge-rhu, .mc-badge-warn { background: var(--tier-rhu-soft); color: var(--tier-rhu); }
-.mc-badge-emergency, .mc-badge-danger { background: var(--tier-emergency-soft); color: var(--tier-emergency); }
-.mc-badge-info { background: var(--accent-soft); color: var(--accent); }
+.mc-badge-home, .mc-badge-ok { background: var(--tier-home-soft); color: var(--tier-home-ink); }
+.mc-badge-rhu, .mc-badge-warn { background: var(--tier-rhu-soft); color: var(--tier-rhu-ink); }
+.mc-badge-emergency, .mc-badge-danger { background: var(--tier-emergency-soft); color: var(--tier-emergency-ink); }
+.mc-badge-info { background: var(--accent-soft); color: var(--accent-strong); }
 
 /* ------------------------------------------------------------------- table */
 
@@ -460,17 +547,17 @@ a {
 .mc-table th,
 .mc-table td {
   text-align: left;
-  padding: 9px 10px;
+  padding: 11px 10px;
   border-bottom: 1px solid var(--border);
   vertical-align: top;
 }
 
 .mc-table th {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--text-faint);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
 }
 
 .mc-table tbody tr:last-child td {
@@ -483,35 +570,85 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
+/* Ranked bars (Figure 31, "Top symptom codes"). */
+.mc-rank {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 0;
+}
+
+.mc-rank-index {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: #b4bbb9;
+  width: 12px;
+}
+
+.mc-rank-name {
+  font-weight: 500;
+  min-width: 96px;
+  flex: 1;
+}
+
+.mc-rank-track {
+  flex: 1.4;
+  height: 9px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+  overflow: hidden;
+}
+
+.mc-rank-track > span {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+}
+
+.mc-rank-value {
+  font-weight: 600;
+  font-size: 13.5px;
+  min-width: 34px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ------------------------------------------------------------------- forms */
 
 .mc-field {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 7px;
   min-width: 0;
 }
 
 .mc-field > span {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--label);
 }
 
 .mc-input,
 .mc-select,
 .mc-textarea {
   font: inherit;
+  font-size: 15px;
   color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 8px 10px;
+  background: var(--surface-input);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  padding: 13px 14px;
   min-width: 0;
 }
 
+.mc-input::placeholder,
+.mc-textarea::placeholder {
+  color: #a9a49a;
+}
+
 .mc-textarea {
-  min-height: 80px;
+  min-height: 84px;
   resize: vertical;
 }
 
@@ -521,14 +658,39 @@ a {
   border-color: var(--danger);
 }
 
+.mc-input-affix {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.mc-input-affix .mc-input {
+  flex: 1;
+  padding-right: 68px;
+}
+
+/* The "Show" password toggle in Figures 30 and 36. */
+.mc-input-action {
+  position: absolute;
+  right: 14px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--accent);
+  padding: 4px;
+}
+
 .mc-field-error {
   color: var(--danger);
-  font-size: 12px;
+  font-size: 12.5px;
 }
 
 .mc-field-hint {
-  color: var(--text-muted);
-  font-size: 12px;
+  color: var(--text-faint);
+  font-size: 12.5px;
 }
 
 .mc-check {
@@ -541,7 +703,7 @@ a {
 
 .mc-banner {
   border-radius: var(--radius);
-  padding: 12px 14px;
+  padding: 14px 16px;
   border: 1px solid var(--border);
   background: var(--surface);
   display: flex;
@@ -554,23 +716,23 @@ a {
 }
 
 .mc-banner-info { background: var(--accent-soft); border-color: transparent; }
-.mc-banner-success { background: var(--tier-home-soft); border-color: transparent; }
-.mc-banner-warning { background: var(--tier-rhu-soft); border-color: transparent; }
-.mc-banner-danger { background: var(--tier-emergency-soft); border-color: transparent; }
+.mc-banner-success { background: var(--tier-home-soft); border-color: transparent; color: var(--tier-home-ink); }
+.mc-banner-warning { background: var(--tier-rhu-soft); border-color: transparent; color: var(--tier-rhu-ink); }
+.mc-banner-danger { background: var(--tier-emergency-soft); border-color: transparent; color: var(--tier-emergency-ink); }
 
 /* ------------------------------------------------------------ misc states */
 
 .mc-empty {
   text-align: center;
   padding: 32px 16px;
-  color: var(--text-muted);
+  color: var(--text-faint);
 }
 
 .mc-spinner {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  border: 2px solid var(--border);
+  border: 2px solid var(--border-strong);
   border-top-color: var(--accent);
   animation: mc-spin 0.8s linear infinite;
   display: inline-block;
@@ -593,27 +755,28 @@ a {
   color: var(--text);
   padding: 0;
   width: min(560px, calc(100vw - 32px));
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-lift);
 }
 
 .mc-dialog::backdrop {
-  background: rgba(20, 16, 12, 0.45);
+  background: rgba(22, 32, 30, 0.45);
 }
 
 .mc-dialog-body {
-  padding: 20px;
+  padding: 22px;
 }
 
 .mc-dialog-body h2 {
   margin: 0 0 12px;
   font-size: 17px;
+  font-weight: 600;
 }
 
 .mc-dialog-foot {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  padding: 12px 20px;
+  padding: 14px 22px;
   border-top: 1px solid var(--border);
 }
 
@@ -626,7 +789,7 @@ a {
 }
 
 .mc-chart-axis {
-  fill: var(--text-muted);
+  fill: var(--text-faint);
   font-size: 10px;
 }
 
@@ -643,13 +806,13 @@ a {
   display: inline-block;
   width: 10px;
   height: 10px;
-  border-radius: 2px;
+  border-radius: 3px;
   margin-right: 6px;
   vertical-align: -1px;
-  background: var(--swatch, var(--border));
+  background: var(--swatch, var(--border-strong));
 }
 
-/* --------------------------------------------------------------- tier tile */
+/* --------------------------------------------------------------- map tiles */
 
 .mc-tile-grid {
   display: grid;
@@ -659,7 +822,7 @@ a {
 
 .mc-tile {
   border-radius: var(--radius);
-  padding: 12px;
+  padding: 14px;
   border: 1px solid var(--border);
   min-height: 84px;
   display: flex;
@@ -671,3 +834,78 @@ a {
 .mc-band-elevated { background: var(--tier-rhu-soft); }
 .mc-band-high { background: var(--tier-emergency-soft); }
 .mc-band-suppressed { background: var(--masked-bg); }
+
+/* ------------------------------------------------------------------- login */
+
+.mc-login-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 70px 24px 80px;
+  background: var(--login-ground, var(--surface));
+}
+
+.mc-login-card {
+  width: 420px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: var(--login-card-padding, 0);
+  border: var(--login-card-border, 0);
+}
+
+.mc-login-mark {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: var(--accent);
+  display: grid;
+  place-items: center;
+  margin-bottom: 12px;
+}
+
+.mc-login-word {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.mc-login-surface {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #8a8276;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+
+.mc-login-card form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mc-login-card form .mc-button {
+  margin-top: 8px;
+  padding: 18px;
+  font-size: 16px;
+  border-radius: var(--radius);
+}
+
+.mc-login-foot {
+  font-size: 13px;
+  color: #a9a49a;
+  margin-top: 16px;
+  text-align: center;
+}
+
+/* Figure 36: the console signs in on a dark ground, card still light. */
+.mc-login-dark {
+  --login-ground: #221f1c;
+  --login-card-padding: 34px 30px 30px;
+}

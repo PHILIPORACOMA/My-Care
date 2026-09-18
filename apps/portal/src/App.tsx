@@ -1,4 +1,4 @@
-import { AppShell, Button, Spinner, type NavItem } from "@mycare/ui";
+import { AppShell, Button, CareMark, Spinner, type NavItem } from "@mycare/ui";
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth";
 import { DashboardPage } from "./pages/DashboardPage";
@@ -35,7 +35,7 @@ export function App() {
     <AppShell
       brand="My Care"
       subtitle="Health worker portal"
-      mark="MC"
+      mark={<CareMark size={30} stroke="var(--sidebar-mark-ink)" />}
       nav={NAV}
       renderLink={(item) => (
         <NavLink to={item.to} end={item.to === "/"}>

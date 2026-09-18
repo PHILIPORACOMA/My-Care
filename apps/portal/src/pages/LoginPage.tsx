@@ -1,9 +1,13 @@
 import { ApiError } from "@mycare/api-client";
-import { Banner, Button, TextField } from "@mycare/ui";
+import { Banner, Button, LoginBrand, PasswordField, TextField } from "@mycare/ui";
 import { useState, type FormEvent } from "react";
 import { useAuth } from "../auth";
 
-/** Figure 30, Sub Admin Portal Login. */
+/**
+ * Figure 30, Sub Admin Portal Login. Copy and layout follow the design canvas:
+ * brand block, email, password with a Show toggle, "Log in", and the line
+ * about who creates accounts.
+ */
 export function LoginPage() {
   const { login } = useAuth();
   const [email, setEmail] = useState("");
@@ -25,15 +29,9 @@ export function LoginPage() {
   }
 
   return (
-    <div className="login-page">
-      <div className="mc-card login-card">
-        <div className="login-mark" aria-hidden="true">
-          MC
-        </div>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 22 }}>My Care</h1>
-          <div className="mc-brand-sub">Health worker portal</div>
-        </div>
+    <div className="mc-login-page">
+      <div className="mc-login-card">
+        <LoginBrand surface="Health worker portal" />
 
         <form onSubmit={submit} noValidate>
           {error && <Banner tone="danger">{error}</Banner>}
@@ -46,9 +44,8 @@ export function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <TextField
+          <PasswordField
             label="Password"
-            type="password"
             autoComplete="current-password"
             required
             value={password}
@@ -59,9 +56,7 @@ export function LoginPage() {
           </Button>
         </form>
 
-        <p className="mc-muted mc-small" style={{ margin: 0 }}>
-          Accounts are created by the system administrator.
-        </p>
+        <p className="mc-login-foot">Accounts are created by the system administrator.</p>
       </div>
     </div>
   );

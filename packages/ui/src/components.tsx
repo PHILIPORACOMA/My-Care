@@ -3,6 +3,7 @@ import {
   useEffect,
   useId,
   useRef,
+  useState,
   type ButtonHTMLAttributes,
   type InputHTMLAttributes,
   type ReactNode,
@@ -19,17 +20,23 @@ export interface NavItem {
   label: string;
 }
 
+/**
+ * The two staff surfaces share this shell. `sidebar="dark"` is the console
+ * (Figure 37): a dark sidebar beside a light content area — not a dark theme.
+ * Only the sidebar's tokens change.
+ */
 export function AppShell(props: {
   brand: string;
   subtitle: string;
   mark: ReactNode;
   nav: NavItem[];
   renderLink: (item: NavItem) => ReactNode;
+  sidebar?: "light" | "dark";
   footer?: ReactNode;
   children: ReactNode;
 }) {
   return (
-    <div className="mc-shell">
+    <div className="mc-shell" data-sidebar={props.sidebar ?? "light"}>
       <aside className="mc-sidebar">
         <div className="mc-brand">
           <div className="mc-brand-mark" aria-hidden="true">
@@ -101,19 +108,81 @@ export function Count({ cell }: { cell: Cell }) {
   return <span className="mc-count">{cell.display}</span>;
 }
 
+const DELTA_CLASS = {
+  good: "mc-delta-up-good",
+  warn: "mc-delta-up-warn",
+  flat: "mc-delta-flat",
+} as const;
+
 export function StatCard(props: {
   label: ReactNode;
   value: ReactNode;
   hint?: ReactNode;
   tone?: "home" | "rhu" | "emergency" | "accent";
+  /** Figure 31's "▲ 12% vs last week" line under the figure. */
+  delta?: { text: string; tone?: "good" | "warn" | "flat" };
 }) {
   return (
     <div className={cx("mc-card", "mc-stat", props.tone && `mc-tone-${props.tone}`)}>
       <span className="mc-stat-label">{props.label}</span>
       <span className="mc-stat-value">{props.value}</span>
+      {props.delta && <span className={DELTA_CLASS[props.delta.tone ?? "good"]}>{props.delta.text}</span>}
       {props.hint && <span className="mc-stat-hint">{props.hint}</span>}
     </div>
   );
+}
+
+/**
+ * A ranked list with proportional bars (Figure 31, "Top symptom codes").
+ *
+ * Only displayable counts reach this: a suppressed bucket has no bar, because
+ * a bar's length would give away the count the mask exists to hide.
+ */
+export function RankList(props: { items: { key: string; name: ReactNode; value: number; display: string }[] }) {
+  const top = Math.max(1, ...props.items.map((i) => i.value));
+
+  return (
+    <div>
+      {props.items.map((item, index) => (
+        <div className="mc-rank" key={item.key}>
+          <span className="mc-rank-index">{index + 1}</span>
+          <span className="mc-rank-name">{item.name}</span>
+          <span className="mc-rank-track" aria-hidden="true">
+            <span style={{ width: `${Math.round((item.value / top) * 100)}%` }} />
+          </span>
+          <span className="mc-rank-value">{item.display}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** The segmented range switch in Figure 31. */
+export function Segmented<T extends string>(props: {
+  label: string;
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (value: T) => void;
+}) {
+  return (
+    <div className="mc-segment" role="group" aria-label={props.label}>
+      {props.options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          aria-pressed={props.value === option.value}
+          onClick={() => props.onChange(option.value)}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Figure 31's "As of last sync" pill. */
+export function SyncPill({ children }: { children: ReactNode }) {
+  return <span className="mc-pill">{children}</span>;
 }
 
 export type BadgeTone = "home" | "rhu" | "emergency" | "ok" | "warn" | "danger" | "info" | "neutral";
@@ -194,6 +263,40 @@ export function TextField({
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${id}-error` : undefined}
       />
+    </FieldShell>
+  );
+}
+
+/**
+ * Password field with the "Show" toggle both login screens have (Figures 30,
+ * 36). The toggle is a real button, announced as such, and the field keeps its
+ * autocomplete semantics.
+ */
+export function PasswordField({
+  label,
+  error,
+  hint,
+  ...input
+}: InputHTMLAttributes<HTMLInputElement> & { label: ReactNode; error?: string; hint?: ReactNode }) {
+  const generated = useId();
+  const id = input.id ?? generated;
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <FieldShell label={label} error={error} hint={hint} id={id}>
+      <div className="mc-input-affix">
+        <input
+          {...input}
+          id={id}
+          type={visible ? "text" : "password"}
+          className={cx("mc-input", input.className)}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${id}-error` : undefined}
+        />
+        <button type="button" className="mc-input-action" onClick={() => setVisible((v) => !v)} aria-pressed={visible}>
+          {visible ? "Hide" : "Show"}
+        </button>
+      </div>
     </FieldShell>
   );
 }

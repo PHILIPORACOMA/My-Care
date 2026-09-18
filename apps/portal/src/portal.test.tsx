@@ -72,9 +72,8 @@ describe("portal", () => {
     renderApp();
 
     // The heading renders before the request resolves, so wait for a figure.
-    expect(await screen.findByText("18")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Dashboard" })).toBeInTheDocument();
-    expect(screen.getByText("7")).toBeInTheDocument();
+    expect(await screen.findByText("7")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Triage overview/ })).toBeInTheDocument();
     // Emergency was under five: masked, with an explanation, and no digit.
     const masked = screen.getAllByTitle(/Fewer than 5/);
     expect(masked.length).toBeGreaterThan(0);
@@ -84,9 +83,28 @@ describe("portal", () => {
   it("names the health worker's own barangay, and offers no barangay chooser", async () => {
     renderApp();
 
-    await waitFor(() => expect(screen.getByText(/Triage activity in Valladolid/)).toBeInTheDocument());
+    // Figure 31's heading: "Brgy. {name} — Triage overview".
+    await waitFor(() => expect(screen.getByRole("heading", { name: /Brgy\. Valladolid/ })).toBeInTheDocument());
     expect(screen.queryByLabelText("Barangay")).toBeNull();
     expect(api.staff.dashboard).toHaveBeenCalled();
+  });
+
+  /*
+   * Figure 31 shows "▲ 12% vs last week" under each figure. It is only honest
+   * when both periods are displayable: a percentage against a suppressed
+   * figure would let a reader solve for the hidden count.
+   */
+  it("states a change only when both periods are displayable", async () => {
+    api.staff.dashboard
+      .mockResolvedValueOnce({ ...dashboard, tiers: { home: cell(14), rhu: cell(6), emergency: cell(null) } })
+      .mockResolvedValueOnce({ ...dashboard, tiers: { home: cell(7), rhu: cell(6), emergency: cell(null) } });
+
+    renderApp();
+
+    expect(await screen.findByText(/100% vs previous period/)).toBeInTheDocument();
+    expect(screen.getByText("No change vs previous period")).toBeInTheDocument();
+    // Emergency is suppressed in both periods, so no change line at all.
+    expect(screen.getAllByText(/vs previous period/)).toHaveLength(2);
   });
 
   it("states the cluster banner in words a health worker can act on", async () => {

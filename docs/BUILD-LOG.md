@@ -394,3 +394,53 @@ npm run dev -w @mycare/portal     # http://localhost:5174/portal/
 
 Sign in as `sub@mycare.test` / `password` to see the barangay-scoped view, or
 as the super-admin to see every barangay with a barangay chooser.
+
+---
+
+### 8a - Design import: tokens and the staff apps (2026-09-18)
+
+Imported the team's design canvas ("UI regeneration from storyboards",
+Figures 17-41) through the Claude Design MCP and applied it to the built
+apps. Typecheck clean; ui 9/9, portal 5/5, console 4/4; both apps build.
+
+**Tokens now come from the design**, not from my approximations:
+
+| | Value |
+|---|---|
+| Type | Poppins 400/500/600/700, IBM Plex Mono for figures and ids |
+| Ground / surface | `#FBFAF7` / white, inputs `#FAF8F4` |
+| Ink | `#16201E`, muted `#8A9491` |
+| Accent | teal `#0D7C6C`, hover `#0A6A5B`, soft `#EAF4F1` |
+| Tiers | home `#1F7A3C`, RHU `#EF7D12`, emergency `#D72B21` |
+| Shape | 13px cards, 12px inputs, 99px pills |
+
+**The console is not a dark theme.** The design gives it a dark *sidebar*
+(`#221F1C`) beside a light content area, and a white login card on a dark
+ground. Mine was dark throughout, so `AppShell` gained `sidebar="dark"` and the
+console's `data-theme="dark"` is gone.
+
+Design affordances added:
+
+- **"Show" password toggle** on both logins (`PasswordField`), which neither
+  screen had.
+- **Segmented range switch** and the **"as of last sync" pill** on the
+  dashboard.
+- **Stat cards with a change line** ("▲ 12% vs previous period"). The API has
+  no deltas, so the dashboard fetches the previous period too and computes it
+  client-side — and only states a change **when both periods are displayable**,
+  since a percentage against a suppressed figure would let a reader solve for
+  the hidden count. A test covers that.
+- **Ranked bars** for top symptom codes, with no bar for a suppressed count.
+- The shared `CareMark` logo and the login brand block.
+
+Fonts load from Google Fonts for the staff apps, which are online-only. **The
+patient PWA will self-host a subset instead** — it must work offline inside a
+100 MB budget.
+
+Deliberately not copied from the design: Figure 37's "Report worker · queue 12"
+panel. There is no queue worker in this deployment (reports generate in the
+request), so the service panel keeps showing the aggregation job and engine
+replay, which do exist.
+
+Not yet done: nobody has looked at either app in a browser since the restyle.
+Rendering gets verified with Playwright in Milestone 9.

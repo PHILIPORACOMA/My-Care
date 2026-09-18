@@ -1,9 +1,12 @@
 import { ApiError } from "@mycare/api-client";
-import { Banner, Button, TextField } from "@mycare/ui";
+import { Banner, Button, LoginBrand, PasswordField, TextField } from "@mycare/ui";
 import { useState, type FormEvent } from "react";
 import { useAuth } from "../auth";
 
-/** Figure 36, Super Admin – Login. */
+/**
+ * Figure 36, Super Admin Login. Same card as the portal's, on the dark ground
+ * the design gives the admin subdomain, and with the console's own wording.
+ */
 export function LoginPage({ wrongRole }: { wrongRole: boolean }) {
   const { login, logout } = useAuth();
   const [email, setEmail] = useState("");
@@ -25,32 +28,33 @@ export function LoginPage({ wrongRole }: { wrongRole: boolean }) {
   }
 
   return (
-    <div className="login-page">
-      <div className="mc-card login-card">
-        <div className="login-mark" aria-hidden="true">
-          MC
-        </div>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 22 }}>My Care</h1>
-          <div className="mc-brand-sub">System administration</div>
-        </div>
+    <div className="mc-login-page mc-login-dark">
+      <div className="mc-login-card">
+        <LoginBrand surface="System administration" />
 
         {wrongRole ? (
-          <>
+          <div className="mc-stack" style={{ width: "100%" }}>
             <Banner tone="warning" title="This console is for the development team">
               Your account is a sub-admin account. Use the Health Worker Portal instead.
             </Banner>
             <Button variant="secondary" onClick={() => void logout()}>
               Sign out
             </Button>
-          </>
+          </div>
         ) : (
           <form onSubmit={submit} noValidate>
             {error && <Banner tone="danger">{error}</Banner>}
-            <TextField label="Email" type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
             <TextField
+              label="Email"
+              type="email"
+              autoComplete="username"
+              required
+              placeholder="admin@mycare.dev"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <PasswordField
               label="Password"
-              type="password"
               autoComplete="current-password"
               required
               value={password}
@@ -62,9 +66,7 @@ export function LoginPage({ wrongRole }: { wrongRole: boolean }) {
           </form>
         )}
 
-        <p className="mc-muted mc-small" style={{ margin: 0 }}>
-          Restricted to the My Care development team.
-        </p>
+        <p className="mc-login-foot">Restricted to the My Care development team.</p>
       </div>
     </div>
   );
