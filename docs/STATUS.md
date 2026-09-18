@@ -29,8 +29,17 @@ Paste this into a new chat session to pick up where this one left off:
 > **no UI has been opened in a real browser yet**, and the PWA has never run
 > against a live API — that is the first job of Milestone 9.
 >
+> Both branches are **pushed** (`feat/UT-011-phases-4-to-9` at `eba08ee`,
+> `feat/UT-020-laravel-api-schema` at `7cd72ae`). No PR is open for the phases
+> branch yet, and CI has never run against it.
+>
 > Continue the plan in `docs/BUILD-LOG.md`: E2E + CI (9), deployment (10),
-> final docs pass.
+> final docs pass. The honest first task is Playwright, because it is what
+> finally opens all three apps in a real browser.
+>
+> Two things need me, not you: **MySQL80 is stopped** (needs an elevated
+> `net start MySQL80` before anything touches the API), and the Tagalog and
+> Cebuano copy in `apps/pwa/src/i18n.ts` is an unreviewed draft.
 >
 > Tell me what you understand the current state to be, and wait for direction —
 > don't start new work yet.
@@ -122,11 +131,16 @@ opened in a browser.
 
 ## Git state
 
-- **`feat/UT-011-phases-4-to-9`** (local only, **not pushed**): 10 commits,
-  `18acb14` onwards, stacked on the PR #1 branch.
-- **`feat/UT-020-laravel-api-schema`** (PR #1): `5aa26c7` and `7cd72ae` are
-  committed locally but **not pushed**. Everything before them is on origin.
-- `CLAUDE.md` and the two session transcripts are untracked on purpose.
+- **`feat/UT-011-phases-4-to-9`** — **pushed 2026-09-18**, 11 commits,
+  `18acb14`…`eba08ee`, stacked on the PR #1 branch. No PR opened for it yet:
+  https://github.com/PHILIPORACOMA/My-Care/pull/new/feat/UT-011-phases-4-to-9
+- **`feat/UT-020-laravel-api-schema`** (PR #1) — **pushed 2026-09-18**, now at
+  `7cd72ae`. Fully in sync with origin.
+- **CI has not run on any of this.** Both workflows trigger on `push` to `main`
+  and on pull requests only, so the new branch is untested by CI until a PR
+  exists — and the `api` job will fail when one does, because it has no Node
+  step and no `engine-replay` build (Milestone 9's job).
+- `CLAUDE.md` and the three session transcripts are untracked on purpose.
 
 ## Environment notes (needed to run this on a fresh machine)
 
