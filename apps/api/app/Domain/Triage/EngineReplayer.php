@@ -104,16 +104,63 @@ final class EngineReplayer
         ];
     }
 
-    /** Whether the replay tool can run here. Cached briefly for the health screen. */
-    public static function available(): bool
+    /**
+     * Whether the replay tool can run here, and why not when it cannot.
+     *
+     * Never throws. This feeds the System Health screen, and a health check that
+     * dies with a 500 tells an operator nothing — which is exactly what happened
+     * the first time the console called it: under `php artisan serve` on Windows
+     * the child process inherits no TMP/TEMP, so Symfony's Process could not
+     * create its pipe files and the endpoint 500ed.
+     *
+     * @return array{ok: bool, detail: string}
+     */
+    public static function availability(): array
     {
-        return Cache::remember('engine-replay-available', 60, function (): bool {
-            if (! is_readable((string) config('mycare.replay.script'))) {
-                return false;
+        return Cache::remember('engine-replay-availability', 60, function (): array {
+            $script = (string) config('mycare.replay.script');
+
+            if (! is_readable($script)) {
+                return ['ok' => false, 'detail' => "Script missing at {$script}. Run `npm run build -w @mycare/engine-replay`."];
             }
 
-            return Process::timeout(10)->run([config('mycare.replay.node_binary'), '--version'])->successful();
+            if (($temp = self::unwritableTempDir()) !== null) {
+                return ['ok' => false, 'detail' => $temp];
+            }
+
+            try {
+                $process = Process::timeout(10)->run([config('mycare.replay.node_binary'), '--version']);
+            } catch (\Throwable $e) {
+                return ['ok' => false, 'detail' => 'Could not start Node: '.$e->getMessage()];
+            }
+
+            return $process->successful()
+                ? ['ok' => true, 'detail' => 'Node '.trim($process->output())]
+                : ['ok' => false, 'detail' => 'Node did not run: '.trim($process->errorOutput() ?: $process->output())];
         });
+    }
+
+    public static function available(): bool
+    {
+        return self::availability()['ok'];
+    }
+
+    /**
+     * PHP writes a process's output through temporary files on Windows, so an
+     * unwritable temp directory breaks replay before Node is ever reached. The
+     * message names the cause, because the raw Symfony error ("fopen(
+     * C:\WINDOWS\sf_proc_00.out.lock)") reads like a permissions mystery.
+     */
+    private static function unwritableTempDir(): ?string
+    {
+        $temp = sys_get_temp_dir();
+
+        if (is_dir($temp) && is_writable($temp)) {
+            return null;
+        }
+
+        return "The PHP process has no writable temporary directory (got \"{$temp}\"), so it cannot run Node. "
+            .'Set TMP and TEMP for the web server process — under `php artisan serve` on Windows they are not inherited.';
     }
 
     /**
@@ -130,9 +177,19 @@ final class EngineReplayer
             );
         }
 
-        $process = Process::timeout((int) config('mycare.replay.timeout_seconds'))
-            ->input(json_encode($payload, JSON_THROW_ON_ERROR))
-            ->run([config('mycare.replay.node_binary'), $script]);
+        if (($temp = self::unwritableTempDir()) !== null) {
+            throw new RuntimeException('Engine replay cannot start. '.$temp);
+        }
+
+        try {
+            $process = Process::timeout((int) config('mycare.replay.timeout_seconds'))
+                ->input(json_encode($payload, JSON_THROW_ON_ERROR))
+                ->run([config('mycare.replay.node_binary'), $script]);
+        } catch (\Throwable $e) {
+            // Aggregation must fail loudly rather than count sessions it could
+            // not replay — a wrong dashboard is worse than a stale one.
+            throw new RuntimeException('Engine replay could not start: '.$e->getMessage(), previous: $e);
+        }
 
         if (! $process->successful()) {
             throw new RuntimeException('Engine replay failed: '.trim($process->errorOutput() ?: $process->output()));

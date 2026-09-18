@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\AuditLog;
+use Illuminate\Support\Facades\Cache;
 use Tests\Support\SessionFixtures;
 use Tests\Support\StaffHelpers;
 
@@ -59,6 +60,33 @@ it('reports system health with services, metrics and per-barangay last sync (Fig
         ->and($health['metrics']['sessionsLast24h']['value'])->toBeNull()
         ->and(collect($health['barangays'])->pluck('name'))->toContain('Valladolid');
 });
+
+/*
+ * REGRESSION. Found by running the console against a live server: the health
+ * endpoint 500ed because checking for Node goes through Symfony's Process,
+ * which writes temp files, and `php artisan serve` on Windows hands the child
+ * no writable TMP. A health screen that dies tells an operator nothing — it has
+ * to report the thing that is broken, including itself.
+ */
+it('reports a broken engine replay instead of failing', function (string $binary, ?string $script, string $expected) {
+    Cache::forget('engine-replay-availability');
+    config([
+        'mycare.replay.node_binary' => $binary,
+        // null means "the real script"; base_path() cannot be called while the
+        // dataset is being collected, before the application boots.
+        'mycare.replay.script' => $script ?? config('mycare.replay.script'),
+    ]);
+
+    $health = $this->getJson('/api/v1/console/system-health')->assertStatus(200)->json();
+    $replay = collect($health['services'])->firstWhere('key', 'replay');
+
+    expect($replay['status'])->toBe('down')
+        ->and($replay['detail'])->toContain($expected)
+        ->and($replay['detail'])->toContain('Aggregates cannot refresh');
+})->with([
+    'script missing' => ['node', 'C:/nope/replay.mjs', 'Script missing'],
+    'node missing' => ['definitely-not-node', null, 'Node'],
+]);
 
 it('is super-admin only', function () {
     $this->flushHeaders()->actingAsStaff($this->subAdmin($this->barangay));

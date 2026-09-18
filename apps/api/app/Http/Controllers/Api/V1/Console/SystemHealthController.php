@@ -52,7 +52,7 @@ class SystemHealthController extends Controller
 
         $subAdmins = User::whereHas('role', fn ($q) => $q->where('name', 'sub_admin'))->get();
 
-        $replayOk = EngineReplayer::available();
+        $replay = EngineReplayer::availability();
         $aggregationFresh = $lastRun !== null
             && CarbonImmutable::parse($lastRun['finishedAt'])->greaterThan($now->subMinutes(30));
 
@@ -68,8 +68,8 @@ class SystemHealthController extends Controller
                 ],
                 [
                     'key' => 'replay', 'label' => 'Engine replay (Node)',
-                    'status' => $replayOk ? 'ok' : 'down',
-                    'detail' => $replayOk ? 'Available' : 'Node or the replay script is missing — aggregates cannot refresh',
+                    'status' => $replay['ok'] ? 'ok' : 'down',
+                    'detail' => $replay['ok'] ? $replay['detail'] : $replay['detail'].' Aggregates cannot refresh until this is fixed.',
                 ],
                 [
                     'key' => 'aggregation', 'label' => 'Aggregation job',

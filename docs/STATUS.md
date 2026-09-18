@@ -1,10 +1,11 @@
 # Development status checkpoint
 
-Last updated: **2026-09-17, end of session.** Phases 4–9 are being built on
+Last updated: **2026-09-18.** Phases 4–9 are being built on
 branch `feat/UT-011-phases-4-to-9`. **All backend work for Phases 4, 6 (server
-side) and 7 is done and verified**, the shared frontend packages are done, and
-the **super-admin console is written but not yet run or tested** — that is where
-work stops. `docs/BUILD-LOG.md` is the long-form record of everything below.
+side) and 7 is done and verified, and the super-admin console is verified end to
+end** — typecheck, tests, production build, and a real sign-in against a running
+API with every console and staff endpoint answering 200. Next: the sub-admin
+portal (Milestone 7). `docs/BUILD-LOG.md` is the long-form record.
 
 Update this file at the end of any session that changes phase status, adds a
 major decision, or closes/opens a known gap — don't let it drift.
@@ -18,17 +19,15 @@ Paste this into a new chat session to pick up where this one left off:
 >
 > We are finishing Phases 4–9 on branch `feat/UT-011-phases-4-to-9` with **no
 > manuscript amendments**. Backend Milestones 0–4 and the shared packages
-> (Milestone 5) are committed and verified: Pest 174/708, engine 12/12,
-> lexicon-matcher 11/11, engine-replay 5/5, api-client 5/5, ui 9/9.
+> (Milestone 5) are committed and verified: Pest 176/716, engine 12/12,
+> lexicon-matcher 11/11, engine-replay 5/5, api-client 5/5, ui 9/9,
+> console 4/4.
 >
-> **Milestone 6 (super-admin console, `apps/console`) is written but
-> uncommitted and has never been run** — no typecheck, no tests, no build, no
-> browser. Start there: `npm install`, `npm run typecheck -w @mycare/console`,
-> `npm test -w @mycare/console`, fix what breaks, then run it against
-> `php artisan serve` and click through Figures 36–41 before committing.
+> Milestone 6 (the console) is committed and verified over HTTP, though nobody
+> has clicked through the UI in a browser yet.
 >
-> Then continue the plan in `docs/BUILD-LOG.md`: portal (7), patient PWA and
-> offline sync (8), E2E + CI (9), deployment (10), final docs pass.
+> Continue the plan in `docs/BUILD-LOG.md`: portal (7), patient PWA and offline
+> sync (8), E2E + CI (9), deployment (10), final docs pass.
 >
 > Tell me what you understand the current state to be, and wait for direction —
 > don't start new work yet.
@@ -47,7 +46,7 @@ BS Information Technology capstone; the manuscript is the specification.
 | 1 | Triage engine + ruleset schema | ✅ 12/12 |
 | 2 | Ruleset v1 from the Clinical Appraisal Form | ✅ encoded; ⚠️ **not clinician-reviewed** |
 | 3 | Laravel API + 20 migrations | ✅ no open defects |
-| 4 | Super-admin console | 🔨 **API ✅** (rules lifecycle, accounts, devices, audit, health). **UI written, unverified, uncommitted** |
+| 4 | Super-admin console | ✅ API + UI built and verified (not yet clicked through in a browser) |
 | 5 | Patient PWA | 🔨 lexicon matcher (NLP) ✅; app ⬜ |
 | 6 | Offline sync layer | 🔨 server side ✅ (self-registration, idempotent sync, pending-queue reporting); device side ⬜ |
 | 7 | Sub-admin dashboard | 🔨 **API ✅** (dashboard, trends, sync status, map, CSV/PDF reports); UI ⬜ |
@@ -72,7 +71,7 @@ BS Information Technology capstone; the manuscript is the specification.
 
 ## What's built and verified
 
-Backend (`apps/api`) — **Pest 174 passed, 708 assertions** against MySQL 8:
+Backend (`apps/api`) — **Pest 176 passed, 716 assertions** against MySQL 8:
 
 - Device API: self-registration, hashed tokens, public barangay list,
   facilities for "Call for help", `X-Pending-Sessions` queue reporting.
@@ -91,15 +90,17 @@ Packages — all typecheck clean:
   `engine-replay` 5/5 · `api-client` 5/5 · `ui` 9/9.
 - `npm audit`: 0 vulnerabilities; `composer audit`: clean.
 
-Written, **not yet verified**: `apps/console` (Figures 36–41) — login, system
-dashboard, user management, rules & lexicon editor with a test/explain panel,
-symptom codes, sync & health with device revocation, audit log with export.
+`apps/console` (Figures 36–41) — login, system dashboard, user management,
+rules & lexicon editor with a test/explain panel, symptom codes, sync & health
+with device revocation, audit log with export. **Verified 2026-09-18:**
+typecheck clean, 4/4 tests, production build (242 kB, 76 kB gzipped), and a live
+sign-in through the Vite proxy with every console and staff endpoint
+returning 200.
 
 ## Git state
 
-- **`feat/UT-011-phases-4-to-9`** (local only, **not pushed**): 5 commits,
-  `18acb14` → `65fd93b`, stacked on the PR #1 branch, plus the docs commit
-  that carries this file. Uncommitted: `apps/console/`.
+- **`feat/UT-011-phases-4-to-9`** (local only, **not pushed**): 7 commits,
+  `18acb14` onwards, stacked on the PR #1 branch.
 - **`feat/UT-020-laravel-api-schema`** (PR #1): `5aa26c7` and `7cd72ae` are
   committed locally but **not pushed**. Everything before them is on origin.
 - `CLAUDE.md` and the two session transcripts are untracked on purpose.
@@ -117,6 +118,12 @@ symptom codes, sync & health with device revocation, audit log with export.
   `npm run build -w @mycare/engine-replay` before running Pest or aggregation.
 - The v1 import test reads `packages/ruleset/dist/v1.json`; create it with
   `npm run export:v1 -w @mycare/ruleset` (the test skips without it).
+- **Run the API locally with**
+  `php -d variables_order=EGPCS artisan serve --no-reload`. Plain
+  `php artisan serve` drops `TMP`/`TEMP` from the server process, so PHP cannot
+  run Node: the System Health screen then reports engine replay as down. The
+  `mycare:aggregate` command from a normal terminal is unaffected, and so is
+  Linux deployment under php-fpm.
 - Windows gotchas hit this session: `pest --filter 'a|b'` fails in PowerShell
   (cmd reads `|` as a pipe — use Bash), and Windows Python cannot read Git
   Bash's `/tmp`.
@@ -169,8 +176,8 @@ intro sentence that claims only aggregates sync.
 
 ## Next steps, in order
 
-1. **Verify Milestone 6 (console):** install, typecheck, test, build, run it
-   against the API, click through Figures 36–41, fix, commit.
+1. ~~Verify Milestone 6 (console)~~ **done 2026-09-18.** Still worth clicking
+   through Figures 36–41 in a browser once.
 2. **Milestone 7 — portal** (`apps/portal`, Figures 30–35).
 3. **Milestone 8 — patient PWA + offline sync** (`apps/pwa`, Figures 17–29):
    onboarding, symptom input with chips, clarification, result screens, health
@@ -198,9 +205,15 @@ npm test -w @mycare/ui                   # 9/9
 npm run purity -w @mycare/triage-engine
 npm run purity -w @mycare/lexicon-matcher
 
+npm test -w @mycare/console              # 4/4
+
 cd apps/api
 php artisan migrate:fresh --seed --force
-./vendor/bin/pest                        # 174 passed, 708 assertions
+./vendor/bin/pest                        # 176 passed, 716 assertions
+
+# Run it locally (the flags matter on Windows — see Environment notes):
+php -d variables_order=EGPCS artisan serve --no-reload
+npm run dev -w @mycare/console           # http://localhost:5175
 ```
 
 ## Repo pointers

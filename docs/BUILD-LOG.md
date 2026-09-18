@@ -302,3 +302,36 @@ npm run dev -w @mycare/console        # in another, then open http://localhost:5
 | 10 | Deployment | ⬜ |
 
 Nothing on `feat/UT-011-phases-4-to-9` has been pushed.
+
+---
+
+## Milestone 6 verified (2026-09-18)
+
+`apps/console` typechecks clean, passes 4/4 tests, builds for production
+(242 kB, 76 kB gzipped), and was signed into over HTTP through the Vite proxy as
+`super@mycare.test`. Every console and staff endpoint answered 200: system
+health, ruleset versions, symptom codes, users, devices, audit log, dashboard,
+trends, sync status, map, reports.
+
+**One real bug, found only by running it.** `GET /console/system-health`
+returned **500**. Checking whether Node is available goes through Symfony's
+Process, which buffers output through temporary files; under `php artisan serve`
+on Windows the child server process inherits no writable TMP, so the check died
+and took the whole health screen with it. A health screen that dies tells an
+operator nothing.
+
+Fixed: `EngineReplayer::availability()` never throws. It returns a status and a
+plain-language reason ("The PHP process has no writable temporary directory..."),
+which the screen shows as *down* with that detail. The replay path itself still
+fails loudly during aggregation, because counting sessions it could not replay
+would be worse than a stale dashboard. Two regression tests cover a missing
+script and a missing Node binary. Suite: **Pest 176 / 716**.
+
+**Local run command.** Use
+`php -d variables_order=EGPCS artisan serve --no-reload` for the API. Plain
+`artisan serve` forwards only an allow-list of environment variables, and PHP's
+default `variables_order` leaves `$_ENV` empty, so TMP and TEMP never reach the
+server process and engine replay cannot start. With those flags System Health
+reports "Node v20.20.2". Linux deployment under php-fpm is unaffected.
+
+Still worth doing once by hand: click through Figures 36-41 in a browser.
