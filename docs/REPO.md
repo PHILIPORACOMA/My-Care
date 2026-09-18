@@ -45,26 +45,56 @@ compile time and contributes nothing at runtime.
 
 What it deliberately does **not** do:
 
-- Turn free text into symptom codes. That's the NLP/lexicon layer
-  (`apps/pwa`, not yet built — Phase 5). `evaluate()` only ever sees codes
-  that have already been resolved.
+- Turn free text into symptom codes. That is `packages/lexicon-matcher`.
+  `evaluate()` only ever sees codes that have already been resolved.
 - Anything asynchronous, time-dependent, or random. `evaluate()` is called
   synchronously and returns the same result for the same input and bundle,
   every time, forever — that reproducibility is what makes a past triage
   result reconstructible from the ruleset version in force at the time
-  (audit log, Figure 41).
+  (audit log, Figure 41), and it is what lets the server replay stored
+  sessions to recover their tier (`packages/engine-replay`, ADR-0007).
+
+## `packages/lexicon-matcher`
+
+The on-device NLP layer (Table 30 module 3, UT-003, UT-004). `matchSymptoms(text,
+lexicon)` proposes symptom codes from free text: normalisation, a length-scaled
+typo allowance, split and run-together words, and negation driven by lexicon
+terms flagged `isNegation`.
+
+Pure and zero-dependency like the engine, and held to the same purity check
+(`scripts/check-purity.mjs`, shared by both). **It contains no Cebuano or
+Tagalog vocabulary of its own** — every word comes from the published lexicon —
+and it never assigns a tier.
+
+## `packages/engine-replay`
+
+A small Node CLI around the engine, bundled with esbuild. The Laravel API pipes
+stored sessions to it during aggregation to recover each session's tier, since
+`TRIAGE_SESSION` has no `outcome_tier` column (ADR-0007). Build it with
+`npm run build -w @mycare/engine-replay`; the API needs `dist/replay.mjs` on the
+server.
+
+## `packages/api-client` and `packages/ui`
+
+`api-client` is the typed staff/console client (Sanctum cookie mode: no token
+ever lives in JavaScript). `ui` holds the tokens and primitives those two SPAs
+share — including `<Count>`, which renders a suppressed cell as `<5`. **Neither
+is used by `apps/pwa`**: the patient app has a different visual language and a
+hard bundle budget.
 
 ## `apps/*`
 
-`apps/api` is built as far as its schema (Phase 3); the three front ends are
-not started. Reserved layout:
-
-- `apps/pwa` — patient-facing, anonymous, offline-first (Figures 17–29)
-- `apps/portal` — sub-admin (RHU/LGU), read-only (Figures 30–35)
-- `apps/console` — super-admin (dev team), rule/lexicon authoring (Figures 36–41)
 - `apps/api` — Laravel 13 + MySQL 8. The manuscript pins no Laravel version
   (Table 25 says only "Laravel"), so this needed no amendment; Laravel 11 is
-  uninstallable. See `docs/adr/0002-phase-3-schema-decisions.md`.
+  uninstallable. See `docs/adr/0002-phase-3-schema-decisions.md`. **Complete
+  for Phases 3, 4, 6 (server side) and 7.**
+- `apps/console` — super-admin (dev team), rule/lexicon authoring
+  (Figures 36–41). **Written, not yet verified** (see `docs/BUILD-LOG.md`).
+- `apps/portal` — sub-admin (RHU/LGU), read-only (Figures 30–35). Not started.
+- `apps/pwa` — patient-facing, anonymous, offline-first (Figures 17–29). Not
+  started; its NLP layer already exists as `packages/lexicon-matcher`.
+
+Dependency direction is unchanged: `apps/*` → `packages/*`, never the reverse.
 
 ## Where the source content comes from
 

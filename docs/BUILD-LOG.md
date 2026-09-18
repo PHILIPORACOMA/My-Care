@@ -236,3 +236,69 @@ with a critical and a high advisory (old Vitest and Vite). They were replaced
 with the current patched releases that still run on Node 20 — Vite 8,
 Vitest 4, React Router 7, React 18.3.1 (the manuscript's pinned version).
 `npm audit`: **0 vulnerabilities.**
+
+### 6 — Super-admin console (Figures 36–41) — IN PROGRESS, stopped here
+
+**Written, not verified, not committed.** Session ended 2026-09-17 at Philipo's
+request before anything in `apps/console` was run. Expect type errors and
+failing tests on the first run; fix them before committing.
+
+What is written (`apps/console`, React 18 + Vite, dark theme, port 5175,
+`/api` and `/sanctum` proxied to `php artisan serve` so the session cookie is
+same-origin):
+
+- `LoginPage` (Figure 36) — sign in; a signed-in sub-admin sees an explanation
+  instead of the console.
+- `SystemDashboardPage` (Figure 37) — barangays live, sync health, active
+  sub-admins, published version, service health, activity.
+- `UsersPage` (Figure 38) — list, add sub-admin, reset password / reactivate,
+  change barangay, deactivate.
+- `rules/RulesetListPage`, `rules/RulesetVersionPage` (Figure 39) — versions
+  with status; tabbed editor for rules (with condition reordering and a live
+  expression preview), thresholds and red-flag overrides, clarification
+  questions, lexicon, health tips; save-as-new-version, submit for review,
+  return to draft, publish (with the clinical-review attestation dialog), new
+  draft from any version, rollback; bundle JSON import.
+- `rules/TestPanel` — "Test & explain": runs the real `matchSymptoms()` and
+  `evaluate()` on unsaved content in the browser and says which rule fired and
+  why.
+- `rules/SymptomCodesPage` — add/edit codes; locked codes cannot be edited.
+- `SyncHealthPage` (Figure 40) — service status, per-barangay last report,
+  device list with revoke/reinstate.
+- `AuditLogPage` (Figure 41) — filter by category, pagination, de-identified
+  CSV/PDF export.
+- `rules/rules.test.tsx` — expression preview matches the server's formatter,
+  reordering updates the expression, read-only mode, TestPanel runs the engine.
+
+To resume:
+
+```bash
+npm install
+npm run typecheck -w @mycare/console
+npm test -w @mycare/console
+cd apps/api && php artisan serve      # in one terminal
+npm run dev -w @mycare/console        # in another, then open http://localhost:5175
+```
+
+`SANCTUM_STATEFUL_DOMAINS` in `apps/api/.env` must include `localhost:5175`
+(the example file lists 5173 only) — add it before signing in.
+
+---
+
+## Where the build stopped (2026-09-17)
+
+| # | Milestone | State |
+|---|---|---|
+| 0 | Staff-auth 500s | ✅ committed (PR #1 branch, not pushed) |
+| 1 | Devices, tokens, barangays, facilities | ✅ `18acb14` |
+| 2 | Ruleset lifecycle | ✅ `a644d52` |
+| 3 | Accounts and devices | ✅ `14ecd28` |
+| 4 | Replay, aggregation, surveillance API | ✅ `2739b64` |
+| 5 | Lexicon matcher, API client, UI kit | ✅ `65fd93b` |
+| 6 | Super-admin console | 🔨 written, unverified, uncommitted |
+| 7 | Portal | ⬜ |
+| 8 | Patient PWA + offline sync | ⬜ |
+| 9 | E2E + CI | ⬜ |
+| 10 | Deployment | ⬜ |
+
+Nothing on `feat/UT-011-phases-4-to-9` has been pushed.
