@@ -1,11 +1,12 @@
 # Development status checkpoint
 
-Last updated: **2026-09-18.** Phases 4–9 are being built on
-branch `feat/UT-011-phases-4-to-9`. **All backend work for Phases 4, 6 (server
-side) and 7 is done and verified, and the super-admin console is verified end to
-end** — typecheck, tests, production build, and a real sign-in against a running
-API with every console and staff endpoint answering 200. Next: the sub-admin
-portal (Milestone 7). `docs/BUILD-LOG.md` is the long-form record.
+Last updated: **2026-09-18.** Phases 4–9 are being built on branch
+`feat/UT-011-phases-4-to-9`. All backend work for Phases 4, 6 (server side) and
+7 is done and verified, and **both staff front ends — the super-admin console
+and the sub-admin portal — are built and verified**: typecheck, tests,
+production builds, and real sign-ins against a running API with every endpoint
+answering 200. Next: the patient PWA and its offline sync layer (Milestone 8).
+`docs/BUILD-LOG.md` is the long-form record.
 
 Update this file at the end of any session that changes phase status, adds a
 major decision, or closes/opens a known gap — don't let it drift.
@@ -21,13 +22,13 @@ Paste this into a new chat session to pick up where this one left off:
 > manuscript amendments**. Backend Milestones 0–4 and the shared packages
 > (Milestone 5) are committed and verified: Pest 176/716, engine 12/12,
 > lexicon-matcher 11/11, engine-replay 5/5, api-client 5/5, ui 9/9,
-> console 4/4.
+> console 4/4, portal 4/4.
 >
-> Milestone 6 (the console) is committed and verified over HTTP, though nobody
-> has clicked through the UI in a browser yet.
+> Milestones 6 (console) and 7 (portal) are committed and verified over HTTP,
+> though nobody has clicked through either UI in a browser yet.
 >
-> Continue the plan in `docs/BUILD-LOG.md`: portal (7), patient PWA and offline
-> sync (8), E2E + CI (9), deployment (10), final docs pass.
+> Continue the plan in `docs/BUILD-LOG.md`: patient PWA and offline sync (8),
+> E2E + CI (9), deployment (10), final docs pass.
 >
 > Tell me what you understand the current state to be, and wait for direction —
 > don't start new work yet.
@@ -49,7 +50,7 @@ BS Information Technology capstone; the manuscript is the specification.
 | 4 | Super-admin console | ✅ API + UI built and verified (not yet clicked through in a browser) |
 | 5 | Patient PWA | 🔨 lexicon matcher (NLP) ✅; app ⬜ |
 | 6 | Offline sync layer | 🔨 server side ✅ (self-registration, idempotent sync, pending-queue reporting); device side ⬜ |
-| 7 | Sub-admin dashboard | 🔨 **API ✅** (dashboard, trends, sync status, map, CSV/PDF reports); UI ⬜ |
+| 7 | Sub-admin dashboard | ✅ API + UI built and verified (not yet clicked through in a browser) |
 | 8 | Integration + offline E2E | ⬜ |
 | 9 | Deployment | ⬜ |
 
@@ -97,9 +98,16 @@ typecheck clean, 4/4 tests, production build (242 kB, 76 kB gzipped), and a live
 sign-in through the Vite proxy with every console and staff endpoint
 returning 200.
 
+`apps/portal` (Figures 30–35) — login, dashboard, trends with the cluster
+banner and watch list, sync & status, data & reports, aggregate map. **Verified
+2026-09-18:** typecheck clean, 4/4 tests, production build (207 kB, 68 kB
+gzipped), and a live sign-in as the sub-admin: every staff endpoint 200, the
+barangay list correctly showing only Valladolid, the console refusing them with
+403, and a CSV report generated and downloaded with every count suppressed.
+
 ## Git state
 
-- **`feat/UT-011-phases-4-to-9`** (local only, **not pushed**): 7 commits,
+- **`feat/UT-011-phases-4-to-9`** (local only, **not pushed**): 9 commits,
   `18acb14` onwards, stacked on the PR #1 branch.
 - **`feat/UT-020-laravel-api-schema`** (PR #1): `5aa26c7` and `7cd72ae` are
   committed locally but **not pushed**. Everything before them is on origin.
@@ -176,10 +184,9 @@ intro sentence that claims only aggregates sync.
 
 ## Next steps, in order
 
-1. ~~Verify Milestone 6 (console)~~ **done 2026-09-18.** Still worth clicking
-   through Figures 36–41 in a browser once.
-2. **Milestone 7 — portal** (`apps/portal`, Figures 30–35).
-3. **Milestone 8 — patient PWA + offline sync** (`apps/pwa`, Figures 17–29):
+1. ~~Milestone 6 (console)~~ and ~~Milestone 7 (portal)~~ **done 2026-09-18.**
+   Still worth clicking through Figures 30–41 in a browser once.
+2. **Milestone 8 — patient PWA + offline sync** (`apps/pwa`, Figures 17–29):
    onboarding, symptom input with chips, clarification, result screens, health
    tips, settings; IndexedDB queue, device registration, bundle updates,
    idempotent batch upload; Tagalog/Cebuano drafts flagged for review.
@@ -206,6 +213,7 @@ npm run purity -w @mycare/triage-engine
 npm run purity -w @mycare/lexicon-matcher
 
 npm test -w @mycare/console              # 4/4
+npm test -w @mycare/portal               # 4/4
 
 cd apps/api
 php artisan migrate:fresh --seed --force
@@ -214,6 +222,7 @@ php artisan migrate:fresh --seed --force
 # Run it locally (the flags matter on Windows — see Environment notes):
 php -d variables_order=EGPCS artisan serve --no-reload
 npm run dev -w @mycare/console           # http://localhost:5175
+npm run dev -w @mycare/portal            # http://localhost:5174/portal/
 ```
 
 ## Repo pointers

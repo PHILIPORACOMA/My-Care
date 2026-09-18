@@ -335,3 +335,62 @@ server process and engine replay cannot start. With those flags System Health
 reports "Node v20.20.2". Linux deployment under php-fpm is unaffected.
 
 Still worth doing once by hand: click through Figures 36-41 in a browser.
+
+---
+
+### 7 — Sub-admin portal (Figures 30-35)
+
+**Done and verified 2026-09-18.** Typecheck clean, 4/4 tests, production build
+(207 kB, 68 kB gzipped), and a live sign-in as the sub-admin through the
+portal's own proxy.
+
+What exists (`apps/portal`, React 18 + Vite, light theme, port 5174, served
+under `/portal/` as Figure 30 shows):
+
+- **Login** (Figure 30) - "Health worker portal", with the figure's own line:
+  accounts are created by the system administrator.
+- **Dashboard** (Figure 31) - three tier cards and the total for a date range,
+  plus the most common symptoms as a ranked list. Symptoms under five sessions
+  are left out of the ranking entirely: ordering them would reveal their
+  relative sizes.
+- **Trends & surveillance** (Figure 32, UT-017) - the cluster banner in plain
+  words ("a 38% week-over-week rise in rhu referrals this week"), the 14-day
+  volume chart with this week shaded when a cluster is flagged, and the watch
+  list with rising / stable / low.
+- **Sync & status** (Figure 33, UT-014) - a banner saying whether the data is
+  current, device coverage per barangay, the queue still sitting on devices,
+  and sessions received. The screen's job is to make a stale figure read as "a
+  barangay is out of signal", not "the system is broken".
+- **Data & reports** (Figure 34, UT-018) - pick a report, range and format,
+  generate and download; recent reports listed for re-download.
+- **Aggregate map** (Figure 35) - barangay tiles shaded by relative volume.
+  Deliberately tiles, not a drawn map: the manuscript has no barangay
+  boundaries and inventing coordinates would put made-up geography into a
+  health system. Area level only, never GPS - the figure's own guarantee.
+
+Every screen carries a plain-language privacy note explaining what "<5" means
+and why a percentage or a ranking is sometimes missing.
+
+**Live verification** (sub-admin `sub@mycare.test` through the portal proxy):
+every staff endpoint 200; the barangay list returned **only Valladolid**; the
+console refused the same session with **403**; and a CSV report generated and
+downloaded came back scoped to Valladolid with every count suppressed:
+
+```
+Barangay,"Home management","RHU referral","Emergency referral","Total sessions"
+Valladolid,<5,<5,<5,<5
+```
+
+That is UT-016 and UT-018 demonstrated end to end, not just unit-tested.
+
+One shared-package change: `Banner` in `@mycare/ui` accepts a `className`, for
+the cluster banner's accent border.
+
+**Run it:**
+
+```bash
+npm run dev -w @mycare/portal     # http://localhost:5174/portal/
+```
+
+Sign in as `sub@mycare.test` / `password` to see the barangay-scoped view, or
+as the super-admin to see every barangay with a barangay chooser.

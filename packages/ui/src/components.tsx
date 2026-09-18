@@ -242,10 +242,15 @@ export function Checkbox(props: { checked: boolean; onChange: (checked: boolean)
 
 /* ------------------------------------------------------------------ states */
 
-export function Banner(props: { tone?: "info" | "success" | "warning" | "danger"; title?: ReactNode; children?: ReactNode }) {
+export function Banner(props: {
+  tone?: "info" | "success" | "warning" | "danger";
+  title?: ReactNode;
+  className?: string;
+  children?: ReactNode;
+}) {
   const tone = props.tone ?? "info";
   return (
-    <div className={cx("mc-banner", `mc-banner-${tone}`)} role={tone === "danger" || tone === "warning" ? "alert" : "status"}>
+    <div className={cx("mc-banner", `mc-banner-${tone}`, props.className)} role={tone === "danger" || tone === "warning" ? "alert" : "status"}>
       <div>
         {props.title && <strong>{props.title}</strong>}
         {props.children}

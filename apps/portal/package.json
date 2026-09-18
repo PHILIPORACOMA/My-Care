@@ -1,0 +1,21 @@
+{
+  "name": "@mycare/portal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Sub-admin portal (Figures 30-35): read-only, de-identified, barangay-scoped surveillance for RHU/LGU staff.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mycare/api-client": "*",
+    "@mycare/ui": "*",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-router-dom": "^7.18.4"
+  }
+}

@@ -89,8 +89,9 @@ hard bundle budget.
   uninstallable. See `docs/adr/0002-phase-3-schema-decisions.md`. **Complete
   for Phases 3, 4, 6 (server side) and 7.**
 - `apps/console` — super-admin (dev team), rule/lexicon authoring
-  (Figures 36–41). **Written, not yet verified** (see `docs/BUILD-LOG.md`).
-- `apps/portal` — sub-admin (RHU/LGU), read-only (Figures 30–35). Not started.
+  (Figures 36–41). **Built and verified** (see `docs/BUILD-LOG.md`).
+- `apps/portal` — sub-admin (RHU/LGU), read-only (Figures 30–35). **Built and
+  verified**; served under `/portal/` as Figure 30 shows.
 - `apps/pwa` — patient-facing, anonymous, offline-first (Figures 17–29). Not
   started; its NLP layer already exists as `packages/lexicon-matcher`.
 
