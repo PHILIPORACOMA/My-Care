@@ -49,6 +49,7 @@ function syntheticBundle(overrides: Partial<RulesetBundle> = {}): RulesetBundle 
     severityThresholds: [],
     clarificationQuestions: [],
     rules: [],
+    healthTips: [],
     ...overrides,
   };
 }

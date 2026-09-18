@@ -1,0 +1,108 @@
+# Laravel API — migrations, seed, and the Pest suite against a real MySQL 8.
+#
+# Deliberately a separate workflow from engine-purity.yml. The engine check is
+# the clinical safety argument and must stay fast and dependency-free; booting
+# a MySQL service container alongside it would make the safety-critical job
+# wait on, and flake with, a database it does not use. Separate files run as
+# separate jobs, in parallel, failing independently.
+#
+# There is no SQLite fallback anywhere, by design: config/database.php defines
+# only the mysql connection, and an in-memory SQLite run would mask exactly the
+# suppression and aggregate bugs this system exists to avoid (UT-018, UT-020).
+# If this job cannot reach MySQL it must fail loudly. That is the point.
+name: api
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: apps/api
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: mycare_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      # phpunit.xml is committed and deliberately carries no credentials, so CI
+      # supplies them. These are not secrets: they belong to an ephemeral
+      # service container that exists only for the length of this job and is
+      # never reachable from outside it.
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      # phpunit.xml pins DB_DATABASE=mycare_test as a guard so a test run can
+      # never reach a development schema. The artisan step below does not read
+      # phpunit.xml, so the same value is set here — .env.example points at
+      # `mycare`, which does not exist in the service container. Laravel's
+      # Dotenv does not overwrite a variable already present in the
+      # environment, so this wins over .env without editing it.
+      DB_DATABASE: mycare_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          # pdo_mysql is the one extension this project has actually been
+          # bitten by: it ships with PHP but is not enabled by default on
+          # Windows, and its absence looks like a connection failure rather
+          # than a missing driver. See docs/STATUS.md.
+          extensions: pdo_mysql, mbstring, bcmath, intl
+          coverage: none
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer/files
+          key: composer-${{ runner.os }}-php8.4-${{ hashFiles('apps/api/composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-php8.4-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Wait for MySQL
+        run: |
+          for i in $(seq 1 30); do
+            if mysqladmin ping -h 127.0.0.1 -P 3306 -uroot -proot --silent; then
+              echo "MySQL is up."
+              exit 0
+            fi
+            echo "Waiting for MySQL ($i/30)..."
+            sleep 2
+          done
+          echo "MySQL did not become ready in time." >&2
+          exit 1
+
+      - name: Run migrations and seed
+        # Proves the 20 Data Dictionary migrations apply cleanly from scratch
+        # and that RoleSeeder runs. The Pest suite re-migrates via
+        # RefreshDatabase but never invokes the seeder, so this step is not
+        # redundant with it.
+        run: php artisan migrate:fresh --seed --force
+
+      - name: Run Pest
+        run: ./vendor/bin/pest

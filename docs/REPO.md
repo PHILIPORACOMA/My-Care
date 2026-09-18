@@ -64,18 +64,24 @@ What it deliberately does **not** do:
 
 ## `apps/*`
 
-Not yet built (Phase 3 onward). Reserved layout:
+`apps/api` is built as far as its schema (Phase 3); the three front ends are
+not started. Reserved layout:
 
 - `apps/pwa` — patient-facing, anonymous, offline-first (Figures 17–29)
 - `apps/portal` — sub-admin (RHU/LGU), read-only (Figures 30–35)
 - `apps/console` — super-admin (dev team), rule/lexicon authoring (Figures 36–41)
-- `apps/api` — Laravel 11 + MySQL 8
+- `apps/api` — Laravel 13 + MySQL 8. The manuscript pins no Laravel version
+  (Table 25 says only "Laravel"), so this needed no amendment; Laravel 11 is
+  uninstallable. See `docs/adr/0002-phase-3-schema-decisions.md`.
 
 ## Where the source content comes from
 
-- Full Data Dictionary (Tables 5–24), hardware/software specs (Tables
-  25–29), module list (Table 30), and the UT-001–UT-020 unit test registry
-  (Table 31) live in the capstone manuscript, not in this repo. Anything
+- The full Data Dictionary (Tables 5–24) is now transcribed verbatim into
+  `docs/data-dictionary.md` — read that instead of opening the manuscript.
+  It is a copy, not an authority: the manuscript still wins on any conflict.
+- Hardware/software specs (Tables 25–29), the module list (Table 30), and the
+  UT-001–UT-020 unit test registry (Table 31) live in the capstone
+  manuscript, not in this repo. Anything
   under `docs/` that restates them should stay traceable back to a table
   number, as this file and `docs/ut-matrix.md` do.
 - The 23 v1 symptom presentations come from the *Clinical Plausibility and

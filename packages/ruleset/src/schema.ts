@@ -81,6 +81,25 @@ export interface ClarificationQuestion {
   redFlagAnswer?: string;
 }
 
+/**
+ * Table 21: HEALTH_TIP. Plain-language guidance shown alongside a result
+ * (Figure 28), scoped to a ruleset version so it ships to devices with the
+ * bundle. Purely presentational: a health tip never influences a tier, and
+ * `evaluate()` does not read this field.
+ *
+ * `symptomCode` is optional — a tip may be general to a tier (e.g. what to do
+ * while travelling to the RHU) rather than tied to one symptom.
+ */
+export interface HealthTip {
+  symptomCode?: string;
+  outcomeTier: Tier;
+  language: LanguageCode;
+  title: string;
+  body: string;
+  /** Ascending; ties broken by the order the API returns them in. */
+  displayOrder: number;
+}
+
 /** Table 7: RULESET_VERSION plus the versioned content it governs. */
 export interface RulesetBundle {
   versionLabel: string;
@@ -89,4 +108,5 @@ export interface RulesetBundle {
   severityThresholds: SeverityThreshold[];
   clarificationQuestions: ClarificationQuestion[];
   rules: TriageRule[];
+  healthTips: HealthTip[];
 }
