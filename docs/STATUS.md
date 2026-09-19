@@ -29,9 +29,11 @@ Paste this into a new chat session to pick up where this one left off:
 > **no UI has been opened in a real browser yet**, and the PWA has never run
 > against a live API — that is the first job of Milestone 9.
 >
-> Both branches are **pushed** (`feat/UT-011-phases-4-to-9` at `eba08ee`,
-> `feat/UT-020-laravel-api-schema` at `7cd72ae`). No PR is open for the phases
-> branch yet, and CI has never run against it.
+> Both branch names now point at the same commit (`6047f04`) and **PR #1
+> contains all 36 commits**. `main` is NOT merged in: kizaru3214's PR #2 put a
+> second patient app at `apps/pwa` there, and Philipo is settling with the team
+> which one survives. Do not merge `main` or re-merge that work unless he says
+> so.
 >
 > Continue the plan in `docs/BUILD-LOG.md`: E2E + CI (9), deployment (10),
 > final docs pass. The honest first task is Playwright, because it is what
@@ -131,15 +133,21 @@ opened in a browser.
 
 ## Git state
 
-- **`feat/UT-011-phases-4-to-9`** — **pushed 2026-09-18**, 11 commits,
-  `18acb14`…`eba08ee`, stacked on the PR #1 branch. No PR opened for it yet:
-  https://github.com/PHILIPORACOMA/My-Care/pull/new/feat/UT-011-phases-4-to-9
-- **`feat/UT-020-laravel-api-schema`** (PR #1) — **pushed 2026-09-18**, now at
-  `7cd72ae`. Fully in sync with origin.
-- **CI has not run on any of this.** Both workflows trigger on `push` to `main`
-  and on pull requests only, so the new branch is untested by CI until a PR
-  exists — and the `api` job will fail when one does, because it has no Node
-  step and no `engine-replay` build (Milestone 9's job).
+**The two branches were consolidated on 2026-09-19.** They were always one
+line of history — `feat/UT-011-phases-4-to-9` was branched off the PR #1 branch
+and contained every one of its commits — so `feat/UT-020-laravel-api-schema`
+was fast-forwarded to match. Both now point at the same commit.
+
+- **`feat/UT-020-laravel-api-schema`** = **`feat/UT-011-phases-4-to-9`** =
+  `6047f04`, 36 commits ahead of `main`, both pushed.
+- **PR #1 now contains all of it** — Phases 3 through 8, 278 files. Its title
+  still says "Phase 3", which no longer describes it.
+- **`main` has moved and we have not merged it.** kizaru3214's PR #2 (patient
+  PWA + a 124-term invented lexicon draft) landed on `main` 2026-09-18 03:36Z
+  and occupies `apps/pwa`, the same path as ours. Merging it here was tried and
+  **reverted at Philipo's instruction** — he is taking the overlap to the team.
+  A dry-run merge gives 8 add/add conflicts; the two patient apps cannot be
+  reconciled line by line, so one of them has to win.
 - `CLAUDE.md` and the three session transcripts are untracked on purpose.
 
 ## Environment notes (needed to run this on a fresh machine)
