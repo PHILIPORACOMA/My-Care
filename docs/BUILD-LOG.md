@@ -597,3 +597,57 @@ When it does merge, use **"Create a merge commit"**. Squashing would collapse
 37 commits into one and lose the per-commit UT ids that
 `docs/ut-matrix.md` traceability depends on; rebasing would rewrite every hash,
 and STATUS.md and this log cite commits by hash.
+
+---
+
+### 8d - The PWA against a live API (2026-09-20)
+
+MySQL was up, so the patient app finally ran against a real server instead of a
+stubbed `fetch`. **Not a browser** - the Chrome extension is not connected here
+- but everything below the rendering layer was real: `api.ts`, `sync.ts`,
+`triage.ts` and `storage.ts` as shipped, the real lexicon matcher, the real
+engine, a running Laravel server and MySQL. The substitutions were
+`fake-indexeddb` for the browser's IndexedDB and a wrapper turning the app's
+relative `/api/v1/...` paths absolute, which is what the Vite proxy does in the
+browser.
+
+What happened, in order:
+
+| Step | Result |
+|---|---|
+| `GET /barangays` | 1 barangay (Valladolid) - the seeded 15 are not in this database |
+| `POST /devices` | device #3 registered anonymously, token `apv6a9w8gdhr.<secret>` |
+| `GET /ruleset/current` | `demo-v1`, published 2026-09-14: 2 codes, 3 lexicon terms, 2 rules, 1 question |
+| Free text "naa koy hilanat" | matched `hilanat` → `fever_mild` on the device |
+| Triage | **tier `rhu`, no matched rule, reason `fail_safe_default`** |
+| `POST /sync/batches` | accepted; queue emptied; the row is in `triage_sessions` |
+| Replay of the same session uuid | **no second row** - UT-015 holds against the live server |
+
+The payload that went over the wire carried the symptom code and the published
+lexicon term, and not one word the patient typed.
+
+#### The one finding: `rule_conditions` is empty
+
+`demo-v1`'s two rules have `conditions: []`. They were hand-made on
+2026-09-14 during manual API testing, before the console existed, and no
+`rule_conditions` rows were ever written - the table has **0 rows**.
+
+Everything downstream follows from that, and all of it is correct behaviour:
+
+- **No symptom chips.** `chipsFor()` offers only codes that a live rule
+  actually tests. No conditions, no codes tested, no chips.
+- **No rule matched**, so the engine fell to `rhu`, never `home` - ADR-0001's
+  fail-safe, doing exactly its job on incomplete data.
+
+So this is a **data** gap, not a code one. The app read a real bundle, matched
+real text, and refused to guess. Fixing it needs a ruleset with conditions:
+either author one in the console (draft → clinical-review attestation →
+publish, ADR-0006), or `mycare:ruleset:import` the v1 export of the 23
+appraisal-form presentations and publish that. **Publishing asserts clinical
+review, so it is Philipo's to do, not mine.**
+
+#### Still not done
+
+Nobody has seen the app render. The Chrome extension is not connected to this
+session; when it is, the browser walk-through takes minutes. Milestone 9's
+Playwright suite covers it permanently.
