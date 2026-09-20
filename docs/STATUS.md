@@ -128,8 +128,9 @@ batch uuid. **Verified 2026-09-18:** typecheck clean, 24/24 tests (triage 13,
 sync 8, and three full journeys driving the real UI — a Cebuano walk-through, a
 red-flag escalation, and a triage completed with `fetch` throwing on every
 call), production build 59 kB gzipped, 225 KiB precached, Poppins self-hosted
-at 31 kB. **Not yet run against a live API** (MySQL was stopped) and not yet
-opened in a browser.
+at 31 kB. **Run against the live API 2026-09-20** (BUILD-LOG 8d): registration,
+ruleset pull, on-device matching and triage, sync, and a replayed batch that
+did not double-count. **Still never opened in a browser.**
 
 ## Git state
 
@@ -200,9 +201,14 @@ survives here; nothing was lost. Do not recreate it.
 
 - **v1 ruleset is not clinician-reviewed**, and no lexicon terms, clarification
   questions or health tips exist yet. The console can hold them; the content
-  must come from the team. Until lexicon terms exist, free text matches nothing
-  and patients rely on symptom chips (which the PWA builds from the codes live
-  rules test, so they are never empty).
+  must come from the team.
+- **The `mycare` database has no usable ruleset.** `demo-v1` is published, but
+  its two rules have **zero conditions** (`rule_conditions` is empty), so no
+  rule can match: the app offers no chips and every triage falls to the `rhu`
+  fail-safe. Found by running the PWA against the live API on 2026-09-20. The
+  fix is to author or import a real ruleset and publish it — which asserts
+  clinical review, so it is Philipo's to do. That database also holds only
+  Valladolid, not the seeded 15 barangays.
 - **The PWA's Tagalog and Cebuano interface copy is an unreviewed draft.** It
   needs a native speaker and a clinician, especially the three verdicts, the
   advice under each, the disclaimer and the emergency instruction.
