@@ -199,16 +199,21 @@ survives here; nothing was lost. Do not recreate it.
 
 ### Still open
 
-- **v1 ruleset is not clinician-reviewed**, and no lexicon terms, clarification
-  questions or health tips exist yet. The console can hold them; the content
-  must come from the team.
-- **The `mycare` database has no usable ruleset.** `demo-v1` is published, but
-  its two rules have **zero conditions** (`rule_conditions` is empty), so no
-  rule can match: the app offers no chips and every triage falls to the `rhu`
-  fail-safe. Found by running the PWA against the live API on 2026-09-20. The
-  fix is to author or import a real ruleset and publish it — which asserts
-  clinical review, so it is Philipo's to do. That database also holds only
-  Valladolid, not the seeded 15 barangays.
+- **v1 is appraised, but not yet published.** The clinical appraisal form came
+  back 2026-09-20: all appropriateness items 4, no under-triage risk (physical
+  copy; the .docx is the blank template and **the filled one still needs
+  scanning for the appendix**). The encoded ruleset was verified row by row
+  against the form - 23 of 23 match. It sits in the database as a **draft**;
+  publishing it records the attestation and is Philipo's to do.
+- **No lexicon terms, clarification questions or health tips exist.** Free text
+  therefore matches nothing and patients rely on chips. Philipo has the
+  reviewed terms and will enter them himself.
+- **The dev database was reset 2026-09-20** (BUILD-LOG 8e): 15 barangays, `v1`
+  imported as a draft with 23 rules and 23 conditions, and no test junk. Two
+  consequences until Philipo acts: **there are no staff accounts** (recreate
+  with `php artisan mycare:staff:create-super-admin <email>`, which prompts for
+  the password), and **nothing is published, so `/api/v1/ruleset/current`
+  returns 503 and the patient app cannot triage.**
 - **The PWA's Tagalog and Cebuano interface copy is an unreviewed draft.** It
   needs a native speaker and a clinician, especially the three verdicts, the
   advice under each, the disclaimer and the emergency instruction.

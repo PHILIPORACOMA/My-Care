@@ -651,3 +651,59 @@ review, so it is Philipo's to do, not mine.**
 Nobody has seen the app render. The Chrome extension is not connected to this
 session; when it is, the browser walk-through takes minutes. Milestone 9's
 Playwright suite covers it permanently.
+
+---
+
+### 8e - The appraisal form, and a clean database (2026-09-20)
+
+Philipo sent `My_Care_Clinical_Appraisal_Form (1).docx` and reported that the
+**physical copy is complete: every appropriateness item scored 4, and no
+under-triage risk flagged on any of the 23 rules.**
+
+**The digital file is the blank template.** Part A's name, affiliation,
+signature and date lines are empty and every checkbox in Parts B and C is
+unticked. The filled copy exists only on paper, so **the manuscript appendix
+needs it scanned** - a blank template in the appendix would be a weak point at
+defence.
+
+#### The cross-check that matters
+
+The form's rule table was compared row by row against the encoded ruleset in
+`packages/ruleset/dist/v1.json`:
+
+**23 of 23 rows match** - same presentation wording, same tier, same order.
+6 home, 8 RHU, 9 emergency. **Zero mismatches.** What the reviewer appraised on
+paper and what `evaluate()` actually runs are the same rule table.
+
+#### The database was reset
+
+The `mycare` database still held September's hand-made demo data, and it was
+getting in the way: `demo-v1` had two symptom codes defined differently from
+v1, so `mycare:ruleset:import` refused to redefine them (correctly - existing
+codes are never overwritten by an import, and five synced sessions referenced
+them). Its rules had no conditions at all, which is why the patient app showed
+no chips and every triage fell to the `rhu` fail-safe.
+
+With Philipo's go-ahead: `migrate:fresh --seed --force`, then import.
+
+| Before | After |
+|---|---|
+| 1 barangay (Valladolid) | **15** — the seeded Carcar list |
+| `demo-v1` published, 2 rules, **0 conditions** | **`v1` draft**, 23 rules, **23 conditions** |
+| 5 fabricated sessions, 5 devices, 35 audit rows | 0, 0, 0 |
+| 2 staff accounts | **0 — must be recreated** |
+
+Two things were deliberately left for Philipo:
+
+1. **The super-admin account.** `mycare:staff:create-super-admin` prompts for the
+   password rather than taking an argument, so it never lands in shell history.
+   Choosing or typing his password is not mine to do.
+2. **Publishing v1.** Publishing writes the clinical-review attestation (ADR-0006)
+   - who reviewed, and when. "All 4s, no risks" relayed secondhand is not an
+   attestation; the reviewer's name and the form's date are.
+
+**Until v1 is published, `GET /api/v1/ruleset/current` returns 503 and the patient
+app cannot triage.** That was the accepted trade for a clean database. Once it is
+published the symptom screen will offer chips for all 23 presentations. Free text
+still matches nothing: `v1` carries **zero lexicon terms**, and those are the
+reviewed ones Philipo will enter himself.

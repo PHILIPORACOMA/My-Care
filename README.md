@@ -8,13 +8,13 @@ An offline-first Progressive Web Application that performs deterministic health 
 entirely on a patient's own device — in Cebuano and Filipino, with no internet connection,
 no account, and no personal data collected.
 
-[![CI (web)](https://github.com/OWNER/my-care/actions/workflows/ci-web.yml/badge.svg)](https://github.com/OWNER/my-care/actions/workflows/ci-web.yml)
-[![CI (api)](https://github.com/OWNER/my-care/actions/workflows/ci-api.yml/badge.svg)](https://github.com/OWNER/my-care/actions/workflows/ci-api.yml)
+[![api](https://github.com/PHILIPORACOMA/My-Care/actions/workflows/api.yml/badge.svg)](https://github.com/PHILIPORACOMA/My-Care/actions/workflows/api.yml)
+[![engine-purity](https://github.com/PHILIPORACOMA/My-Care/actions/workflows/engine-purity.yml/badge.svg)](https://github.com/PHILIPORACOMA/My-Care/actions/workflows/engine-purity.yml)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![PHP](https://img.shields.io/badge/PHP-8.4-777BB4)
 ![Node](https://img.shields.io/badge/Node-20-339933)
 ![React](https://img.shields.io/badge/React-18-61DAFB)
-![Laravel](https://img.shields.io/badge/Laravel-11-FF2D20)
+![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20)
 
 Capstone project · BS Information Technology
 College of Computer Studies, University of Cebu — Main Campus
@@ -45,7 +45,7 @@ enough bandwidth for a video call.
 
 | | |
 |---|---|
-| **Works fully offline** | Triage runs on-device. No network call, ever. |
+| **Works fully offline** | Triage itself makes no network call. The device fetches rules and uploads records when it has signal — never to decide a tier. |
 | **Speaks the language** | Free-text symptom input in Cebuano and Filipino. |
 | **Anonymous by design** | No account, no login, no personally identifying information. |
 | **Explainable** | Every result traces to the exact rule that produced it. |
@@ -77,7 +77,9 @@ This matters for three reasons:
    inconvenience, it is a clinical hazard (Roustan & Bastardot, 2025).
 2. **Auditability.** A clinician can review the rule set before deployment and know
    exactly what the system will do. Rules are appraised via a formal
-   Clinical Plausibility and Content Validity Appraisal Form.
+   Clinical Plausibility and Content Validity Appraisal Form. The v1 rule table —
+   23 presentations, 6 home / 8 RHU / 9 emergency — has been appraised on that
+   form, and the encoded ruleset was verified row by row against it.
 3. **It fits the hardware.** A quantised transformer exceeds the entire 100 MB storage
    budget of the minimum target device. The engine ships in kilobytes.
 
@@ -118,11 +120,17 @@ Three client surfaces, one backend:
 - **`apps/pwa`** — patient app. Anonymous, offline-first, low-end devices.
 - **`apps/portal`** — RHU and LGU staff. Read-only, scoped to one barangay.
 - **`apps/console`** — development team. Rule authoring, lexicon, publishing, audit.
-- **`apps/api`** — Laravel 11 + MySQL 8.
+- **`apps/api`** — Laravel 13 + MySQL 8.
+
+Shared packages: **`ruleset`** (the contract between API and device),
+**`triage-engine`**, **`lexicon-matcher`** (free text → symptom codes, never a tier),
+**`engine-replay`** (the server replays stored sessions through the real engine),
+**`api-client`** and **`ui`** (staff apps only — the patient app shares neither).
 
 The triage engine lives in **`packages/triage-engine`** as a standalone package with
 **zero runtime dependencies**. It cannot import React, call `fetch`, read
-`localStorage`, or use `Date.now()` — a CI job fails the build if it tries.
+`localStorage`, or use `Date.now()` — a CI job fails the build if it tries. The same
+check guards `lexicon-matcher`.
 
 ## Tech stack
 
@@ -131,7 +139,7 @@ The triage engine lives in **`packages/triage-engine`** as a standalone package 
 | Patient / admin frontends | React 18 · TypeScript · Vite |
 | Offline storage | Service Worker · IndexedDB |
 | Triage engine | Pure TypeScript, zero dependencies |
-| Backend | Laravel 11 · PHP 8.4 |
+| Backend | Laravel 13 · PHP 8.4 |
 | Database | MySQL 8 |
 | Testing | Vitest · Pest |
 | CI | GitHub Actions |
@@ -153,6 +161,14 @@ needs no database:
 npm test -w @mycare/triage-engine
 ```
 
+Two build steps the backend depends on — the server replays sessions through the
+real engine under Node (ADR-0007), and the importer reads an exported bundle:
+
+```bash
+npm run build -w @mycare/engine-replay
+npm run export:v1 -w @mycare/ruleset
+```
+
 Backend:
 
 ```bash
@@ -160,35 +176,55 @@ cd apps/api
 composer install
 cp .env.example .env
 php artisan key:generate
-php artisan migrate --seed
+php artisan migrate --seed          # includes the 15 Carcar barangays
 php artisan serve
+
+php artisan mycare:ruleset:import ../../packages/ruleset/dist/v1.json
+php artisan mycare:staff:create-super-admin you@example.org
 ```
 
-Frontends:
+An imported ruleset lands as a **draft**. It reaches no device until a super-admin
+publishes it in the console, which records who attested to the clinical review.
+
+Frontends — each proxies `/api` to the backend on port 8000:
 
 ```bash
-npm run dev:pwa       # patient app
-npm run dev:portal    # RHU / LGU dashboard
-npm run dev:console   # super-admin console
+npm run dev -w @mycare/pwa        # patient app        → :5173
+npm run dev -w @mycare/portal     # RHU / LGU dashboard → :5174/portal/
+npm run dev -w @mycare/console    # super-admin console → :5175
 ```
 
-Full setup notes, repository conventions, and the Laravel domain layout are in
-[`docs/REPO.md`](docs/REPO.md).
+Everything at once, plus the Pest suite:
+
+```bash
+npm test                          # every workspace
+npm run typecheck
+cd apps/api && ./vendor/bin/pest  # needs MySQL 8, never SQLite
+```
+
+Full setup notes, repository conventions, the Laravel domain layout and the
+Windows-specific gotchas are in [`docs/REPO.md`](docs/REPO.md) and
+[`docs/STATUS.md`](docs/STATUS.md).
 
 ## Project status
 
 | Phase | Scope | Status |
 |---|---|---|
 | 0 | Monorepo, CI, conventions | ✅ Done |
-| 1 | Triage engine + ruleset schema | ✅ Done |
-| 2 | Ruleset v1 (clinical appraisal) | 🔨 In progress |
-| 3 | Laravel API + 20 migrations | ⬜ Planned |
-| 4 | Super-admin console | ⬜ Planned |
-| 5 | Patient PWA | ⬜ Planned |
-| 6 | Offline sync layer | ⬜ Planned |
-| 7 | Sub-admin dashboard | ⬜ Planned |
-| 8 | Integration + offline E2E | ⬜ Planned |
+| 1 | Triage engine + ruleset schema | ✅ Done — 12 tests, purity enforced |
+| 2 | Ruleset v1 (clinical appraisal) | ✅ Encoded and appraised |
+| 3 | Laravel API + 20 migrations | ✅ Done — Pest 176 passed, 716 assertions |
+| 4 | Super-admin console | ✅ Done |
+| 5 | Patient PWA | ✅ Done — 24 tests; not yet opened in a browser |
+| 6 | Offline sync layer | ✅ Done — both server and device halves |
+| 7 | Sub-admin dashboard | ✅ Done |
+| 8 | Integration + offline E2E | 🔨 Next — Playwright, and CI for the new workspaces |
 | 9 | Deployment | ⬜ Planned |
+
+Phases 3–8 are on `feat/UT-020-laravel-api-schema` (PR #1), built under a standing
+rule of **no manuscript amendments**: where the schema and the code disagreed, the
+gap was closed in code and documented, never by editing the specification.
+[`docs/BUILD-LOG.md`](docs/BUILD-LOG.md) records every one of those decisions.
 
 ## Privacy
 
