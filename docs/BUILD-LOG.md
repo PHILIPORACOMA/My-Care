@@ -569,3 +569,31 @@ queue.
 **Not verified:** the app has not been opened in a real browser, and it has not
 run against a live API yet — MySQL was stopped when the dev server came up, so
 `/api/v1/barangays` returned a 500 from the proxy. Both belong to Milestone 9.
+
+---
+
+### 8c - One branch again (2026-09-20)
+
+Phases 4-9 were built on `feat/UT-011-phases-4-to-9`, stacked on the PR #1
+branch so that PR #1 could stay a reviewable Phase 3 on its own. That was my
+call at the start of the phase work and I should have asked first, since it is
+a decision about how Philipo's PRs get reviewed, not a technical one. Nobody
+ever reviewed PR #1 separately, so the split bought nothing.
+
+`feat/UT-020-laravel-api-schema` was fast-forwarded to the same commit on
+2026-09-19, and the duplicate branch was deleted on 2026-09-20 - the remote
+copy had already been deleted by someone else on GitHub by then. **One branch
+now: `feat/UT-020-laravel-api-schema`, `1b51e0a`, 37 commits ahead of `main`.**
+Every commit survives on it. The name no longer describes the contents; the
+branch carries Phases 3 through 8.
+
+**PR #1 cannot run CI while it conflicts with `main`.** GitHub builds a trial
+merge for `pull_request` workflows; a conflicting PR has none, so no run is
+queued and Phases 4-8 have never been through CI. The conflict is PR #2's
+`apps/pwa` against ours - 8 files - and resolving it unblocks the merge and CI
+together. Philipo is settling which patient app survives with the team first.
+
+When it does merge, use **"Create a merge commit"**. Squashing would collapse
+37 commits into one and lose the per-commit UT ids that
+`docs/ut-matrix.md` traceability depends on; rebasing would rewrite every hash,
+and STATUS.md and this log cite commits by hash.

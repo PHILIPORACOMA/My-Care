@@ -1,7 +1,7 @@
 # Development status checkpoint
 
 Last updated: **2026-09-18.** Phases 4–9 are being built on branch
-`feat/UT-011-phases-4-to-9`. All backend work for Phases 4, 6 (server side) and
+`feat/UT-020-laravel-api-schema`. All backend work for Phases 4, 6 (server side) and
 7 is done and verified, and **all three front ends are built** — the super-admin
 console, the sub-admin portal, and now the patient PWA with the device half of
 the sync layer. The team's design canvas has been applied throughout. What
@@ -18,7 +18,7 @@ Paste this into a new chat session to pick up where this one left off:
 > Read `CLAUDE.md`, `docs/STATUS.md` and `docs/BUILD-LOG.md` first, then ADRs
 > 0005–0007 in `docs/adr/`. Skim `docs/REPO.md` and `docs/ut-matrix.md`.
 >
-> We are finishing Phases 4–9 on branch `feat/UT-011-phases-4-to-9` with **no
+> We are finishing Phases 4–9 on branch `feat/UT-020-laravel-api-schema` with **no
 > manuscript amendments**. Backend Milestones 0–4 and the shared packages
 > (Milestone 5) are committed and verified: Pest 176/716, engine 12/12,
 > lexicon-matcher 11/11, engine-replay 5/5, api-client 5/5, ui 9/9,
@@ -133,15 +133,24 @@ opened in a browser.
 
 ## Git state
 
-**The two branches were consolidated on 2026-09-19.** They were always one
-line of history — `feat/UT-011-phases-4-to-9` was branched off the PR #1 branch
-and contained every one of its commits — so `feat/UT-020-laravel-api-schema`
-was fast-forwarded to match. Both now point at the same commit.
+**There is now one branch: `feat/UT-020-laravel-api-schema`.** Phases 4–9 were
+built on a second branch, `feat/UT-011-phases-4-to-9`, stacked on this one so
+that PR #1 could stay a reviewable Phase 3 on its own. Nobody ever reviewed it
+separately, so on 2026-09-19 this branch was fast-forwarded to match and on
+2026-09-20 the duplicate was **deleted**, locally and on GitHub. Every commit
+survives here; nothing was lost. Do not recreate it.
 
-- **`feat/UT-020-laravel-api-schema`** = **`feat/UT-011-phases-4-to-9`** =
-  `6047f04`, 36 commits ahead of `main`, both pushed.
+- **`feat/UT-020-laravel-api-schema`** — `1b51e0a`, 37 commits ahead of `main`,
+  pushed. The branch name is a misnomer now: it carries Phases 3 through 8.
 - **PR #1 now contains all of it** — Phases 3 through 8, 278 files. Its title
   still says "Phase 3", which no longer describes it.
+- **PR #1 is `CONFLICTING`, so GitHub will not run CI on it.** Pull-request
+  workflows build a trial merge into `main`; with conflicts there is nothing to
+  build, and no run exists for `1b51e0a`. **Phases 4–8 have never been through
+  CI.** Resolving the `apps/pwa` conflict unblocks both the merge and CI.
+- **Someone else is working in this repo.** The duplicate branch had already
+  been deleted from GitHub by the time we went to delete it (2026-09-20), and
+  `origin/Gil` exists. Fetch before assuming remote state.
 - **`main` has moved and we have not merged it.** kizaru3214's PR #2 (patient
   PWA + a 124-term invented lexicon draft) landed on `main` 2026-09-18 03:36Z
   and occupies `apps/pwa`, the same path as ours. Merging it here was tried and
