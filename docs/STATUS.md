@@ -1,6 +1,6 @@
 # Development status checkpoint
 
-Last updated: **2026-09-18.** Phases 4–9 are being built on branch
+Last updated: **2026-09-23.** Phases 4–9 are being built on branch
 `feat/UT-020-laravel-api-schema`. All backend work for Phases 4, 6 (server side) and
 7 is done and verified, and **all three front ends are built** — the super-admin
 console, the sub-admin portal, and now the patient PWA with the device half of
@@ -214,6 +214,11 @@ survives here; nothing was lost. Do not recreate it.
   with `php artisan mycare:staff:create-super-admin <email>`, which prompts for
   the password), and **nothing is published, so `/api/v1/ruleset/current`
   returns 503 and the patient app cannot triage.**
+- **No UI has been seen rendered, and that has already cost something.** The
+  2026-09-23 styling pass (BUILD-LOG 8f) found two classes used but never
+  defined in the patient app: screen-reader-only labels were rendering as
+  visible duplicate text, and Home's pill row had no layout. 47 passing tests
+  did not catch either. Playwright is the fix.
 - **The PWA's Tagalog and Cebuano interface copy is an unreviewed draft.** It
   needs a native speaker and a clinician, especially the three verdicts, the
   advice under each, the disclaimer and the emergency instruction.
