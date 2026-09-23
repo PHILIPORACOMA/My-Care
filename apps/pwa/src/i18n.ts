@@ -115,6 +115,12 @@ const en = {
   needConnectionTitle: "Connect once to get started",
   needConnectionBody:
     "My Care needs an internet connection the first time, to download the triage rules for your area. After that it works offline.",
+  noRulesTitle: "Not ready yet",
+  noRulesBody:
+    "My Care reached the health office, but no triage rules have been published for your area yet. Your connection is fine — please try again later, or ask your barangay health worker.",
+  serverProblemTitle: "Cannot reach the health office",
+  serverProblemBody:
+    "Your connection is working, but the health office system did not answer. Please try again in a little while.",
   retry: "Try again",
   offlineNotice: "You are offline. Your check still works, and results are sent when you have signal again.",
 } as const;
@@ -205,6 +211,12 @@ const tl: Dictionary = {
   needConnectionTitle: "Kumonekta muna nang isang beses",
   needConnectionBody:
     "Kailangan ng My Care ng internet sa unang pagkakataon, para ma-download ang mga panuntunan sa triage para sa inyong lugar. Pagkatapos nito, gumagana na ito offline.",
+  noRulesTitle: "Hindi pa handa",
+  noRulesBody:
+    "Naabot ng My Care ang health office, pero wala pang nailalathalang panuntunan sa triage para sa inyong lugar. Maayos ang inyong koneksyon — subukan muli mamaya, o magtanong sa inyong barangay health worker.",
+  serverProblemTitle: "Hindi maabot ang health office",
+  serverProblemBody:
+    "Gumagana ang inyong koneksyon, pero hindi sumagot ang sistema ng health office. Pakisubukan muli maya-maya.",
   retry: "Subukan muli",
   offlineNotice:
     "Offline ka ngayon. Gumagana pa rin ang pagsusuri, at ipapadala ang resulta kapag may signal ka na ulit.",
@@ -293,6 +305,12 @@ const ceb: Dictionary = {
   needConnectionTitle: "Kumonekta usa sa makausa",
   needConnectionBody:
     "Nagkinahanglan ang My Care ug internet sa unang higayon, aron ma-download ang mga lagda sa triage para sa inyong lugar. Human niini, molihok na kini bisan offline.",
+  noRulesTitle: "Dili pa andam",
+  noRulesBody:
+    "Naabot sa My Care ang health office, apan wala pay gipatik nga mga lagda sa triage para sa inyong lugar. Maayo ang inyong koneksyon — sulayi pag-usab unya, o pangutana sa inyong barangay health worker.",
+  serverProblemTitle: "Dili maabot ang health office",
+  serverProblemBody:
+    "Naglihok ang inyong koneksyon, apan wala mitubag ang sistema sa health office. Palihug sulayi pag-usab sa makadiyot.",
   retry: "Sulayi pag-usab",
   offlineNotice:
     "Offline ka karon. Molihok gihapon ang pagsusi, ug ipadala ang resulta kung naa na kay signal.",

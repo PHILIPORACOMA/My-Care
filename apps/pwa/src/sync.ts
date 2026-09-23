@@ -139,6 +139,29 @@ export async function flush(): Promise<void> {
  * rules is correct behaviour offline, and every session records the version it
  * used, so the server can still reconstruct the result exactly (ADR-0007).
  */
+/**
+ * Why a device has no rules to triage with.
+ *
+ * These are worth telling apart, because the patient can act on one of them
+ * and not on the others: "move to where there is signal" fixes `offline`,
+ * and nothing the patient does fixes `unpublished` — that one is waiting on
+ * the health office to publish a ruleset. Reporting a 503 as "no internet"
+ * sends someone up a hill for nothing.
+ */
+export type BundleBlocker = "offline" | "unpublished" | "server";
+
+export class BundleUnavailable extends Error {
+  constructor(readonly reason: BundleBlocker) {
+    super(reason);
+    this.name = "BundleUnavailable";
+  }
+}
+
+function classify(error: unknown): BundleBlocker {
+  if (error instanceof OfflineError) return "offline";
+  return (error as { status?: number }).status === 503 ? "unpublished" : "server";
+}
+
 export async function refreshBundle(force = false): Promise<CachedBundle | undefined> {
   const prefs = await readPrefs();
   const device = prefs.device;
@@ -160,7 +183,11 @@ export async function refreshBundle(force = false): Promise<CachedBundle | undef
     if (!(error instanceof OfflineError)) {
       console.warn("Could not refresh the ruleset; keeping the cached one.", error);
     }
-    return cached;
+    // A device that already holds a bundle keeps triaging: a failed refresh is
+    // not the patient's problem. A device with nothing cached has no rules at
+    // all, and the caller has to be able to say why.
+    if (cached) return cached;
+    throw new BundleUnavailable(classify(error));
   }
 }
 
@@ -195,7 +222,10 @@ export async function ensureRegistered(barangayId: number): Promise<DeviceCreden
 export function startSync(): () => void {
   const onOnline = () => {
     void flush();
-    void refreshBundle();
+    // Background refresh: a device with no bundle yet will reject with
+    // BundleUnavailable, which the onboarding screens report. Nothing to do
+    // here but not crash on it.
+    void refreshBundle().catch(() => undefined);
   };
 
   window.addEventListener("online", onOnline);

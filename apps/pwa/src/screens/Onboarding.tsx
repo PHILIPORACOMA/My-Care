@@ -152,7 +152,7 @@ export function BarangayScreen(props: {
             <small>{barangay.city}</small>
           </button>
         ))}
-        {props.barangays.length === 0 && <p className="banner">{props.t("needConnectionBody")}</p>}
+        {props.barangays.length === 0 && !props.error && <p className="banner">{props.t("needConnectionBody")}</p>}
       </div>
 
       {why && <p className="banner">{props.t("whyAskBody")}</p>}

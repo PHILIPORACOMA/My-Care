@@ -1,5 +1,24 @@
 import type { Translator } from "../i18n";
+import type { BundleBlocker } from "../sync";
 import { CareMark, OfflineBadge } from "./parts";
+
+/*
+ * Three reasons a device can have no rules, and they are not interchangeable:
+ * the patient can fix the first by finding signal, and cannot fix the other
+ * two at all. Telling them apart is the difference between a useful screen
+ * and one that sends someone up a hill for nothing.
+ */
+const BLOCKER_TITLE: Record<BundleBlocker, "needConnectionTitle" | "noRulesTitle" | "serverProblemTitle"> = {
+  offline: "needConnectionTitle",
+  unpublished: "noRulesTitle",
+  server: "serverProblemTitle",
+};
+
+const BLOCKER_BODY: Record<BundleBlocker, "needConnectionBody" | "noRulesBody" | "serverProblemBody"> = {
+  offline: "needConnectionBody",
+  unpublished: "noRulesBody",
+  server: "serverProblemBody",
+};
 
 /**
  * Figure 21, Home Page — "the persistent landing state for every return visit:
@@ -9,7 +28,7 @@ export function HomeScreen(props: {
   t: Translator;
   barangayName: string;
   languageLabel: string;
-  needsConnection: boolean;
+  blocker?: BundleBlocker;
   onCheck: () => void;
   onSettings: () => void;
 }) {
@@ -32,11 +51,11 @@ export function HomeScreen(props: {
       <p className="subtitle">📍 {props.t("barangayLine", { barangay: props.barangayName })}</p>
 
       <div className="grow">
-        {props.needsConnection ? (
+        {props.blocker ? (
           <div className="banner banner-warn">
-            <strong>{props.t("needConnectionTitle")}</strong>
+            <strong>{props.t(BLOCKER_TITLE[props.blocker])}</strong>
             <br />
-            {props.t("needConnectionBody")}
+            {props.t(BLOCKER_BODY[props.blocker])}
           </div>
         ) : (
           <button className="home-card" onClick={props.onCheck}>

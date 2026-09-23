@@ -187,4 +187,40 @@ describe("a patient checking their symptoms", () => {
     const storage = await import("./storage");
     await waitFor(async () => expect(await storage.queueLength()).toBe(1));
   }, 20000);
+
+  /*
+   * A 503 means the server answered and has no published ruleset. Telling the
+   * patient "you need an internet connection" would be a lie they can act on,
+   * badly: there is no signal to go and find, and the fix belongs to the
+   * health office. This is the bug Philipo hit while testing on 2026-09-23.
+   */
+  it("says the rules are unpublished, not that the phone is offline, on a 503", async () => {
+    vi.stubGlobal("fetch", async (url: string, init: RequestInit = {}) => {
+      const path = String(url);
+      if (path.endsWith("/api/v1/barangays")) {
+        return new Response(JSON.stringify({ barangays: [{ id: 1, name: "Valladolid", city: "Carcar City" }] }), { status: 200 });
+      }
+      if (path.endsWith("/api/v1/devices")) {
+        return new Response(JSON.stringify({ token: "prefix.secret", device: { id: 3 } }), { status: 201 });
+      }
+      if (path.endsWith("/api/v1/ruleset/current")) {
+        return new Response(JSON.stringify({ message: "No published ruleset version is available." }), { status: 503 });
+      }
+      if (path.endsWith("/api/v1/facilities")) {
+        return new Response(JSON.stringify({ facilities: [] }), { status: 200 });
+      }
+      return new Response("{}", { status: 200 });
+    });
+
+    const user = await launch();
+    await user.click(await screen.findByRole("button", { name: /Get started/ }));
+    await user.click(await screen.findByRole("button", { name: /English/ }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: /Yes, I'm 18/ }));
+    await user.click(await screen.findByRole("button", { name: /Valladolid/ }));
+    await user.click(screen.getByRole("button", { name: /Confirm barangay/ }));
+
+    expect(await screen.findByText(/no triage rules have been published/)).toBeInTheDocument();
+    expect(screen.queryByText(/needs an internet connection/)).not.toBeInTheDocument();
+  }, 20000);
 });

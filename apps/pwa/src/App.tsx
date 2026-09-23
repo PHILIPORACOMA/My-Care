@@ -2,7 +2,7 @@ import type { SymptomMatch } from "@mycare/lexicon-matcher";
 import type { ClarificationQuestion, LanguageCode } from "@mycare/ruleset";
 import type { TriageResult } from "@mycare/triage-engine";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { deviceApi } from "./api";
+import { deviceApi, OfflineError } from "./api";
 import { LANGUAGES, translatorFor } from "./i18n";
 import { AgeScreen, BarangayScreen, LanguageScreen, SplashScreen } from "./screens/Onboarding";
 import { ClarifyScreen, InputScreen, ProcessingScreen } from "./screens/Check";
@@ -16,7 +16,17 @@ import {
   type Barangay,
   type Prefs,
 } from "./storage";
-import { ensureRegistered, onSyncState, recordSession, refreshBundle, refreshFacilities, startSync, type SyncState } from "./sync";
+import {
+  BundleUnavailable,
+  ensureRegistered,
+  onSyncState,
+  recordSession,
+  refreshBundle,
+  refreshFacilities,
+  startSync,
+  type BundleBlocker,
+  type SyncState,
+} from "./sync";
 import {
   buildSession,
   canonicalAnswer,
@@ -80,7 +90,15 @@ export function App() {
   const [check, setCheck] = useState<Check>(emptyCheck);
   const [sync, setSync] = useState<SyncState>({ pending: 0, syncing: false });
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string>();
+  /*
+   * Why the device has no rules, when it has none. Held as a reason rather
+   * than a message so the screens can word it themselves: a 503 from a
+   * reachable server used to be reported to the patient as "no internet",
+   * which sends someone looking for signal they do not need.
+   */
+  const [blocker, setBlocker] = useState<BundleBlocker>();
+  const blockerBody = (reason: BundleBlocker) =>
+    reason === "offline" ? t("needConnectionBody") : reason === "unpublished" ? t("noRulesBody") : t("serverProblemBody");
 
   const language: LanguageCode = prefs.language ?? "en";
   const t = useMemo(() => translatorFor(language), [language]);
@@ -95,7 +113,12 @@ export function App() {
       setScreen(stored.barangay && stored.ageConfirmed ? "home" : "splash");
 
       if (stored.device) {
-        void refreshBundle().then((fresh) => fresh && setPrefs((p) => ({ ...p, bundle: fresh })));
+        void refreshBundle()
+          .then((fresh) => {
+            if (fresh) setPrefs((p) => ({ ...p, bundle: fresh }));
+            setBlocker(undefined);
+          })
+          .catch((e: unknown) => setBlocker(e instanceof BundleUnavailable ? e.reason : "server"));
         void refreshFacilities();
       }
     })();
@@ -119,10 +142,11 @@ export function App() {
       const fetched = await deviceApi.barangays();
       setBarangays(fetched);
       await save({ barangays: fetched });
-    } catch {
-      setError(t("needConnectionBody"));
+      setBlocker(undefined);
+    } catch (e) {
+      setBlocker(e instanceof OfflineError ? "offline" : "server");
     }
-  }, [barangays.length, save, t]);
+  }, [barangays.length, save]);
 
   /**
    * Confirming a barangay is also this installation's first contact with the
@@ -132,16 +156,17 @@ export function App() {
   async function confirmBarangay() {
     if (!choice) return;
     setBusy(true);
-    setError(undefined);
+    setBlocker(undefined);
     try {
       await save({ barangay: choice });
       await ensureRegistered(choice.id);
-      const fresh = await refreshBundle(true);
+      await refreshBundle(true);
       await refreshFacilities();
       setPrefs(await readPrefs());
-      if (!fresh) setError(t("needConnectionBody"));
-    } catch {
-      setError(t("needConnectionBody"));
+    } catch (e) {
+      // Whatever went wrong, the barangay is saved and the patient reaches
+      // home; the banner there explains what is missing and who fixes it.
+      setBlocker(e instanceof BundleUnavailable ? e.reason : e instanceof OfflineError ? "offline" : "server");
     } finally {
       setBusy(false);
       setScreen("home");
@@ -248,7 +273,7 @@ export function App() {
           barangays={barangays}
           selected={choice ?? prefs.barangay}
           busy={busy}
-          error={error}
+          error={blocker && blockerBody(blocker)}
           onBack={() => setScreen("age")}
           onSelect={setChoice}
           onConfirm={() => void confirmBarangay()}
@@ -261,7 +286,7 @@ export function App() {
           t={t}
           barangayName={prefs.barangay?.name ?? ""}
           languageLabel={languageLabel}
-          needsConnection={!bundle}
+          blocker={bundle ? undefined : (blocker ?? "offline")}
           onCheck={() => {
             setCheck(emptyCheck());
             setScreen("input");
