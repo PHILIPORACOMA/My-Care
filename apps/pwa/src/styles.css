@@ -40,23 +40,70 @@
 }
 
 :root {
-  --ground: #f6f3ed;
+  /*
+   * Colour. Every value here is the same hex as the matching token in
+   * packages/ui, so a tier looks identical to a patient and to the health
+   * worker reading the dashboard. The NAMES differ, and the sheets stay
+   * separate, because the patient app never imports the staff kit
+   * (CLAUDE.md: different visual language, hard bundle budget).
+   */
+  --ground: #fbfaf7;
   --surface: #ffffff;
   --ink: #16201e;
   --ink-soft: #6e7a77;
   --ink-faint: #8a9491;
   --ink-placeholder: #a9b1ae;
-  --line: rgba(0, 0, 0, 0.1);
+  --line: rgba(0, 0, 0, 0.08);
+  --line-strong: rgba(0, 0, 0, 0.13);
   --teal: #0d7c6c;
   --teal-dark: #0a6a5b;
   --teal-tint: #dcefea;
   --home: #1f7a3c;
   --rhu: #ef7d12;
   --rhu-ink: #c4620a;
-  --rhu-tint: #fdf0e1;
+  --rhu-tint: #fdf2e4;
   --emergency: #d72b21;
   --note: #e4f0f6;
   --note-ink: #2f5a6e;
+
+  /*
+   * Spacing: a 4px scale, and one gutter. Every screen in the app is inset by
+   * --gutter and nothing else, so headings and text line up vertically when a
+   * patient moves between screens.
+   */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-7: 32px;
+  --gutter: 22px;
+
+  /* Radii: small controls, cards, the big sheets, and pills. */
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-xl: 26px;
+  --r-pill: 99px;
+
+  /*
+   * Type. The app used to carry eleven sizes, six of them within a pixel of
+   * each other (13, 13.5, 14, 14.5, 15, 15.5). These are the steps that
+   * survive; anything else is a nudge, and nudges are what drift.
+   */
+  --fs-caption: 12px;
+  --fs-small: 13px;
+  --fs-body: 14px;
+  --fs-lead: 15px;
+  --fs-action: 16px;
+  --fs-lg: 18px;
+  --fs-xl: 22px;
+  --fs-display: 25px;
+  --fs-display-lg: 30px;
+
+  /* Glyphs rather than text: the splash wordmark and the result emoji. */
+  --fs-mark: 34px;
+  --fs-wordmark: 42px;
 }
 
 * {
@@ -75,7 +122,7 @@ body {
   background: var(--ground);
   color: var(--ink);
   font-family: Poppins, system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-size: 15px;
+  font-size: var(--fs-lead);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -94,7 +141,7 @@ button {
   min-height: 100%;
   display: flex;
   flex-direction: column;
-  padding: max(18px, env(safe-area-inset-top)) 22px max(20px, env(safe-area-inset-bottom));
+  padding: max(var(--s-5), env(safe-area-inset-top)) var(--gutter) max(var(--s-5), env(safe-area-inset-bottom));
   max-width: 460px;
   margin: 0 auto;
   background: var(--ground);
@@ -110,15 +157,15 @@ button {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 8px;
+  gap: var(--s-2);
 }
 
 .top-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
-  margin-top: 4px;
+  gap: var(--s-3);
+  margin-top: var(--s-1);
 }
 
 /* -------------------------------------------------------------- controls */
@@ -129,10 +176,10 @@ button {
   cursor: pointer;
   background: var(--teal);
   color: #fff;
-  font-size: 16px;
+  font-size: var(--fs-action);
   font-weight: 600;
-  padding: 18px;
-  border-radius: 16px;
+  padding: var(--s-4);
+  border-radius: var(--r-md);
   min-height: 56px;
 }
 
@@ -152,7 +199,7 @@ button {
 .btn-outline {
   background: #fff;
   color: var(--ink);
-  border: 1.6px solid var(--line);
+  border: 1.5px solid var(--line-strong);
 }
 
 .btn-dark {
@@ -168,30 +215,30 @@ button {
 .icon-btn {
   width: 40px;
   height: 40px;
-  border-radius: 13px;
+  border-radius: var(--r-sm);
   border: 1px solid var(--line);
   background: #fff;
   cursor: pointer;
   display: grid;
   place-items: center;
   flex: none;
-  font-size: 18px;
+  font-size: var(--fs-lg);
   color: var(--ink);
 }
 
 .icon-btn-round {
-  border-radius: 99px;
+  border-radius: var(--r-pill);
 }
 
 .pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-2);
   background: #fff;
   border: 1px solid var(--line);
-  border-radius: 99px;
-  padding: 8px 13px;
-  font-size: 12.5px;
+  border-radius: var(--r-pill);
+  padding: var(--s-2) var(--s-3);
+  font-size: var(--fs-caption);
   font-weight: 500;
   color: var(--ink);
 }
@@ -217,14 +264,14 @@ button.pill {
 
 .steps {
   display: flex;
-  gap: 7px;
-  margin: 22px 0 8px;
+  gap: var(--s-2);
+  margin: var(--s-5) 0 var(--s-4);
 }
 
 .steps i {
   flex: 1;
   height: 4px;
-  border-radius: 99px;
+  border-radius: var(--r-pill);
   background: rgba(13, 124, 108, 0.22);
 }
 
@@ -233,39 +280,40 @@ button.pill {
 }
 
 .step-label {
-  font-size: 12.5px;
+  font-size: var(--fs-caption);
   color: var(--ink-faint);
+  margin: 0 0 var(--s-4);
 }
 
 .title {
-  font-size: 25px;
+  font-size: var(--fs-display);
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.25;
-  margin: 6px 0 0;
+  margin: var(--s-5) 0 var(--s-3);
 }
 
 .title-lg {
-  font-size: 30px;
+  font-size: var(--fs-display-lg);
 }
 
 .subtitle {
-  font-size: 13.5px;
+  font-size: var(--fs-small);
   color: var(--ink-faint);
-  margin: 6px 0 0;
+  margin: var(--s-2) 0 0;
 }
 
 .disclaimer {
   text-align: center;
-  font-size: 11.5px;
+  font-size: var(--fs-caption);
   color: #9aa3a0;
-  margin: 12px 0 0;
+  margin: var(--s-3) 0 0;
 }
 
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 11px;
+  gap: var(--s-3);
 }
 
 .push {
@@ -280,7 +328,7 @@ button.pill {
   min-height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 40px 26px max(30px, env(safe-area-inset-bottom));
+  padding: var(--s-7) var(--gutter) max(var(--s-7), env(safe-area-inset-bottom));
   max-width: 460px;
   margin: 0 auto;
   text-align: center;
@@ -289,7 +337,7 @@ button.pill {
 .splash-mark {
   width: 86px;
   height: 86px;
-  border-radius: 26px;
+  border-radius: var(--r-xl);
   background: rgba(255, 255, 255, 0.14);
   display: grid;
   place-items: center;
@@ -297,18 +345,18 @@ button.pill {
 }
 
 .splash-word {
-  font-size: 42px;
+  font-size: var(--fs-wordmark);
   font-weight: 700;
   letter-spacing: -0.02em;
-  margin: 20px 0 0;
+  margin: var(--s-5) 0 0;
 }
 
 .splash-tag {
-  font-size: 15px;
+  font-size: var(--fs-lead);
   line-height: 1.5;
   color: rgba(255, 255, 255, 0.88);
   max-width: 260px;
-  margin: 12px auto 0;
+  margin: var(--s-3) auto 0;
 }
 
 /* ---------------------------------------------------------- choice cards */
@@ -316,22 +364,22 @@ button.pill {
 .choice {
   width: 100%;
   text-align: left;
-  border: 1.6px solid var(--line);
+  border: 1.5px solid var(--line-strong);
   background: #fff;
   color: var(--ink);
   cursor: pointer;
-  border-radius: 16px;
-  padding: 15px 16px;
-  font-size: 15.5px;
+  border-radius: var(--r-md);
+  padding: var(--s-4);
+  font-size: var(--fs-lead);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--s-1);
   min-height: 56px;
 }
 
 .choice small {
   color: var(--ink-faint);
-  font-size: 12.5px;
+  font-size: var(--fs-caption);
 }
 
 .choice[aria-pressed="true"],
@@ -349,12 +397,12 @@ button.pill {
 .search {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: var(--s-2);
   background: #fff;
   border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 12px 14px;
-  margin-bottom: 12px;
+  border-radius: var(--r-md);
+  padding: var(--s-3) var(--s-4);
+  margin: var(--s-4) 0 var(--s-3);
 }
 
 .search input {
@@ -362,7 +410,7 @@ button.pill {
   outline: 0;
   flex: 1;
   font: inherit;
-  font-size: 14px;
+  font-size: var(--fs-body);
   background: transparent;
   min-width: 0;
 }
@@ -372,8 +420,8 @@ button.pill {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding-bottom: 8px;
+  gap: var(--s-2);
+  padding-bottom: var(--s-2);
   -webkit-overflow-scrolling: touch;
 }
 
@@ -385,45 +433,45 @@ button.pill {
   cursor: pointer;
   background: var(--teal);
   color: #fff;
-  border-radius: 26px;
-  padding: 30px 24px;
+  border-radius: var(--r-xl);
+  padding: var(--s-7) var(--s-6);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-2);
   text-align: center;
 }
 
 .home-card-mark {
   width: 56px;
   height: 56px;
-  border-radius: 99px;
+  border-radius: var(--r-pill);
   background: rgba(255, 255, 255, 0.16);
   display: grid;
   place-items: center;
-  margin-bottom: 6px;
+  margin-bottom: var(--s-2);
 }
 
 .home-card-title {
-  font-size: 22px;
+  font-size: var(--fs-xl);
   font-weight: 600;
 }
 
 .home-card-sub {
-  font-size: 13px;
+  font-size: var(--fs-small);
   line-height: 1.45;
   opacity: 0.88;
   max-width: 230px;
 }
 
 .home-card-cta {
-  margin-top: 14px;
+  margin-top: var(--s-4);
   width: 100%;
   background: #fff;
   color: var(--teal-dark);
-  border-radius: 14px;
-  padding: 15px;
-  font-size: 15px;
+  border-radius: var(--r-md);
+  padding: var(--s-4);
+  font-size: var(--fs-lead);
   font-weight: 600;
 }
 
@@ -431,12 +479,12 @@ button.pill {
 
 .textarea {
   background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.09);
-  border-radius: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
   min-height: 150px;
-  padding: 16px;
+  padding: var(--s-4);
   font: inherit;
-  font-size: 14.5px;
+  font-size: var(--fs-body);
   width: 100%;
   resize: none;
   color: var(--ink);
@@ -449,43 +497,43 @@ button.pill {
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 9px;
+  gap: var(--s-2);
 }
 
 .chip {
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--line-strong);
   background: #fff;
   color: var(--ink);
   cursor: pointer;
-  border-radius: 99px;
-  padding: 10px 15px;
-  font-size: 13.5px;
+  border-radius: var(--r-pill);
+  padding: var(--s-2) var(--s-4);
+  font-size: var(--fs-small);
   min-height: 44px;
 }
 
 .chip[aria-pressed="true"] {
-  border: 1.4px solid var(--teal);
+  border: 1.5px solid var(--teal);
   background: var(--teal-tint);
   color: var(--teal-dark);
   font-weight: 500;
 }
 
 .section-label {
-  font-size: 12.5px;
+  font-size: var(--fs-caption);
   color: var(--ink-faint);
-  margin: 16px 0 10px;
+  margin: var(--s-4) 0 var(--s-3);
 }
 
 /* ------------------------------------------------------------ clarify */
 
 .note {
   display: flex;
-  gap: 10px;
+  gap: var(--s-3);
   background: var(--note);
   color: var(--note-ink);
-  border-radius: 14px;
-  padding: 14px;
-  font-size: 13px;
+  border-radius: var(--r-md);
+  padding: var(--s-4);
+  font-size: var(--fs-small);
   line-height: 1.45;
 }
 
@@ -497,7 +545,7 @@ button.pill {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 26px;
+  gap: var(--s-6);
 }
 
 .rings {
@@ -511,7 +559,7 @@ button.pill {
 .rings i {
   position: absolute;
   inset: 0;
-  border-radius: 99px;
+  border-radius: var(--r-pill);
   border: 2px solid var(--teal);
   opacity: 0;
   animation: pulse 2.1s ease-out infinite;
@@ -528,7 +576,7 @@ button.pill {
 .rings-core {
   width: 72px;
   height: 72px;
-  border-radius: 99px;
+  border-radius: var(--r-pill);
   background: var(--teal);
   display: grid;
   place-items: center;
@@ -561,25 +609,25 @@ button.pill {
 .result-emergency { background: var(--emergency); }
 
 .result-head {
-  padding: max(18px, env(safe-area-inset-top)) 26px 28px;
+  padding: max(var(--s-5), env(safe-area-inset-top)) var(--gutter) var(--s-6);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
+  gap: var(--s-4);
 }
 
 .result-mark {
   width: 78px;
   height: 78px;
-  border-radius: 99px;
+  border-radius: var(--r-pill);
   background: rgba(255, 255, 255, 0.2);
   display: grid;
   place-items: center;
-  font-size: 34px;
+  font-size: var(--fs-mark);
 }
 
 .result-verdict {
-  font-size: 27px;
+  font-size: var(--fs-display);
   font-weight: 700;
   line-height: 1.25;
   letter-spacing: -0.02em;
@@ -589,16 +637,16 @@ button.pill {
 
 .result-chips {
   display: flex;
-  gap: 8px;
+  gap: var(--s-2);
   flex-wrap: wrap;
   justify-content: center;
 }
 
 .result-chip {
   background: rgba(0, 0, 0, 0.18);
-  border-radius: 99px;
-  padding: 6px 13px;
-  font-size: 12.5px;
+  border-radius: var(--r-pill);
+  padding: var(--s-1) var(--s-3);
+  font-size: var(--fs-caption);
   font-weight: 500;
 }
 
@@ -606,21 +654,21 @@ button.pill {
   flex: 1;
   background: #fff;
   color: var(--ink);
-  border-radius: 26px 26px 0 0;
-  padding: 26px 24px max(24px, env(safe-area-inset-bottom));
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  padding: var(--s-6) var(--gutter) max(var(--s-6), env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--s-4);
 }
 
 .result-advice {
-  font-size: 15px;
+  font-size: var(--fs-lead);
   line-height: 1.55;
   margin: 0;
 }
 
 .result-rule {
-  font-size: 12px;
+  font-size: var(--fs-caption);
   color: var(--ink-faint);
 }
 
@@ -628,27 +676,27 @@ button.pill {
 
 .tip {
   display: flex;
-  gap: 13px;
+  gap: var(--s-3);
   align-items: center;
   background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.07);
-  border-radius: 16px;
-  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--s-4);
 }
 
 .tip-mark {
   width: 38px;
   height: 38px;
-  border-radius: 11px;
+  border-radius: var(--r-sm);
   background: var(--rhu-tint);
   display: grid;
   place-items: center;
   flex: none;
-  font-size: 18px;
+  font-size: var(--fs-lg);
 }
 
 .tip-body {
-  font-size: 14px;
+  font-size: var(--fs-body);
   line-height: 1.45;
 }
 
@@ -660,9 +708,9 @@ button.pill {
 .referral {
   background: var(--teal-tint);
   color: var(--teal-dark);
-  border-radius: 14px;
-  padding: 13px 15px;
-  font-size: 13px;
+  border-radius: var(--r-md);
+  padding: var(--s-3) var(--s-4);
+  font-size: var(--fs-small);
   line-height: 1.45;
 }
 
@@ -671,18 +719,18 @@ button.pill {
 .rows {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--s-3);
 }
 
 .row {
   background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.07);
-  border-radius: 16px;
-  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--s-4);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: var(--s-3);
   width: 100%;
   text-align: left;
   font: inherit;
@@ -690,21 +738,21 @@ button.pill {
 }
 
 .row-label {
-  font-size: 12px;
+  font-size: var(--fs-caption);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-faint);
   font-weight: 600;
-  margin: 6px 0;
+  margin: var(--s-2) 0;
 }
 
 .segmented {
   display: flex;
-  gap: 6px;
+  gap: var(--s-2);
   background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.07);
-  border-radius: 16px;
-  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--s-2);
 }
 
 .segmented button {
@@ -712,9 +760,9 @@ button.pill {
   border: 0;
   background: transparent;
   color: var(--ink-soft);
-  border-radius: 11px;
-  padding: 11px 6px;
-  font-size: 14px;
+  border-radius: var(--r-sm);
+  padding: var(--s-3) var(--s-2);
+  font-size: var(--fs-body);
   cursor: pointer;
   min-height: 44px;
 }
@@ -728,9 +776,9 @@ button.pill {
 /* ---------------------------------------------------------------- banner */
 
 .banner {
-  border-radius: 14px;
-  padding: 13px 15px;
-  font-size: 13px;
+  border-radius: var(--r-md);
+  padding: var(--s-3) var(--s-4);
+  font-size: var(--fs-small);
   line-height: 1.45;
   background: var(--note);
   color: var(--note-ink);
@@ -745,10 +793,78 @@ button.pill {
   text-align: center;
 }
 
+/*
+ * Screen-reader-only text. The patient app previously borrowed
+ * `mc-visually-hidden` from packages/ui, which it does not import — so the
+ * text rendered visibly, duplicating the heading above the symptom box and
+ * the "based on" line on the result screen.
+ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* A row of small controls. Also previously borrowed from the staff kit. */
+.row-inline {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.self-center {
+  align-self: center;
+}
+
+.self-end {
+  align-self: flex-end;
+}
+
+.stack-top {
+  margin-top: var(--s-4);
+}
+
+.subtitle-top {
+  margin-top: var(--s-6);
+}
+
+/* The words the lexicon recognised, echoed back under the box (Figure 22). */
+.matches {
+  font-size: var(--fs-caption);
+  color: var(--ink-faint);
+  margin: var(--s-3) 0 0;
+}
+
+/* A secondary action that is not the screen's main button. */
+.btn-small {
+  min-height: 44px;
+  padding: var(--s-3);
+  font-size: var(--fs-body);
+}
+
+/* An anchor doing a button's job — "Call for help" is a tel: link. */
+.btn-link {
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+  line-height: 1.25;
+}
+
+.disclaimer-flush {
+  text-align: left;
+  margin: 0;
+}
+
 .spinner {
   width: 22px;
   height: 22px;
-  border-radius: 99px;
+  border-radius: var(--r-pill);
   border: 3px solid rgba(13, 124, 108, 0.25);
   border-top-color: var(--teal);
   animation: spin 0.8s linear infinite;

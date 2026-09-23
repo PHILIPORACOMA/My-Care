@@ -24,7 +24,7 @@ export function App() {
 
   if (checking) {
     return (
-      <div style={{ display: "grid", placeItems: "center", minHeight: "100vh" }}>
+      <div className="mc-center-page">
         <Spinner label="Checking your session" />
       </div>
     );

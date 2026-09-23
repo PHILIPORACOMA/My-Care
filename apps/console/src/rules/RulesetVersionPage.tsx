@@ -134,7 +134,7 @@ function VersionEditor(props: { version: RulesetVersionSummary; initial: Ruleset
         }
       />
 
-      <div className="mc-stack" style={{ marginBottom: 16 }}>
+      <div className="mc-stack mc-mb-4">
         {notice && <Banner tone="success">{notice}</Banner>}
         {error && (
           <Banner tone="danger" title={error.message}>
@@ -219,7 +219,7 @@ function PublishDialog(props: { label: string; busy: boolean; onClose: () => voi
       }
     >
       <div className="mc-stack">
-        <p style={{ margin: 0 }}>
+        <p className="mc-flush">
           Patients' phones download it on their next connection and triage against it from then on. The current published version is retired and can be
           rolled back to.
         </p>

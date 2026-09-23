@@ -157,7 +157,7 @@ function RuleCard(props: {
           hint="Lower wins a tie"
           onChange={(e) => set({ priority: Number(e.target.value) })}
         />
-        <div className="mc-row" style={{ paddingBottom: 8 }}>
+        <div className="mc-row mc-pb-2">
           <Checkbox checked={rule.isActive} disabled={readOnly} onChange={(isActive) => set({ isActive })}>
             Active
           </Checkbox>
@@ -250,7 +250,7 @@ function ConditionRow(props: {
             </option>
           ))}
         </SelectField>
-        <span className="mc-small mc-muted" style={{ paddingBottom: 10 }}>
+        <span className="mc-small mc-muted mc-pb-2">
           {isSymptom ? "symptom" : "threshold"}
         </span>
         {isSymptom ? (
@@ -264,7 +264,7 @@ function ConditionRow(props: {
             <CodeOptions codes={props.codes} />
           </SelectField>
         ) : (
-          <div className="mc-grid" style={{ gridTemplateColumns: "1fr 80px 1fr", gap: 8 }}>
+          <div className="mc-grid" style={{ gridTemplateColumns: "1fr 80px 1fr" }}>
             <TextField
               label="Attribute (question key)"
               value={condition.attribute ?? ""}
@@ -299,7 +299,7 @@ function ConditionRow(props: {
           </div>
         )}
         {!readOnly && (
-          <div className="mc-row" style={{ paddingBottom: 6 }}>
+          <div className="mc-row mc-pb-2">
             <Button size="sm" variant="ghost" disabled={!props.canMoveUp} onClick={() => props.onMove(-1)} aria-label="Move condition up">
               ↑
             </Button>
@@ -326,7 +326,7 @@ export function ThresholdsEditor({ content, onChange, readOnly, errorFor }: Edit
 
   return (
     <div className="mc-stack">
-      <p className="mc-muted mc-small" style={{ margin: 0 }}>
+      <p className="mc-muted mc-small mc-flush">
         A threshold is compared with a clarification answer whose question key matches. Marked as a <strong>red-flag override</strong>, reaching it
         forces its tier ahead of every rule.
       </p>
@@ -344,7 +344,7 @@ export function ThresholdsEditor({ content, onChange, readOnly, errorFor }: Edit
                 </option>
               ))}
             </SelectField>
-            <div className="mc-row" style={{ paddingBottom: 8 }}>
+            <div className="mc-row mc-pb-2">
               <Checkbox checked={t.isOverride} disabled={readOnly} onChange={(isOverride) => set(replaceAt(thresholds, i, { ...t, isOverride }))}>
                 Red-flag override
               </Checkbox>
@@ -381,7 +381,7 @@ export function QuestionsEditor({ content, onChange, codes, readOnly, errorFor }
 
   return (
     <div className="mc-stack">
-      <p className="mc-muted mc-small" style={{ margin: 0 }}>
+      <p className="mc-muted mc-small mc-flush">
         Asked when a matched symptom needs clarification. The key doubles as the attribute a threshold condition reads. Give each language its own
         entry with the same key; keep answers in the same order across languages.
       </p>
@@ -403,7 +403,7 @@ export function QuestionsEditor({ content, onChange, codes, readOnly, errorFor }
                 ))}
               </SelectField>
               {!readOnly && (
-                <Button size="sm" variant="ghost" onClick={() => set(removeAt(questions, i))} style={{ marginBottom: 6 }}>
+                <Button size="sm" variant="ghost" onClick={() => set(removeAt(questions, i))} className="mc-mb-1">
                   Remove
                 </Button>
               )}
@@ -479,7 +479,7 @@ export function LexiconEditor({ content, onChange, codes, readOnly, errorFor }: 
 
   return (
     <div className="mc-stack">
-      <div className="mc-row" style={{ justifyContent: "space-between" }}>
+      <div className="mc-row mc-row-between">
         <TextField label="Filter" placeholder="Code or word" value={filter} onChange={(e) => setFilter(e.target.value)} />
         <span className="mc-small mc-muted">{terms.length} terms</span>
       </div>
@@ -497,13 +497,13 @@ export function LexiconEditor({ content, onChange, codes, readOnly, errorFor }: 
             ))}
           </SelectField>
           <TextField label="Word or phrase" value={term.term} disabled={readOnly} error={errorFor(`lexiconTerms.${index}.term`)} onChange={(e) => set(replaceAt(terms, index, { ...term, term: e.target.value }))} />
-          <div style={{ paddingBottom: 8 }}>
+          <div className="mc-pb-2">
             <Checkbox checked={term.isNegation} disabled={readOnly} onChange={(isNegation) => set(replaceAt(terms, index, { ...term, isNegation }))}>
               Negation (symptom absent)
             </Checkbox>
           </div>
           {!readOnly ? (
-            <Button size="sm" variant="ghost" onClick={() => set(removeAt(terms, index))} style={{ marginBottom: 6 }}>
+            <Button size="sm" variant="ghost" onClick={() => set(removeAt(terms, index))} className="mc-mb-1">
               Remove
             </Button>
           ) : (
@@ -561,7 +561,7 @@ export function TipsEditor({ content, onChange, codes, readOnly, errorFor }: Edi
               </SelectField>
               <TextField label="Order" type="number" min={0} value={tip.displayOrder} disabled={readOnly} onChange={(e) => set(replaceAt(tips, i, { ...tip, displayOrder: Number(e.target.value) }))} />
               {!readOnly && (
-                <Button size="sm" variant="ghost" onClick={() => set(removeAt(tips, i))} style={{ marginBottom: 6 }}>
+                <Button size="sm" variant="ghost" onClick={() => set(removeAt(tips, i))} className="mc-mb-1">
                   Remove
                 </Button>
               )}

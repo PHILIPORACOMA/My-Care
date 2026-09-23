@@ -38,7 +38,7 @@ export function TierVolumeChart(props: { days: DailyTiers[]; highlight?: { from:
   const y = (value: number) => (value / max) * innerH;
 
   return (
-    <figure style={{ margin: 0 }}>
+    <figure className="mc-flush">
       <svg className="mc-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Daily triage sessions by tier">
         <defs>
           <pattern id="mc-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -107,7 +107,7 @@ export function TierVolumeChart(props: { days: DailyTiers[]; highlight?: { from:
           );
         })}
       </svg>
-      <figcaption className="mc-legend" style={{ marginTop: 8 }}>
+      <figcaption className="mc-legend mc-mt-2">
         {TIERS.map((tier) => (
           <span key={tier} style={{ ["--swatch" as string]: TIER_COLOURS[tier] }}>
             {TIER_LABELS[tier]}

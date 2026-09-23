@@ -35,12 +35,12 @@ export function TrendsPage() {
           <div className="mc-stack">
             {trends.clusters.length > 0 ? (
               <Banner tone="warning" title="Possible clusters this week" className="cluster-banner">
-                <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+                <ul className="mc-list">
                   {trends.clusters.map((cluster) => (
                     <li key={`${cluster.symptomCode}-${cluster.tier ?? "all"}`}>{clusterSentence(cluster)}</li>
                   ))}
                 </ul>
-                <p className="mc-small" style={{ marginBottom: 0 }}>
+                <p className="mc-small mc-flush-bottom">
                   Flagged when this week is at least five sessions, well above the previous four weeks, and unlikely by chance. Worth a look, not a
                   conclusion.
                 </p>

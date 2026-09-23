@@ -36,12 +36,12 @@ export function InputScreen(props: {
         <OfflineBadge t={props.t} />
       </div>
 
-      <h1 className="title" style={{ margin: "18px 0 14px" }}>
+      <h1 className="title">
         {props.t("whatAreYourSymptoms")}
       </h1>
 
       <label>
-        <span className="mc-visually-hidden">{props.t("whatAreYourSymptoms")}</span>
+        <span className="sr-only">{props.t("whatAreYourSymptoms")}</span>
         <textarea
           className="textarea"
           value={props.text}
@@ -52,7 +52,7 @@ export function InputScreen(props: {
       </label>
 
       {props.matches.length > 0 && (
-        <p className="section-label" style={{ margin: "10px 0 0" }}>
+        <p className="matches">
           {props.matches.map((m) => `${m.negated ? "✕" : "✓"} ${m.matchedTerm.term}`).join(" · ")}
         </p>
       )}
@@ -109,7 +109,7 @@ export function ClarifyScreen(props: {
         <OfflineBadge t={props.t} />
       </div>
 
-      <div className="steps" aria-hidden="true" style={{ margin: "20px 0 16px" }}>
+      <div className="steps" aria-hidden="true">
         {Array.from({ length: props.total }, (_, i) => (
           <i key={i} className={i <= props.index ? "on" : undefined} />
         ))}
@@ -117,10 +117,10 @@ export function ClarifyScreen(props: {
 
       <p className="note">{props.t("clarifyIntro")}</p>
 
-      <h1 className="title" style={{ margin: "22px 0 4px" }}>
+      <h1 className="title">
         {props.question.prompt}
       </h1>
-      <p className="step-label" style={{ marginBottom: 14 }}>
+      <p className="step-label">
         {props.t("questionCounter", { n: props.index + 1, total: props.total })}
       </p>
 

@@ -63,7 +63,7 @@ export function ResultScreen(props: {
   return (
     <div className={`result result-${tier}`}>
       <div className="result-head">
-        <div style={{ alignSelf: "flex-end" }}>
+        <div className="self-end">
           <OfflineBadge t={props.t} />
         </div>
         <div className="result-mark" aria-hidden="true">
@@ -72,7 +72,7 @@ export function ResultScreen(props: {
         <h1 className="result-verdict">{props.t(VERDICT[tier])}</h1>
         {props.chips.length > 0 && (
           <>
-            <span className="mc-visually-hidden">{props.t("basedOn")}</span>
+            <span className="sr-only">{props.t("basedOn")}</span>
             <div className="result-chips">
               {props.chips.map((chip) => (
                 <span className="result-chip" key={chip}>
@@ -89,13 +89,13 @@ export function ResultScreen(props: {
 
         {tier !== "home" && <p className="referral">{props.t("showToHealthWorker")}</p>}
 
-        <p className="disclaimer" style={{ textAlign: "left", margin: 0 }}>
+        <p className="disclaimer disclaimer-flush">
           {props.t("longDisclaimer")}
         </p>
 
         <div className="push stack">
           {tier === "emergency" && (
-            <a className="btn btn-danger" href={`tel:${number}`} style={{ textAlign: "center", textDecoration: "none", lineHeight: "20px" }}>
+            <a className="btn btn-danger btn-link" href={`tel:${number}`}>
               📞 {props.t("callForHelp")} · {number}
             </a>
           )}
@@ -106,7 +106,7 @@ export function ResultScreen(props: {
             {props.t("checkAgain")}
           </button>
           {props.result.matchedRuleCode && (
-            <p className="result-rule" style={{ textAlign: "center" }}>
+            <p className="result-rule center">
               {props.result.matchedRuleCode}
             </p>
           )}
@@ -127,7 +127,7 @@ export function TipsScreen(props: { t: Translator; tips: HealthTip[]; tier: Tier
         <OfflineBadge t={props.t} />
       </div>
 
-      <h1 className="title" style={{ margin: "18px 0 16px" }}>
+      <h1 className="title">
         {props.t("healthTips")}
       </h1>
 

@@ -71,7 +71,7 @@ export function ReportsPage() {
             {notice && <Banner tone="success">{notice}</Banner>}
 
             <Card title="Generate a report">
-              <div className="mc-row" style={{ alignItems: "flex-end", gap: 12 }}>
+              <div className="mc-row mc-items-end">
                 <SelectField label="Report" value={type} onChange={(e) => setType(e.target.value)}>
                   {data.types.map((t) => (
                     <option key={t.key} value={t.key}>

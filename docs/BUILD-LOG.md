@@ -707,3 +707,75 @@ app cannot triage.** That was the accepted trade for a clean database. Once it i
 published the symptom screen will offer chips for all 23 presentations. Free text
 still matches nothing: `v1` carries **zero lexicon terms**, and those are the
 reviewed ones Philipo will enter himself.
+
+---
+
+### 8f - One scale across all three apps (2026-09-23)
+
+Philipo: "there's quite an inconsistency in the ui, try smoothing everything
+out." The Chrome extension is not connected to this session, so this was an
+audit of the stylesheets rather than of pixels - which turned out to be lucky,
+because two of the findings were defects rather than drift.
+
+#### Two actual bugs, found on the way
+
+**`.mc-visually-hidden` and `.mc-row` are packages/ui class names, and the
+patient app does not import packages/ui.** So in `apps/pwa`:
+
+- the screen-reader-only labels on the symptom screen and the result screen had
+  no styles at all, and were **rendering as visible duplicate text** - the
+  symptom screen showed its own heading twice;
+- Home's language pill and settings button had **no row layout**, because the
+  class carrying `display: flex` did not exist. The inline `gap: 8` did nothing
+  without it.
+
+Both now use PWA-native classes (`.sr-only`, `.row-inline`) defined in the
+app's own sheet. This is exactly the failure the CLAUDE.md layout rule predicts
+when the two vocabularies blur: the patient app is excluded from the kit on
+purpose, so borrowing a class name from it silently produces unstyled markup.
+
+#### The drift
+
+| | Before | After |
+|---|---|---|
+| Type sizes, patient app | 11 (11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15, 15.5, 16 …) | 9 named steps, no fractions |
+| Type sizes, staff kit | 12 (10, 11, 11.5, 12, 12.5, 13, 13.5, 14, 15, 15.5, 16, 17 …) | 9 named steps |
+| Radii, patient app | 7 literals (11, 13, 14, 16, 18, 26, 99) | 4 tokens |
+| Gaps, staff kit | 4, 5, 7, 8, 9, 10, 12, 14, 16, 18px | one 4px scale |
+| Inline `style={{…}}` | **70** | **9**, all of them data |
+| Side gutter, patient screens | 22px / 24px / 26px depending on screen | one `--gutter` |
+| Hairline colour, patient app | 4 alphas (.07, .08, .09, .12) | `--line`, plus one deliberate `--line-strong` |
+
+The most visible of these: `.title` carried a different margin on every screen
+it appeared on - `18px 0 14px`, `22px 0 4px`, `18px 0 16px`, `18px 0 8px` -
+so headings sat at a different height depending on where the patient was. It
+is now one rule in the stylesheet.
+
+#### Colours reconciled
+
+Three tokens disagreed between the kit and the patient app for no reason:
+ground (`#fbfaf7` vs `#f6f3ed`), hairline (8% vs 10% black) and the RHU tint
+(`#fdf2e4` vs `#fdf0e1`). The patient app now uses the design canvas's values,
+so a tier looks the same to a patient and to the health worker reading the
+dashboard. **The two sheets stay separate** - same values, different token
+names, no import - because CLAUDE.md excludes the kit from the PWA and that
+rule is what the bundle budget rests on.
+
+#### What deliberately stayed inline
+
+Nine declarations, all of them data rather than styling: a ranked bar's width
+(`${percent}%`), two legend swatch colours, and the six `grid-template-columns`
+that give each ruleset editor its own column layout.
+
+#### Verified
+
+`npm test` 47 passed (console 4, portal 5, pwa 24, api-client 5, ui 9, plus the
+engine, matcher and replay suites). Typecheck clean across ten workspaces. All
+three apps build; the patient bundle is unchanged at 58.9 kB gzipped, 227 KiB
+precached. Every size, radius, gap, padding and margin in all four stylesheets
+now resolves to a token - the check for a stray literal comes back empty.
+
+**Still unverified: how any of it looks.** Nothing here was seen rendered. The
+two undefined-class bugs are the argument for Milestone 9's Playwright pass
+sooner rather than later: both would have been obvious in a browser, and
+neither was visible to 47 passing tests.

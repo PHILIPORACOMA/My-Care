@@ -50,7 +50,7 @@ export function SyncHealthPage() {
                       key={key}
                       label={s.label}
                       value={
-                        <span style={{ fontSize: 20 }}>
+                        <span className="mc-glyph">
                           <ServiceDot status={s.status} />
                           {s.status}
                         </span>

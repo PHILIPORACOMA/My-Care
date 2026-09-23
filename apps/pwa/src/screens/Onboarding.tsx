@@ -16,7 +16,7 @@ export function SplashScreen({ t, onStart }: { t: Translator; onStart: () => voi
         <p className="splash-tag">{t("tagline")}</p>
       </div>
       <div className="stack">
-        <span className="pill pill-ghost" style={{ alignSelf: "center" }}>
+        <span className="pill pill-ghost self-center">
           ✓ {t("worksOffline")} · {t("offlineReady")}
         </span>
         <button className="btn btn-light" onClick={onStart}>
@@ -40,7 +40,7 @@ export function LanguageScreen(props: {
       <div className="grow">
         <h1 className="title">{props.t("chooseLanguage")}</h1>
         <p className="subtitle">{props.t("selectToContinue")}</p>
-        <div className="stack" style={{ marginTop: 18 }}>
+        <div className="stack stack-top">
           {LANGUAGES.map((language) => (
             <button
               key={language.code}
@@ -77,7 +77,7 @@ export function AgeScreen(props: { t: Translator; onBack: () => void; onConfirm:
         <OfflineBadge t={props.t} />
       </div>
       <Steps step={2} t={props.t} />
-      <div className="grow" style={{ justifyContent: "center" }}>
+      <div className="grow">
         <h1 className="title title-lg">{props.t("ageQuestion")}</h1>
         <p className="subtitle">{props.t("adultsOnly")}</p>
         {declined && <p className="banner banner-warn">{props.t("ageDeclined")}</p>}
@@ -130,7 +130,7 @@ export function BarangayScreen(props: {
       <Steps step={3} t={props.t} />
       <h1 className="title">{props.t("selectBarangay")}</h1>
 
-      <div className="search" style={{ marginTop: 14 }}>
+      <div className="search">
         <span aria-hidden="true">🔍</span>
         <input
           value={query}
@@ -158,11 +158,11 @@ export function BarangayScreen(props: {
       {why && <p className="banner">{props.t("whyAskBody")}</p>}
       {props.error && <p className="banner banner-warn">{props.error}</p>}
 
-      <div className="stack" style={{ marginTop: 12 }}>
+      <div className="stack stack-top">
         <button className="btn" disabled={!props.selected || props.busy} onClick={props.onConfirm}>
           {props.t("confirmBarangay")}
         </button>
-        <button className="btn btn-outline" onClick={() => setWhy((open) => !open)} style={{ minHeight: 44, padding: 12 }}>
+        <button className="btn btn-outline btn-small" onClick={() => setWhy((open) => !open)}>
           {props.t("whyAsk")}
         </button>
       </div>

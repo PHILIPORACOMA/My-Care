@@ -49,7 +49,7 @@ export function AppShell(props: {
         </div>
         <nav className="mc-nav" aria-label="Main">
           {props.nav.map((item) => (
-            <span key={item.to} style={{ display: "contents" }}>
+            <span key={item.to} className="mc-contents">
               {props.renderLink(item)}
             </span>
           ))}
@@ -384,7 +384,7 @@ export function Async<T>(props: {
   if (error) {
     return (
       <Banner tone="danger" title="Could not load this view">
-        <p style={{ margin: "4px 0 8px" }}>{error.message}</p>
+        <p className="mc-mt-1 mc-mb-2">{error.message}</p>
         <Button variant="secondary" size="sm" onClick={reload}>
           Try again
         </Button>

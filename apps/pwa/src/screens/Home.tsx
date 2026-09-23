@@ -17,7 +17,7 @@ export function HomeScreen(props: {
     <div className="screen">
       <div className="top-row">
         <OfflineBadge t={props.t} />
-        <div className="mc-row" style={{ gap: 8 }}>
+        <div className="row-inline">
           <span className="pill">{props.languageLabel}</span>
           <button className="icon-btn icon-btn-round" onClick={props.onSettings} aria-label={props.t("settings")}>
             ⚙
@@ -25,7 +25,7 @@ export function HomeScreen(props: {
         </div>
       </div>
 
-      <p className="subtitle" style={{ marginTop: 26 }}>
+      <p className="subtitle subtitle-top">
         {props.t("hello")}
       </p>
       <h1 className="title title-lg">{props.t("howAreYouFeeling")}</h1>

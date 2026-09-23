@@ -60,18 +60,18 @@ export function TestPanel({ content, codes, versionLabel }: { content: RulesetCo
             hint="Matched against this version's lexicon. Test input only — never stored."
           />
           {matches.length > 0 && (
-            <p className="mc-small" style={{ margin: 0 }}>
+            <p className="mc-small mc-flush">
               Lexicon matched:{" "}
               {matches.map((m) => (
-                <span key={m.symptomCode} className="mc-badge" style={{ marginRight: 4 }}>
+                <span key={m.symptomCode} className="mc-badge mc-mr-1">
                   {m.negated ? "not " : ""}
                   {m.symptomCode} ← “{m.matchedTerm.term}”
                 </span>
               ))}
             </p>
           )}
-          <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-            <legend className="mc-small mc-muted" style={{ marginBottom: 6 }}>
+          <fieldset className="mc-fieldset">
+            <legend className="mc-small mc-muted mc-mb-1">
               Or tap symptom codes (like the patient's chips)
             </legend>
             <div className="chip-picker">
@@ -106,7 +106,7 @@ export function TestPanel({ content, codes, versionLabel }: { content: RulesetCo
           <div>
             <TierBadge tier={result.tier} />
           </div>
-          <p style={{ margin: 0 }}>{REASONS[result.reason]}</p>
+          <p className="mc-flush">{REASONS[result.reason]}</p>
           {rule && (
             <div>
               <div className="mc-small mc-muted">

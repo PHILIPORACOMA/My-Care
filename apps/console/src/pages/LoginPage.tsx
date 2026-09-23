@@ -33,7 +33,7 @@ export function LoginPage({ wrongRole }: { wrongRole: boolean }) {
         <LoginBrand surface="System administration" />
 
         {wrongRole ? (
-          <div className="mc-stack" style={{ width: "100%" }}>
+          <div className="mc-stack mc-full">
             <Banner tone="warning" title="This console is for the development team">
               Your account is a sub-admin account. Use the Health Worker Portal instead.
             </Banner>

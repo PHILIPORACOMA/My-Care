@@ -2,9 +2,9 @@
 
 .tabs {
   display: flex;
-  gap: 4px;
+  gap: var(--s-1);
   border-bottom: 1px solid var(--border);
-  margin-bottom: 16px;
+  margin-bottom: var(--s-4);
   flex-wrap: wrap;
 }
 
@@ -14,7 +14,7 @@
   border: 0;
   border-bottom: 2px solid transparent;
   color: var(--text-muted);
-  padding: 8px 12px;
+  padding: var(--s-2) var(--s-3);
   cursor: pointer;
   font-weight: 600;
 }
@@ -26,52 +26,52 @@
 
 .editor-row {
   display: grid;
-  gap: 8px;
+  gap: var(--s-2);
   align-items: end;
 }
 
 .rule-card {
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px;
+  padding: var(--s-4);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--s-3);
   background: var(--surface);
 }
 
 .rule-head {
   display: grid;
   grid-template-columns: 120px 1fr 170px 100px auto;
-  gap: 8px;
+  gap: var(--s-2);
   align-items: end;
 }
 
 .condition-row {
   display: grid;
   grid-template-columns: 90px 110px 1fr auto;
-  gap: 8px;
+  gap: var(--s-2);
   align-items: end;
 }
 
 .expression {
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: var(--fs-md);
   background: var(--surface-muted);
   border-radius: var(--radius-sm);
-  padding: 8px 10px;
+  padding: var(--s-2) var(--s-3);
   overflow-x: auto;
 }
 
 .error-list {
-  margin: 6px 0 0;
-  padding-left: 18px;
-  font-size: 13px;
+  margin: var(--s-2) 0 0;
+  padding-left: var(--s-5);
+  font-size: var(--fs-md);
 }
 
 .json {
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   white-space: pre-wrap;
   word-break: break-word;
   margin: 0;
@@ -81,19 +81,19 @@
 .chip-picker {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--s-2);
 }
 
 .chip-picker label {
   border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  padding: var(--s-1) var(--s-3);
   cursor: pointer;
-  font-size: 12.5px;
+  font-size: var(--fs-md);
 }
 
 .chip-picker input {
-  margin-right: 6px;
+  margin-right: var(--s-2);
 }
 
 .status-dot {
@@ -101,7 +101,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  margin-right: 6px;
+  margin-right: var(--s-2);
   background: var(--text-muted);
 }
 

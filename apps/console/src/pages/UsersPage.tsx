@@ -297,7 +297,7 @@ function DeactivateDialog(props: { user: ConsoleUser; onClose: () => void; onDon
       }
     >
       {submit.error && <Banner tone="danger">{submit.error.message}</Banner>}
-      <p style={{ marginTop: 0 }}>
+      <p className="mc-flush-top">
         They will be signed out on their next request and cannot sign in again until you set a new password. The action is recorded in the audit log.
       </p>
     </Dialog>

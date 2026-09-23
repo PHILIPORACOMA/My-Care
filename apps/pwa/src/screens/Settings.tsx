@@ -35,7 +35,7 @@ export function SettingsScreen(props: {
         <OfflineBadge t={props.t} />
       </div>
 
-      <h1 className="title" style={{ margin: "18px 0 8px" }}>
+      <h1 className="title">
         {props.t("settings")}
       </h1>
 
@@ -75,7 +75,7 @@ export function SettingsScreen(props: {
         </div>
       </div>
 
-      <div className="push stack" style={{ marginTop: 16 }}>
+      <div className="push stack">
         {confirming ? (
           <>
             <p className="banner banner-warn">{props.t("startOverConfirm")}</p>

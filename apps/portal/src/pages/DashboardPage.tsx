@@ -88,7 +88,7 @@ export function DashboardPage() {
       <Async state={state}>
         {({ now, before }) => (
           <div className="mc-stack">
-            <div className="mc-row" style={{ justifyContent: "space-between" }}>
+            <div className="mc-row mc-row-between">
               <SyncPill>As of last aggregate: {formatDateTime(now.computedAt)}</SyncPill>
               <span className="mc-small mc-muted">
                 {now.range.from} to {now.range.to} · <Count cell={now.total} /> sessions

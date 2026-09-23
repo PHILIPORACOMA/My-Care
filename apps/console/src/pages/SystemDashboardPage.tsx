@@ -63,28 +63,28 @@ export function SystemDashboardPage() {
                 </Card>
 
                 <Card title="Activity">
-                  <dl className="mc-grid" style={{ gridTemplateColumns: "1fr auto", margin: 0, rowGap: 8 }}>
+                  <dl className="mc-defs">
                     <dt className="mc-muted">Sessions synced, last 24 hours</dt>
-                    <dd style={{ margin: 0 }}>
+                    <dd>
                       <Count cell={health.metrics.sessionsLast24h} />
                     </dd>
                     <dt className="mc-muted">Upload batches, last 24 hours</dt>
-                    <dd style={{ margin: 0 }}>{health.metrics.batchesLast24h}</dd>
+                    <dd>{health.metrics.batchesLast24h}</dd>
                     <dt className="mc-muted">Sessions waiting on devices</dt>
-                    <dd style={{ margin: 0 }}>
+                    <dd>
                       <Count cell={health.metrics.syncQueue.pendingSessions} />
                     </dd>
                     <dt className="mc-muted">Emergency contacts configured</dt>
-                    <dd style={{ margin: 0 }}>{health.metrics.activeFacilities}</dd>
+                    <dd>{health.metrics.activeFacilities}</dd>
                     <dt className="mc-muted">Aggregates last rebuilt</dt>
-                    <dd style={{ margin: 0 }}>{health.lastAggregation ? formatRelative(health.lastAggregation.finishedAt) : "never"}</dd>
+                    <dd>{health.lastAggregation ? formatRelative(health.lastAggregation.finishedAt) : "never"}</dd>
                     <dt className="mc-muted">Build</dt>
-                    <dd style={{ margin: 0 }} className="mc-mono">
+                    <dd className="mc-mono">
                       {health.appVersion}
                     </dd>
                   </dl>
                   {health.metrics.activeFacilities === 0 && (
-                    <p className="mc-small mc-muted" style={{ marginBottom: 0 }}>
+                    <p className="mc-small mc-muted mc-flush-bottom">
                       No facilities are loaded, so "Call for help" falls back to 911. Import the City Health Office's list with{" "}
                       <code>php artisan mycare:facilities:import</code>.
                     </p>

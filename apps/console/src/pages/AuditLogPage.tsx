@@ -108,7 +108,7 @@ export function AuditLogPage() {
                 },
               ]}
             />
-            <div className="mc-row" style={{ justifyContent: "flex-end", marginTop: 12 }}>
+            <div className="mc-row mc-row-end mc-mt-3">
               <Button size="sm" variant="secondary" disabled={result.page <= 1} onClick={() => setPage((p) => p - 1)}>
                 Newer
               </Button>
@@ -169,7 +169,7 @@ function ExportDialog({ onClose }: { onClose: () => void }) {
     >
       <div className="mc-stack">
         {error && <Banner tone="danger">{error}</Banner>}
-        <p className="mc-small mc-muted" style={{ margin: 0 }}>
+        <p className="mc-small mc-muted mc-flush">
           De-identified for external review: staff email addresses are replaced by role and account number, and attempted sign-in addresses are
           removed. The export itself is recorded in this log.
         </p>
