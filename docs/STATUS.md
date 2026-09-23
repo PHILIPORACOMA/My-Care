@@ -289,6 +289,12 @@ php -d variables_order=EGPCS artisan serve --no-reload
 npm run dev -w @mycare/console           # http://localhost:5175
 npm run dev -w @mycare/portal            # http://localhost:5174/portal/
 npm run dev -w @mycare/pwa               # http://localhost:5173
+
+# Testing offline needs the PRODUCTION build: the dev server does not register
+# a service worker, so going offline against :5173 proves nothing.
+npm run build -w @mycare/pwa
+npm run preview -w @mycare/pwa           # http://localhost:4173, /api proxied
+# then: onboard while online, DevTools > Network > Offline, hard reload.
 ```
 
 ## Repo pointers

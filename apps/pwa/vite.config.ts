@@ -56,6 +56,20 @@ export default defineConfig({
       "/api": { target: api, changeOrigin: false },
     },
   },
+  /*
+   * `preview` serves the production build, and it is the only way to test the
+   * offline behaviour honestly: the service worker is not registered by the
+   * dev server, so going offline against `npm run dev` proves nothing. It
+   * needs the same proxy as `server`, because a device still has to reach the
+   * API once to register and download the ruleset before it can work offline.
+   */
+  preview: {
+    port: 4173,
+    strictPort: true,
+    proxy: {
+      "/api": { target: api, changeOrigin: false },
+    },
+  },
   test: {
     environment: "jsdom",
     globals: true,
