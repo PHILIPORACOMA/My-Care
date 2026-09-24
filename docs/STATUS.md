@@ -1,12 +1,17 @@
 # Development status checkpoint
 
-Last updated: **2026-09-23.** Phases 4–9 are being built on branch
+Last updated: **2026-09-24.** Phases 4–9 are being built on branch
 `feat/UT-020-laravel-api-schema`. All backend work for Phases 4, 6 (server side) and
 7 is done and verified, and **all three front ends are built** — the super-admin
 console, the sub-admin portal, and now the patient PWA with the device half of
 the sync layer. The team's design canvas has been applied throughout. What
 remains is Milestone 9 (browser + offline E2E, CI) and Milestone 10
 (deployment). `docs/BUILD-LOG.md` is the long-form record.
+
+**Blocked on Philipo, not on code:** there are no staff accounts and no
+published ruleset, so the patient app cannot triage at all right now. Both
+steps are deliberately his — one types a password, the other attests that
+clinical review happened. See "Next steps" below.
 
 Update this file at the end of any session that changes phase status, adds a
 major decision, or closes/opens a known gap — don't let it drift.
@@ -15,35 +20,42 @@ major decision, or closes/opens a known gap — don't let it drift.
 
 Paste this into a new chat session to pick up where this one left off:
 
-> Read `CLAUDE.md`, `docs/STATUS.md` and `docs/BUILD-LOG.md` first, then ADRs
-> 0005–0007 in `docs/adr/`. Skim `docs/REPO.md` and `docs/ut-matrix.md`.
+> Read `CLAUDE.md`, `docs/STATUS.md` and `docs/BUILD-LOG.md` first (the log's
+> most recent entries are 8a-8g), then ADRs 0005-0007 in `docs/adr/`. Skim
+> `docs/REPO.md` and `docs/ut-matrix.md`.
 >
-> We are finishing Phases 4–9 on branch `feat/UT-020-laravel-api-schema` with **no
-> manuscript amendments**. Backend Milestones 0–4 and the shared packages
-> (Milestone 5) are committed and verified: Pest 176/716, engine 12/12,
-> lexicon-matcher 11/11, engine-replay 5/5, api-client 5/5, ui 9/9,
-> console 4/4, portal 5/5, pwa 24/24.
+> One branch: **`feat/UT-020-laravel-api-schema`**, pushed, and PR #1 carries
+> all of it (Phases 3-8). Standing rule: **no manuscript amendments**.
 >
-> Milestones 6 (console), 7 (portal) and 8 (patient PWA + offline sync) are
-> committed, along with the design import. Everything is covered by tests, but
-> **no UI has been opened in a real browser yet**, and the PWA has never run
-> against a live API — that is the first job of Milestone 9.
+> Built and tested: the Laravel API (Pest 176/716 against MySQL 8), the
+> super-admin console, the sub-admin portal, and the patient PWA with both
+> halves of the offline sync layer. `npm test` is 48 across the workspaces.
 >
-> Both branch names now point at the same commit (`6047f04`) and **PR #1
-> contains all 36 commits**. `main` is NOT merged in: kizaru3214's PR #2 put a
-> second patient app at `apps/pwa` there, and Philipo is settling with the team
-> which one survives. Do not merge `main` or re-merge that work unless he says
-> so.
+> **Three things are true that the test suite cannot tell you:**
+>
+> 1. **No UI has ever been opened in a browser.** A styling pass on 2026-09-23
+>    found two classes used but never defined in the patient app - visible
+>    duplicate text, and a row with no layout - and 47 passing tests missed
+>    both. Playwright (Milestone 9) is the fix and is the next real task.
+> 2. **Nothing is published**, so `GET /api/v1/ruleset/current` returns 503 and
+>    the patient app cannot triage at all. `v1` sits in the database as a
+>    draft.
+> 3. **There are no staff accounts** - the 2026-09-20 reset left `users: 0`.
+>
+> **Do not do these for Philipo:** create the super-admin (the command prompts
+> for a password, which is his to type), or publish a ruleset (publishing
+> attests that clinical review happened and audits who said so). Ask him.
+>
+> `main` is NOT merged in: kizaru3214's PR #2 put a second patient app at
+> `apps/pwa` there, PR #1 conflicts with it, and GitHub will not run CI on a
+> conflicting PR - so Phases 4-8 have never been through CI. Philipo is
+> settling with the team which patient app survives. Do not merge `main` or
+> re-merge that work unless he says so.
 >
 > Continue the plan in `docs/BUILD-LOG.md`: E2E + CI (9), deployment (10),
-> final docs pass. The honest first task is Playwright, because it is what
-> finally opens all three apps in a real browser.
+> final docs pass.
 >
-> Two things need me, not you: **MySQL80 is stopped** (needs an elevated
-> `net start MySQL80` before anything touches the API), and the Tagalog and
-> Cebuano copy in `apps/pwa/src/i18n.ts` is an unreviewed draft.
->
-> Tell me what you understand the current state to be, and wait for direction —
+> Tell me what you understand the current state to be, and wait for direction -
 > don't start new work yet.
 
 ## What this is
@@ -141,8 +153,9 @@ separately, so on 2026-09-19 this branch was fast-forwarded to match and on
 2026-09-20 the duplicate was **deleted**, locally and on GitHub. Every commit
 survives here; nothing was lost. Do not recreate it.
 
-- **`feat/UT-020-laravel-api-schema`** — `1b51e0a`, 37 commits ahead of `main`,
-  pushed. The branch name is a misnomer now: it carries Phases 3 through 8.
+- **`feat/UT-020-laravel-api-schema`** — `99d0e44`, 42 commits ahead of `main`,
+  pushed and in sync. The branch name is a misnomer now: it carries Phases 3
+  through 8.
 - **PR #1 now contains all of it** — Phases 3 through 8, 278 files. Its title
   still says "Phase 3", which no longer describes it.
 - **PR #1 is `CONFLICTING`, so GitHub will not run CI on it.** Pull-request
@@ -250,17 +263,41 @@ intro sentence that claims only aggregates sync.
 
 ## Next steps, in order
 
-1. ~~Milestone 6 (console)~~ and ~~Milestone 7 (portal)~~ **done 2026-09-18.**
-   Still worth clicking through Figures 30–41 in a browser once.
-2. ~~**Milestone 8 — patient PWA + offline sync**~~ **done 2026-09-18.**
-3. **Milestone 9 — E2E + CI:** Playwright offline triage-and-sync test (which
-   also finally opens all three apps in a real browser), CI for the packages and
-   apps, Node in the `api` job.
-5. **Milestone 10 — deployment:** nginx, PHP-FPM, scheduler cron, Node, HTTPS,
+**Philipo first — nothing below him can be tested until these are done.**
+
+1. **Create the super-admin.** The command prompts for the password rather
+   than taking it as an argument, so it never lands in shell history; typing
+   it is his, not Claude's:
+   ```bash
+   cd apps/api && php artisan mycare:staff:create-super-admin super@mycare.test
+   ```
+   At least 12 characters, letters and numbers.
+2. **Publish `v1`.** Sign in at the console (`:5175`), Rules & Lexicon →
+   **Submit for review** → **Publish**, ticking the clinical-review
+   confirmation. `v1` is a draft, and publish only accepts a version that is
+   in review. This is an attestation: `RulesetLifecycle::publish()` refuses
+   without it and audits who gave it, so **Claude must not click it** — the
+   record would name Philipo for a sign-off he did not give. The paper
+   appraisal (all items 4, no under-triage risk) is the basis for giving it.
+3. **Enter the reviewed lexicon terms** he holds. Until they exist, free text
+   matches nothing and patients rely on chips.
+4. **Scan the completed appraisal form** for the manuscript appendix — the
+   .docx in hand is the blank template.
+
+**Then, in order:**
+
+5. **Verify the patient app end to end** against the published ruleset: chips
+   for all 23 presentations, a real tier, and the session reaching the
+   portal's sync screen. Then the offline run from the production build
+   (`:4173`, DevTools → Offline).
+6. **Milestone 9 — E2E + CI:** Playwright offline triage-and-sync test (which
+   also finally opens all three apps in a real browser), CI for the packages
+   and apps, Node and an `engine-replay` build in the `api` job.
+7. **Milestone 10 — deployment:** nginx, PHP-FPM, scheduler cron, Node, HTTPS,
    env checklist, `docs/DEPLOYMENT.md`.
-6. **Final docs pass:** REPO.md, ut-matrix (UT-001, 002, 006, 012, 013 device
-   side), CLAUDE.md phase table, README.
-7. Push both branches when Philipo says so.
+8. **Final docs pass:** REPO.md, ut-matrix, CLAUDE.md phase table, README.
+9. **The two patient apps.** Settle with the team which survives, then resolve
+   PR #1's conflict with `main` — that unblocks both the merge and CI.
 
 ## Commands to re-verify state
 
@@ -278,7 +315,7 @@ npm run purity -w @mycare/lexicon-matcher
 
 npm test -w @mycare/console              # 4/4
 npm test -w @mycare/portal               # 5/5
-npm test -w @mycare/pwa                  # 24/24
+npm test -w @mycare/pwa                  # 25/25
 
 cd apps/api
 php artisan migrate:fresh --seed --force

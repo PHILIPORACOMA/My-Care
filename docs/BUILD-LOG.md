@@ -779,3 +779,55 @@ now resolves to a token - the check for a stray literal comes back empty.
 two undefined-class bugs are the argument for Milestone 9's Playwright pass
 sooner rather than later: both would have been obvious in a browser, and
 neither was visible to 47 passing tests.
+
+---
+
+### 8g - Splitting "no signal" from "no rules" (2026-09-23)
+
+Philipo, testing the patient app: *"when i choose a barangay, it needs internet
+to continue."* Two separate things were happening.
+
+**The real one, which is by design.** Confirming a barangay is the device's
+first contact with the server: it registers anonymously and downloads the
+ruleset. Without rules there is nothing to triage with, so a first run needs
+connectivity once. Table 27's "None required for triage" is a claim about
+triage, not about provisioning, and the app's own copy says so - *"needs an
+internet connection the first time... After that it works offline."* The
+honest phrasing for the defence: **one connection to provision, none to
+triage.**
+
+**The bug.** Every failure to fetch a ruleset was reported as "no internet",
+including a `503` - a server that answered perfectly well and has nothing
+published. So a patient with working signal was told to go and find signal,
+and the fix (publish a ruleset) belongs to someone who is not in the room.
+It also made testing confusing: perfect wifi, app still asking to connect.
+
+`refreshBundle` now says why it has nothing:
+
+| reason | what the patient reads | who can fix it |
+|---|---|---|
+| `offline` | "Connect once to get started" | the patient |
+| `unpublished` | "Not ready yet" - connection is fine, nothing published yet | the health office |
+| `server` | "Cannot reach the health office" | nobody on site |
+
+A device that already holds a bundle is untouched: a failed refresh stays
+silent and it keeps triaging offline, which is the entire point. Only a device
+with nothing cached raises `BundleUnavailable`.
+
+Verified against the live API, which returns exactly that 503 today:
+`refreshBundle` reasons `unpublished`. 25/25 tests, including one that walks
+onboarding against a 503 and asserts the connection message is **not** shown.
+The Tagalog and Cebuano wording is draft, like the rest of `i18n.ts`.
+
+#### Testing offline needs the production build
+
+The dev server never registers a service worker, so going offline against
+`:5173` proves nothing - the page simply dies. `vite.config.ts` gained a
+`preview` proxy so the built app can still reach the API for that one
+provisioning call:
+
+```bash
+npm run build -w @mycare/pwa
+npm run preview -w @mycare/pwa     # :4173, /api proxied
+# onboard online, then DevTools > Network > Offline, hard reload
+```
