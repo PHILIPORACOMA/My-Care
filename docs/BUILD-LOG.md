@@ -831,3 +831,154 @@ npm run build -w @mycare/pwa
 npm run preview -w @mycare/pwa     # :4173, /api proxied
 # onboard online, then DevTools > Network > Offline, hard reload
 ```
+
+---
+
+### 8h - v1 published, and the whole chain verified end to end (2026-09-25)
+
+Philipo created the super-admin and published `v1` through the console. This is
+the first time the system has run as a system: a clinician-appraised ruleset,
+published by a named actor, reaching a device, triaging on that device, syncing
+back, and surfacing as aggregates.
+
+#### The publish
+
+`draft -> in_review -> published` at 12:11:20 UTC, `published_by_id = 1`, and
+three audit rows naming `super@mycare.test`, each carrying the prior state in
+`old_value`. Figure 41's reconstruction claim holds: the version's history can
+be replayed from the log.
+
+The attestation was given by Philipo, not by Claude. `RulesetLifecycle::publish()`
+refuses without it and records who gave it; a sign-off recorded against someone
+who did not give it would be worthless. The basis is the appraisal form
+(see 8i below).
+
+#### What was verified, against the live server
+
+| | Result |
+|---|---|
+| Barangay list | 15, the seeded Carcar list |
+| Device registration | anonymous, token `prefix.<secret>` (ADR-0005) |
+| Bundle served (UT-013) | `v1`, **23 codes, 23 rules, every rule with a condition** |
+| Tier split | **6 home / 8 RHU / 9 emergency** - matches the appraised table exactly |
+| Chips (Figure 22) | **23**, one per presentation |
+| Free text | matches nothing: **0 published lexicon terms**, as expected |
+| On-device triage | `fever_mild` -> home (R-001) · `fever_persistent` -> rhu (R-007) · `chest_pain_severe_radiating` -> **emergency (R-016)** |
+| Sync (UT-012) | accepted; payload carries codes, never text |
+| Replay (UT-015) | same session uuid re-sent -> **no second row** (3 sessions, 3 distinct uuids, 5 batches) |
+| **Offline triage** | with `fetch` throwing on every call: cached bundle triaged to **emergency**, session **queued**, and **flushed on reconnect** |
+| Engine replay (ADR-0007) | `mycare:aggregate` produced rows carrying `outcome_tier` - `home: 2`, `emergency: 1` - recovered by replaying stored sessions through the real engine under Node, from a table that has no `outcome_tier` column |
+
+That last row is the amendment-free workaround proving itself on real data for
+the first time.
+
+Two failures in the first pass were the verification script's fault - it used
+the old demo data's symptom codes - and both showed correct behaviour anyway: an
+unmatched code fell to the **`rhu` fail-safe, never `home`**, and the server's
+422 for an unknown code left the batch **quarantined rather than retried
+forever**.
+
+#### Seeded data, so the dashboards show something
+
+38 synthetic sessions across Valladolid, Can-asujan and Guadalupe, posted
+**through the real device API** (register -> sync batch, two batches per
+barangay) rather than inserted into MySQL, so they are shaped exactly like data
+a handset would produce. Synthetic, local, and wiped by any `migrate:fresh`.
+
+They are deliberately shaped so **both sides of the suppression rule are
+visible** on today's bucket:
+
+| Barangay | tier | raw | renders as |
+|---|---|---|---|
+| Valladolid | home | 8 | **8** |
+| Valladolid | rhu | 1 | `<5` |
+| Valladolid | emergency | 2 | `<5` |
+| Can-asujan | home | 5 | **5** |
+| Can-asujan | rhu | 2 | `<5` |
+| Guadalupe | emergency | 3 | `<5` |
+
+41 sessions, 14 devices, 11 batches, 99 aggregate rows.
+
+#### One finding worth keeping
+
+Aggregation reported 35 sessions from 41 stored, which looked like
+undercounting. It is not: those 6 sessions have `completed_at >= 16:00 UTC`,
+which is already the **26th in Asia/Manila**, so they belong to tomorrow's
+bucket. `DateRange` converts once, at the boundary, and buckets by local day
+because that is the day a health worker means (CLAUDE.md rule 6). The seed
+script generated timestamps that spill past the local midnight; the aggregator
+was right. Worth knowing before anyone reads a dashboard at 1am and files a bug.
+
+#### Still unverified
+
+**Every UI, in a browser.** The staff read paths need a signed-in session, and
+the patient app has still never been rendered. Milestone 9's Playwright pass is
+the only thing that closes this, and two bugs have already slipped through 48
+passing tests for exactly this reason (8f).
+
+---
+
+### 8i - The appraisal form, and what it actually said (2026-09-25)
+
+The completed appraisal arrived as structured JSON (a transcription of the
+signed paper form, reviewer CR-01, signed 2026-08-20). **It did not say what it
+had been remembered as saying**, and the differences mattered:
+
+- **Part C was unambiguous and good:** all 23 rules rated **4, "highly
+  appropriate"**, mean 4.0, zero needing revision, zero suggested tier changes.
+  Cross-checked row by row against `packages/ruleset/dist/v1.json`: **23 of 23
+  match**, presentation text and tier.
+- **Part D item 2 was rated 1 (Strongly Disagree)** on the reverse-worded
+  statement *"I am NOT aware of a dangerous presentation that the rule set would
+  fail to escalate."* Read literally: the reviewer knew of something the rules
+  would miss - and the field naming it was blank. Part D's mean was **2.5,
+  "Disagree"**, in the one section about red-flag completeness.
+- **Under-triage risk was marked "Yes" on 17 of 23 rules, including all 9
+  Emergency rules** - impossible, since Emergency is the top tier. No suggested
+  tiers, no comments.
+- Part E's column-1 boxes were covered with correction tape.
+
+The reviewer later clarified, remotely, that D2's wording had been misread and
+that the Emergency rows should read "No". Those corrections were recorded in a
+**separate corrected file with an audit trail** - original value, corrected
+value, reason, who recorded it, and `signed_off_by_reviewer: false` until her
+initials are on the paper. The original transcription was left untouched.
+Neither file is in this repository: a signed appraisal naming a clinician and
+her facility is field-study respondent data (CLAUDE.md).
+
+**8 rows are still flagged "Yes" on non-Emergency rules** (7 RHU and one Home),
+each rated 4 with no comment. The reviewer has not stated an intent for those,
+and nobody should invent one for her.
+
+#### The instrument was the problem, so the instrument was fixed
+
+`My_Care_Clinical_Appraisal_Form_v1.1_2026-09-25.docx` (kept outside the repo
+with the other appraisal artefacts):
+
+- **Part D item 2 is positively worded** - "The rule set escalates every
+  dangerous presentation I would expect it to escalate" - and its follow-up is
+  now unconditional, asking for `NONE` in writing rather than leaving a blank to
+  be interpreted.
+- **The under-triage column states its own question** - "Could this rule send
+  the resident to a LOWER level of care than they need?" - with the definition
+  in the Part C instruction, including that a dangerous presentation correctly
+  sent to Emergency carries no under-triage risk.
+- **All nine Emergency rows are pre-filled "N/A - highest tier"** in a greyed
+  cell. The invalid answer is no longer offerable rather than merely
+  discouraged.
+- A "Yes" now requires a suggested tier and a reason.
+- Reviewers are asked to strike through and initial rather than use correction
+  fluid.
+- A version line records the revision, and a line of template boilerplate
+  ("Example rows are shown in italics...") that should never have been in a form
+  a clinician signs was removed.
+
+Schema-validated against the original. **Not rendered** - no LibreOffice on this
+machine - so the Part C header column may want widening; that needs a human to
+open it once.
+
+The `v1` publish rests on Part C, Part F ("Appropriate as presented") and the
+corrected Part D. **What is still owed: the reviewer's initials on v1.1, one
+written confirmation from her for the appendix, the 8 remaining flags, and a
+scan of the completed form** - the .docx originally supplied was the blank
+template.

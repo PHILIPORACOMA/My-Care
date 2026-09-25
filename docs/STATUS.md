@@ -1,6 +1,6 @@
 # Development status checkpoint
 
-Last updated: **2026-09-24.** Phases 4–9 are being built on branch
+Last updated: **2026-09-25.** Phases 4–9 are being built on branch
 `feat/UT-020-laravel-api-schema`. All backend work for Phases 4, 6 (server side) and
 7 is done and verified, and **all three front ends are built** — the super-admin
 console, the sub-admin portal, and now the patient PWA with the device half of
@@ -8,10 +8,12 @@ the sync layer. The team's design canvas has been applied throughout. What
 remains is Milestone 9 (browser + offline E2E, CI) and Milestone 10
 (deployment). `docs/BUILD-LOG.md` is the long-form record.
 
-**Blocked on Philipo, not on code:** there are no staff accounts and no
-published ruleset, so the patient app cannot triage at all right now. Both
-steps are deliberately his — one types a password, the other attests that
-clinical review happened. See "Next steps" below.
+**`v1` is published and the whole chain is verified** (BUILD-LOG 8h): a
+device pulls 23 appraised rules, triages on-device to the right tier, syncs,
+and the aggregates carry tiers recovered by engine replay. 41 sessions of
+local synthetic data make the dashboards show numbers on both sides of the
+`<5` suppression rule. **What remains unverified is every UI in a browser**,
+and four appraisal items are still owed by the reviewer (BUILD-LOG 8i).
 
 Update this file at the end of any session that changes phase status, adds a
 major decision, or closes/opens a known gap — don't let it drift.
