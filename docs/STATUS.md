@@ -23,39 +23,53 @@ major decision, or closes/opens a known gap — don't let it drift.
 Paste this into a new chat session to pick up where this one left off:
 
 > Read `CLAUDE.md`, `docs/STATUS.md` and `docs/BUILD-LOG.md` first (the log's
-> most recent entries are 8a-8g), then ADRs 0005-0007 in `docs/adr/`. Skim
-> `docs/REPO.md` and `docs/ut-matrix.md`.
+> entries 8a-8i cover the recent work), then ADRs 0005-0007 in `docs/adr/`.
+> Skim `docs/REPO.md` and `docs/ut-matrix.md`. The long-form record of the last
+> two sessions is in `my-care-session-transcript-2026-09-18.txt` and
+> `my-care-session-transcript-2026-09-25.txt` if you need detail.
 >
 > One branch: **`feat/UT-020-laravel-api-schema`**, pushed, and PR #1 carries
 > all of it (Phases 3-8). Standing rule: **no manuscript amendments**.
 >
-> Built and tested: the Laravel API (Pest 176/716 against MySQL 8), the
-> super-admin console, the sub-admin portal, and the patient PWA with both
-> halves of the offline sync layer. `npm test` is 48 across the workspaces.
+> **The system now runs end to end and has been verified** (BUILD-LOG 8h):
+> `v1` - the clinician-appraised ruleset, 23 rules, 6 home / 8 RHU / 9
+> emergency - is published; a device pulls and caches it, triages on-device to
+> the correct tier for all three tiers, syncs de-identified records, refuses to
+> double-count a replay, and still triages with `fetch` throwing on every call.
+> Aggregates carry tiers recovered by engine replay under Node (ADR-0007). The
+> dev database holds 41 sessions of local synthetic data, shaped so both sides
+> of the `<5` suppression rule are visible. Pest 176/716; `npm test` 48.
 >
-> **Three things are true that the test suite cannot tell you:**
+> **The one thing never done: no UI has ever been opened in a browser.** Not
+> the patient app, not the portal, not the console. Two real bugs slipped
+> through 47 passing tests for exactly this reason (BUILD-LOG 8f: two classes
+> used but never defined in the patient app, causing visible duplicate text and
+> a row with no layout). **Milestone 9's Playwright pass is the next task** and
+> it is the demo a defence panel will want.
 >
-> 1. **No UI has ever been opened in a browser.** A styling pass on 2026-09-23
->    found two classes used but never defined in the patient app - visible
->    duplicate text, and a row with no layout - and 47 passing tests missed
->    both. Playwright (Milestone 9) is the fix and is the next real task.
-> 2. **Nothing is published**, so `GET /api/v1/ruleset/current` returns 503 and
->    the patient app cannot triage at all. `v1` sits in the database as a
->    draft.
-> 3. **There are no staff accounts** - the 2026-09-20 reset left `users: 0`.
+> After that: CI (the `api` job needs Node and an `engine-replay` build, and
+> the new workspaces need a frontend job), then Milestone 10 deployment and
+> `docs/DEPLOYMENT.md`.
 >
-> **Do not do these for Philipo:** create the super-admin (the command prompts
-> for a password, which is his to type), or publish a ruleset (publishing
-> attests that clinical review happened and audits who said so). Ask him.
+> **Things to ask Philipo about rather than do:** anything that types a
+> password or gives a clinical-review attestation; merging `main` or
+> re-merging PR #2's second patient app at `apps/pwa` (PR #1 conflicts with
+> `main`, which is also why GitHub has never run CI on Phases 4-8, and the
+> team has not yet decided which patient app survives); and writing lexicon
+> terms, which are his to enter.
 >
-> `main` is NOT merged in: kizaru3214's PR #2 put a second patient app at
-> `apps/pwa` there, PR #1 conflicts with it, and GitHub will not run CI on a
-> conflicting PR - so Phases 4-8 have never been through CI. Philipo is
-> settling with the team which patient app survives. Do not merge `main` or
-> re-merge that work unless he says so.
+> **Owed by humans, not code:** the reviewer's initials on the revised
+> appraisal form (v1.1), one written confirmation from her for the appendix,
+> clarification of 8 under-triage flags she has not spoken to, a scan of the
+> completed form, and the two manuscript `.docx` edits (Table 19 `created_at`,
+> the Data Dictionary intro sentence).
 >
-> Continue the plan in `docs/BUILD-LOG.md`: E2E + CI (9), deployment (10),
-> final docs pass.
+> To run it: MySQL80 must be up, then
+> `cd apps/api && php -d variables_order=EGPCS artisan serve --no-reload`, and
+> `npm run dev -w @mycare/pwa|portal|console` (5173 / 5174 / 5175). Offline
+> testing needs the production build: `npm run build -w @mycare/pwa` then
+> `npm run preview -w @mycare/pwa` on 4173 - the dev server registers no
+> service worker.
 >
 > Tell me what you understand the current state to be, and wait for direction -
 > don't start new work yet.
@@ -173,7 +187,7 @@ survives here; nothing was lost. Do not recreate it.
   **reverted at Philipo's instruction** — he is taking the overlap to the team.
   A dry-run merge gives 8 add/add conflicts; the two patient apps cannot be
   reconciled line by line, so one of them has to win.
-- `CLAUDE.md` and the three session transcripts are untracked on purpose.
+- `CLAUDE.md` and the four session transcripts are untracked on purpose.
 
 ## Environment notes (needed to run this on a fresh machine)
 
