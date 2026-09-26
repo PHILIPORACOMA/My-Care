@@ -1,11 +1,12 @@
 # Development status checkpoint
 
-Last updated: **2026-09-26.** Phase 8 is merged (PR #3). **Phase 9
-(deployment) is built and green on PR #4, `feat/UT-011-deployment`**, waiting
-for review and merge. `deploy/` and `docs/DEPLOYMENT.md` take a fresh Ubuntu
+Last updated: **2026-09-26.** **All nine phases are built and merged to
+`main`** (Phase 8: PR #3; Phase 9, deployment: PR #4; the barangay list shipped
+in the app: PR #5). `deploy/` and `docs/DEPLOYMENT.md` take a fresh Ubuntu
 24.04 server to a running system, and a CI job proves it by deploying with
-them. What remains is a real server, which is a human's job.
-`docs/BUILD-LOG.md` is the long-form record (9a, 9b).
+them on every PR. What remains is human: a real server, the first-run steps,
+the lexicon terms and the paperwork. `docs/BUILD-LOG.md` is the long-form
+record (9a, 9b, 9c).
 
 **All three apps have now been opened in a real browser** (BUILD-LOG 9a). The
 Playwright suite runs the patient journey against the real API, MySQL 8 and
@@ -26,16 +27,16 @@ major decision, or closes/opens a known gap — don't let it drift.
 Paste this into a new chat session to pick up where this one left off:
 
 > Read `CLAUDE.md`, `docs/STATUS.md` and `docs/BUILD-LOG.md` first (entries
-> 9a and 9b cover the recent work), then `docs/DEPLOYMENT.md` and ADRs
+> 9a to 9c cover the recent work), then `docs/DEPLOYMENT.md` and ADRs
 > 0004-0007 in `docs/adr/` (0004 was amended 2026-09-26).
 > Skim `docs/REPO.md` and `docs/ut-matrix.md` (its end-to-end section is new).
 >
 > `main` was force-pushed on 2026-09-26 to what was
 > `feat/UT-020-laravel-api-schema`. PR #1 closed as merged. The old `main`
 > (PR #2's patient app) is kept locally as
-> `backup/main-before-force-2026-09-26`. Phase 8 is merged (PR #3). Phase 9
-> is on **PR #4, `feat/UT-011-deployment`**, with all five CI checks green.
-> Standing rule: **no manuscript amendments**.
+> `backup/main-before-force-2026-09-26`. Phases 8 and 9 and the shipped
+> barangay list are merged (PRs #3, #4, #5); `main` is green on all five CI
+> checks. Standing rule: **no manuscript amendments**.
 >
 > **Phase 9:** one host, split by path (`/`, `/portal/`, `/console/`, `/api`).
 > `deploy/` holds the nginx, PHP-FPM, cron, backup, env and `deploy.sh`
@@ -93,7 +94,7 @@ BS Information Technology capstone; the manuscript is the specification.
 | 6 | Offline sync layer | ✅ both halves; retry without double-counting proven end to end |
 | 7 | Sub-admin dashboard | ✅ built, and smoke-tested in a browser |
 | 8 | Integration + offline E2E | ✅ merged (PR #3) |
-| 9 | Deployment | ✅ on PR #4, proven by `deploy-smoke`, awaiting merge. No real server yet |
+| 9 | Deployment | ✅ merged (PR #4), proven by `deploy-smoke` on every PR. No real server yet |
 
 ## Decisions taken 2026-09-17 (details in BUILD-LOG and ADRs)
 
@@ -154,19 +155,28 @@ test vocabulary may not be invented).
 
 ## Git state
 
-- **`main` = `49b2d9a`**, force-pushed 2026-09-26 from
-  `feat/UT-020-laravel-api-schema`. PR #1 shows as merged. `main` has no
-  branch protection.
+- **`main` = `22012e0`** (PR #5). It was force-pushed 2026-09-26 from
+  `feat/UT-020-laravel-api-schema` at Philipo's instruction, then PRs #3-#5
+  merged normally. `main` has no branch protection.
 - **The old `main` (`55abd3b`, PR #2) is kept locally only**, as
   `backup/main-before-force-2026-09-26`. To restore it:
   `git push --force origin backup/main-before-force-2026-09-26:main`.
 - **PR #3** (Phase 8) is merged (`a1d0e40`). Its branch is kept.
-- **PR #4, `feat/UT-011-deployment`**: Phase 9, all five checks green.
-- **`origin/feat/pwa-ui-polish`** (kizaru3214, 2026-09-26) is built on the
-  replaced `main`'s patient app. It cannot merge cleanly; it needs a
-  conversation with the team, not a merge.
+- **PR #4** (Phase 9) is merged (`429df2a`) and **PR #5** (the shipped
+  barangay list) is merged (`22012e0`). Their branches are kept.
+- **`origin/feat/pwa-ui-polish`** (kizaru3214, last commit 2026-09-26 19:03)
+  is built on the replaced `main`'s patient app. **Compared 2026-09-26 and
+  not merged:** a trial merge gives 8 conflicts (6 add/add in `apps/pwa`, plus
+  the root `package.json` and lockfile). The screens look close to ours; the
+  app underneath has no API connection, a no-op sync, rules baked into the
+  build, 5 hard-coded barangays and the invented lexicon draft. Worth porting
+  as ideas: line icons, a language pill on every screen, the age-gate layout.
+  Not worth porting as written: short chips (his "Fever" maps to
+  `fever_mild` → home, an under-triage risk), unreviewed health tips, and a
+  microphone with no voice input. Needs a conversation with the team.
 - `origin/Gil` points at the very old `9358811`. Untouched.
-- `feat/UT-020-laravel-api-schema` and `feat/UT-012-offline-e2e` are fully
+- `feat/UT-020-laravel-api-schema`, `feat/UT-012-offline-e2e`,
+  `feat/UT-011-deployment` and `feat/UT-001-bundled-barangays` are fully
   merged. Philipo asked to keep them: do not delete.
 - **Someone else is working in this repo.** Fetch before assuming remote state.
 - `CLAUDE.md` and the session transcripts are untracked on purpose.
@@ -255,15 +265,14 @@ intro sentence that claims only aggregates sync.
 
 ## Next steps, in order
 
-1. **Review and merge PR #4** (Philipo).
-2. **Get a server and a domain**, then follow `docs/DEPLOYMENT.md`. The
+1. **Get a server and a domain**, then follow `docs/DEPLOYMENT.md`. The
    first-run steps in section 8 are yours: super-admin password, the v1
    publish attestation, facilities CSV, sub-admin accounts.
-3. **Talk to the team about `feat/pwa-ui-polish`.** It is built on the patient
+2. **Talk to the team about `feat/pwa-ui-polish`.** It is built on the patient
    app `main` no longer has.
-4. **Enter the reviewed lexicon terms** (Philipo), then add a free-text
+3. **Enter the reviewed lexicon terms** (Philipo), then add a free-text
    browser test that uses them.
-5. **Final docs pass:** REPO.md (add `deploy/`, `e2e/`), README.
+4. **Final docs pass:** REPO.md (add `deploy/`, `e2e/`), README.
 
 ## Commands to re-verify state
 
@@ -304,7 +313,8 @@ npm run dev -w @mycare/pwa               # http://localhost:5173
 ## Repo pointers
 
 - Remote: `origin` → `PHILIPORACOMA/My-Care.git`.
-- PR #4 (Phase 9): https://github.com/PHILIPORACOMA/My-Care/pull/4
+- PR #5 (shipped barangay list, merged): https://github.com/PHILIPORACOMA/My-Care/pull/5
+- PR #4 (Phase 9, merged): https://github.com/PHILIPORACOMA/My-Care/pull/4
 - PR #3 (Phase 8, merged): https://github.com/PHILIPORACOMA/My-Care/pull/3
 - Deployment guide: `docs/DEPLOYMENT.md`
 - PR #1 (Phases 3–8, merged by the force-push):
