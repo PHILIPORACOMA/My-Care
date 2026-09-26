@@ -25,18 +25,20 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         /*
-        | Sanctum in SPA (cookie) mode, not token mode. statefulApi() puts the
-        | session and CSRF middleware in front of /api for requests coming from
-        | SANCTUM_STATEFUL_DOMAINS, so apps/portal and apps/console authenticate
-        | with a first-party cookie and no personal_access_tokens table is ever
-        | needed — which is what keeps the schema equal to the 20 Data
-        | Dictionary entities and avoids a manuscript amendment.
+        | Sanctum in SPA (cookie) mode, not token mode: apps/portal and
+        | apps/console authenticate with a first-party session cookie, and no
+        | personal_access_tokens table is ever needed - which keeps the schema
+        | equal to the 20 Data Dictionary entities (ADR-0004).
         |
-        | Devices do NOT go through this. They keep AuthenticateDevice on
-        | DEVICE.api_token: a device is not an account, has no role, and must
-        | never reach a staff endpoint (ADR-0003).
+        | The session and CSRF middleware are applied to the staff and console
+        | route groups ONLY (routes/api.php), not to all of /api. This used to
+        | be statefulApi(), which applies them to every /api request from a
+        | SANCTUM_STATEFUL_DOMAINS origin. On one host (Phase 9) the patient app
+        | shares that origin, so every phone upload was treated as a staff
+        | browser request, checked for a CSRF token it never has, and answered
+        | 419 - found by the deploy-smoke job (BUILD-LOG 9b). Devices
+        | authenticate with DEVICE.api_token (ADR-0003) and never get a session.
         */
-        $middleware->statefulApi();
 
         /*
         | No guest redirect. Laravel's default is route('login'), called for any

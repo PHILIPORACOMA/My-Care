@@ -84,6 +84,26 @@ reach a staff route. `routes/api.php` keeps the two groups textually separate
 because the failure worth designing against is a staff route quietly ending up
 behind `device`, or the reverse. Two tests pin the boundary from both sides.
 
+**Amended 2026-09-26 (Phase 9): the session middleware is now scoped to the
+staff and console route groups, not applied to all of `/api`.** The original
+decision used `statefulApi()`, which puts the session and CSRF middleware in
+front of every `/api` request whose origin is in `SANCTUM_STATEFUL_DOMAINS`.
+That only kept devices out while the patient app ran on a different origin.
+Phase 9 serves everything from one host, so the patient app's origin *is*
+first-party. Every phone upload was then given a session and checked for a
+CSRF token it never has, and answered **419**. The CI deploy-smoke job found
+it on its first full run (BUILD-LOG 9b). Laravel skips CSRF under test, which
+is why 176 passing Pest tests never saw it.
+
+`routes/api.php` now applies `EnsureFrontendRequestsAreStateful` to the
+`staff` and `console` groups only. Staff login is unchanged. Device routes
+never get a session, whatever origin they come from, so anonymous phones are
+no longer handed a session cookie either (RA 10173: nothing about the device
+beyond its token). `tests/Feature/Api/DeviceStatelessTest.php` pins both
+halves. Exempting device routes from CSRF instead was rejected: phones would
+still get session cookies, and every new device route would have to be
+remembered in an exemption list.
+
 `User` deliberately does **not** use Sanctum's `HasApiTokens` trait. It exists
 only for the token mode that was not chosen, and its presence would invite
 someone to call `createToken()` later and silently create the table.
@@ -107,13 +127,15 @@ Two fixes were considered:
 
 1. **Switch the staff group to `auth:web`.** Chosen. No token is ever issued in
    SPA mode, so the token path could only ever fail. The web guard reads the
-   same session `statefulApi()` starts, which is the only way staff
-   authenticate. One line in `routes/api.php`.
+   same session Sanctum's stateful middleware starts (`statefulApi()` at the
+   time; the staff and console groups since the 2026-09-26 amendment), which
+   is the only way staff authenticate. One line in `routes/api.php`.
 2. **Keep `auth:sanctum`** and add middleware rejecting `Authorization` headers
    on staff routes. Rejected: it keeps a code path that has no legitimate use
    and guards it with a second piece of code that has to stay in step.
 
-Sanctum stays installed. It still provides `statefulApi()`, the
+Sanctum stays installed. It still provides the stateful middleware
+(`EnsureFrontendRequestsAreStateful`, on the staff and console groups), the
 `/sanctum/csrf-cookie` route and the first-party origin check; only its guard
 is out of the request path.
 
@@ -236,4 +258,6 @@ everything. A test pins that.
   failed-login entries
 - Device auth and the population boundary →
   `docs/adr/0003-device-api-and-sync-contract.md`
+- Devices never get a session, even from the staff apps' origin →
+  `tests/Feature/Api/DeviceStatelessTest.php` (amendment, 2026-09-26)
 - Schema promise → `tests/Feature/SchemaTest.php`
