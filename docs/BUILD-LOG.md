@@ -1100,3 +1100,100 @@ scrolling.
 
 Items 2 (chip wording) and 4 (true zero) remain Philipo's: content and an open
 decision, not code.
+
+---
+
+### 9b - Deployment, proven by deploying (2026-09-26)
+
+**Branch `feat/UT-011-deployment`, PR #4.** This is Milestone 10 (Phase 9).
+Philipo chose **a guide with no server yet** and **one host split by path**.
+
+#### The layout
+
+| Path | Serves |
+|---|---|
+| `/` | patient app (`apps/pwa/dist`) |
+| `/portal/` | sub-admin portal |
+| `/console/` | super-admin console (moved from `/`, the only app code change) |
+| `/api/`, `/sanctum/`, `/up` | Laravel through PHP-FPM |
+
+One origin means the staff session cookie needs no `SESSION_DOMAIN` (ADR-0004
+records this as Phase 9's precondition) and one certificate covers everything.
+Figure 36's `admin.` subdomain is an illustration, as ADR-0004 already says.
+
+#### What was written
+
+- `deploy/nginx/`: `mycare-app.conf` (the locations, shared),
+  `mycare-headers.conf`, `mycare.conf` (production HTTPS) and `mycare-ci.conf`
+  (localhost HTTP for CI).
+  - Only Laravel's `index.php` ever executes.
+  - `sw.js`, `index.html` and the manifest are never HTTP-cached, because a
+    phone stuck on an old service worker is stuck on old triage code.
+  - `Permissions-Policy` refuses geolocation, camera and microphone.
+  - Security headers live in a snippet included per location, because nginx
+    drops a server block's `add_header` in any location that sets its own. The
+    first draft had HSTS at server level, where it would never have been sent.
+- `deploy/php-fpm/mycare.conf`: its own pool, and **`env[PATH]`**. PHP-FPM
+  empties the environment by default, and engine replay needs `node`. This is
+  the Linux version of the Windows `artisan serve` problem in STATUS.md.
+- `deploy/cron/mycare`: the scheduler every minute, and a nightly backup.
+- `deploy/backup.sh`: `mysqldump --single-transaction`, 14 days kept.
+- `deploy/env.production.example`: `APP_DEBUG=false`, secure cookies, a
+  dedicated DB user. Every line that differs from development is marked.
+- `deploy/deploy.sh`: an idempotent build and release, run as root, with
+  runtime files written as `www-data`. It generates `APP_KEY` on the first run
+  and uses maintenance mode during the release.
+- `docs/DEPLOYMENT.md`: the guide, from a fresh Ubuntu 24.04 through HTTPS,
+  first run, checks, backups and restore, updates and rollback, security,
+  troubleshooting, and the defence demo.
+- `E2eSeeder` now guards on the schema name alone (still `mycare_e2e` only), so
+  it can run against a deployment configured as production.
+- `composer.json`: the dead `database.sqlite` line is gone (a STATUS.md item).
+
+#### `deploy-smoke`: the guide, executed
+
+A new workflow sets up a fresh Ubuntu 24.04 runner with the guide's own
+commands and the committed `deploy/` files, runs `deploy.sh`, checks what nginx
+serves (status codes, SPA fallbacks, headers, `/.env` refused, no stack traces
+with `APP_DEBUG=false`), then runs the **whole Playwright suite through nginx**
+(`E2E_BASE_URL=http://localhost`). The only departures from production are the
+ones CI cannot avoid: no public host name, so plain HTTP on `localhost` (where
+service workers are still allowed) and no certbot.
+
+It earned its place at once. Each of these would have failed on a real server:
+
+1. **Line endings.** Files edited by script on Windows were committed with
+   CRLF: bash would read `#!/usr/bin/env bash\r`, cron ignores such files, and
+   PHP-FPM would get a socket path ending in `\r`. This included files merged
+   in PR #3. They were restored to LF, and `.gitattributes` now forces LF for
+   `deploy/**`.
+2. **`artisan optimize` fails on this API.** It also runs `view:cache`, and
+   `apps/api` has no `resources/views`. `deploy.sh` caches config, routes and
+   events explicitly.
+3. **The runner's own Node and apache2.** The runner image ships a newer Node
+   first on PHP-FPM's `PATH`, and apache2 on port 80. CI now installs Node 20
+   from NodeSource as the guide does and stops apache2. A server built from
+   the guide has neither problem, but this is exactly the sort of drift the
+   job exists to catch.
+4. **Test harness:** tinker, run as `www-data`, needs a writable `HOME`.
+5. **Every phone upload would have been rejected: the real find.** Through
+   nginx, the patient app onboarded and triaged offline, but its sync POST got
+   **419 (CSRF token mismatch)**. `statefulApi()` applied Sanctum's session
+   and CSRF middleware to every `/api` request from a first-party origin, and
+   on one host the patient app *is* first-party. Locally it ran on another
+   port, and Laravel skips CSRF under test, so neither 176 Pest tests nor the
+   E2E suite could see it. With Philipo's approval, the stateful middleware
+   now sits on the `staff` and `console` route groups only, so devices never
+   get a session (and anonymous phones no longer receive a session cookie).
+   `DeviceStatelessTest` was written first and failed 4 of 5 before the fix.
+   ADR-0004 carries the amendment and the rejected alternative.
+
+**Result: deploy-smoke green.** A fresh Ubuntu 24.04 machine, built with the
+guide's commands and the committed files, deployed by `deploy.sh`, passes every
+layout and header check and **all 6 Playwright tests through nginx**: offline
+triage, upload on reconnect, a dropped response retried without
+double-counting, and both staff apps. Pest 181/181.
+
+**What still needs a human:** a real server, a domain and its certificate,
+and the first-run steps in DEPLOYMENT.md §8 (super-admin password, the v1
+publish attestation, facilities CSV, lexicon terms, sub-admin accounts).

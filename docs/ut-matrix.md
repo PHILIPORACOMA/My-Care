@@ -89,3 +89,10 @@ browser against the real API, MySQL 8 and the patient app's production build
 
 UT-002 to UT-004 (free text, lexicon matching, negation) have **no browser
 test**: v1 publishes no lexicon terms, and test vocabulary may not be invented.
+
+**Against a deployed server too.** The `deploy-smoke` workflow runs the same
+specs through nginx and PHP-FPM on a fresh Ubuntu 24.04 machine built from
+`docs/DEPLOYMENT.md` (BUILD-LOG 9b). That is where UT-012's upload was found
+failing with a 419 on the one-host layout. `tests/Feature/Api/DeviceStatelessTest.php`
+now pins the cause at the unit level (UT-012, UT-015): device routes never get
+a session, even from the staff apps' origin.
