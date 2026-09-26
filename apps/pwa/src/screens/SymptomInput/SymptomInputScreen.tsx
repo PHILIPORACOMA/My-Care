@@ -48,7 +48,7 @@ export function SymptomInputScreen(props: {
   return (
     <section className="screen">
       <ScreenHeader onBack={props.onBack} language={props.language} onLanguageClick={props.onLanguageClick} />
-      <p className="field-label">{props.t("symptomPrompt")}</p>
+      <p className="field-label screen-title">{props.t("symptomPrompt")}</p>
 
       <div className="textarea-wrap">
         <textarea
@@ -63,7 +63,7 @@ export function SymptomInputScreen(props: {
       </div>
 
       <div>
-        <p className="field-sublabel">{props.t("symptomQuickSelectHint")}</p>
+        <p className="field-sublabel symptom-hint">{props.t("symptomQuickSelectHint")}</p>
         <div className="chip-row">
           {CURATED_SYMPTOMS.map(({ code, labelKey }) => (
             <button
@@ -99,7 +99,7 @@ export function SymptomInputScreen(props: {
       <span className="spacer" />
       <button
         type="button"
-        className="primary-button"
+        className="primary-button symptom-continue"
         disabled={text.trim().length === 0 && selected.size === 0}
         onClick={() => props.onSubmit(text, [...selected])}
       >

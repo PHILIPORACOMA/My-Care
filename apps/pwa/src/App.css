@@ -153,8 +153,8 @@ button, input, textarea {
   border-radius: var(--radius-md);
   border: 2px solid transparent;
   background: var(--color-surface);
-  box-shadow: 0 1px 4px rgba (0, 0, 0, 0.08);
-  color: var(--var-text);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  color: var(--color-text);
   cursor: pointer;
   text-align: left;
   width: 100%;
@@ -704,7 +704,7 @@ font-weight: 800;
 .screen-header .icon-button {
   border:none; border-radius:
   0.8rem; box-shadow: 0 1px 4px 
-  rgba(0, 0, 0, 0,1);
+  rgba(0, 0, 0, 0.1);
 }
 .screen-header .pill {
    border:none;
