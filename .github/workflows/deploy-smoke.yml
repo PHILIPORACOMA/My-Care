@@ -41,8 +41,23 @@ jobs:
             php8.4-bcmath php8.4-intl php8.4-curl php8.4-zip php8.4-gd
           sudo update-alternatives --set php /usr/bin/php8.4
           curl -fsSL https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
+
+          # Node 20 from NodeSource, as the guide installs it. The runner image
+          # ships its own, newer Node in /usr/local/bin, which is first on the
+          # PHP-FPM pool's PATH - remove it so this machine looks like a clean
+          # server and engine replay runs on the Node the guide specifies.
+          curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+          sudo apt-get install -y -q nodejs
+          sudo rm -f /usr/local/bin/node /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack
+          hash -r
+          which node
           node --version | grep -q '^v20\.' || { echo "Node 20 is required"; exit 1; }
           php --version | head -1
+
+          # The runner image also ships apache2, which would hold port 80.
+          # A server set up from the guide never has it.
+          sudo systemctl stop apache2 || true
+          sudo systemctl disable apache2 || true
 
       # ---- step 3: database ---------------------------------------------------
       # The runner ships MySQL 8 (root/root); a server installs mysql-server.

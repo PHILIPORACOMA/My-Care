@@ -2,8 +2,10 @@
 # My Care - nightly MySQL backup (run by /etc/cron.d/mycare as root).
 #
 # Dumps the `mycare` schema to /var/backups/mycare, compressed, and keeps the
-# last 14 days. Credentials come from /root/.my.cnf (DEPLOYMENT.md step 3),
-# never from this file or the command line.
+# last 14 days. It runs as root, and on Ubuntu MySQL's root authenticates by
+# socket, so no password is stored anywhere (DEPLOYMENT.md step 3). If your
+# MySQL root uses a password instead, put it in /root/.my.cnf (mode 600) -
+# never in this file or on the command line.
 #
 # What is in the dump: de-identified session records, aggregates, the audit
 # log and staff accounts (bcrypt digests). No patient names, no free text, no
