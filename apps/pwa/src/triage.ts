@@ -36,10 +36,19 @@ export function chipsFor(bundle: RulesetBundle, language: LanguageCode): Symptom
 
   return bundle.symptomCodes
     .filter((code) => used.has(code.code))
-    .map((code) => {
-      const term = bundle.lexiconTerms.find((t) => t.symptomCode === code.code && t.language === language && !t.isNegation);
-      return { code: code.code, label: term?.term ?? code.displayName };
-    });
+    .map((code) => ({ code: code.code, label: symptomLabel(bundle, code.code, language) }));
+}
+
+/**
+ * What a patient sees for a symptom code: the lexicon word in their language
+ * when one is authored, the display name otherwise, and the raw code only if
+ * the bundle does not know it at all. The chip and the result screen (Figures
+ * 22 and 25-27) use this one function so they always agree - a patient who
+ * tapped "Severe chest pain" must not be shown `chest_pain_severe_radiating`.
+ */
+export function symptomLabel(bundle: RulesetBundle, code: string, language: LanguageCode): string {
+  const term = bundle.lexiconTerms.find((t) => t.symptomCode === code && t.language === language && !t.isNegation);
+  return term?.term ?? bundle.symptomCodes.find((c) => c.code === code)?.displayName ?? code;
 }
 
 /**

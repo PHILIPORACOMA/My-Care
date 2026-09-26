@@ -982,3 +982,121 @@ corrected Part D. **What is still owed: the reviewer's initials on v1.1, one
 written confirmation from her for the appendix, the 8 remaining flags, and a
 scan of the completed form** - the .docx originally supplied was the blank
 template.
+
+---
+
+### 9a - Every app in a real browser, and CI green (2026-09-26)
+
+**Branch `feat/UT-012-offline-e2e`, PR #3.** This is Milestone 9 (Phase 8).
+
+#### `main` was replaced first
+
+At Philipo's instruction, `main` was force-pushed to
+`feat/UT-020-laravel-api-schema` (`49b2d9a`), so PR #1 closed as merged. The old
+`main` (`55abd3b`, PR #2's patient app and invented lexicon draft) is kept
+locally as `backup/main-before-force-2026-09-26`. kizaru3214's
+`feat/pwa-ui-polish`, pushed the same morning, is built on the replaced app
+and needs a conversation, not a merge.
+
+#### CI: why `main` went red, and the fix
+
+The first push of Phases 4-8 to `main` failed **25 Pest tests**: the `api` job
+never installed Node or built `packages/engine-replay`, so aggregation, reports,
+surveillance and system health all found engine replay unavailable (ADR-0007).
+This is the failure STATUS.md had predicted.
+
+- `api.yml` sets up Node 20, builds engine replay and exports v1 before Pest.
+- `engine-purity.yml` also typechecks, tests and purity-checks `lexicon-matcher`,
+  the other half of the safety argument.
+- `frontend.yml` (new) typechecks every workspace, unit-tests the packages and
+  apps, and production-builds all three apps.
+- `e2e.yml` (new) runs the Playwright suite below.
+- Actions moved to the current majors (checkout v7, setup-node v7, cache v6,
+  upload-artifact v7), past the `@v5` STATUS.md had pencilled in.
+
+`api`, `frontend` and `engine-purity` passed on the first push to PR #3.
+
+#### The E2E suite (`e2e/`)
+
+Playwright 1.63 and Chromium. **Nothing is stubbed**: the Laravel API, a real
+MySQL 8 schema, the patient app's production build with its service worker,
+and the portal and console dev servers. Each runs on its own port
+(8100 / 4273 / 5274 / 5275), so a run never collides with the dev servers or
+touches the `mycare` database.
+
+`global-setup.ts` rebuilds the world every run: it builds engine replay,
+exports v1, runs `migrate` (which creates `mycare_e2e` if it is missing) and
+`migrate:fresh --seed`, then `E2eSeeder`. The seeder publishes v1 and creates
+two test staff accounts, and **refuses any schema but `mycare_e2e`**. The guard
+was tested against the dev database and refused it. The publish is test
+fixture, the same as Pest's in `mycare_test`. It is **not** a clinical-review
+attestation.
+
+| Spec | What it proves |
+|---|---|
+| `patient.offline.spec.ts` | Onboard with signal; v1 downloaded and cached (UT-001, UT-013). Network off plus a hard reload, so the app comes from the service worker. Triage home (R-001), RHU and emergency (R-016) by chip (UT-006). 3 queued, 0 on the server. Reconnect: **the server stores the batch but the response is dropped**, so the phone keeps its queue and retries with **the same batch uuid** → 3 sessions, 1 batch (UT-012, UT-015). No console errors beyond expected offline failures |
+| `portal.smoke.spec.ts` | Sub-admin signs in; all five screens load; the dashboard shows `<5`; Sync & status says "Data is current"; no other barangay appears (UT-014, UT-016, UT-020) |
+| `console.smoke.spec.ts` | Super-admin signs in; all six screens load; v1 published, the sub-admin listed, symptom codes present |
+
+**6/6 pass locally, in about a minute.** Screenshots land in `e2e/screenshots/`
+(gitignored), named for the manuscript figures they correspond to.
+
+Symptoms are entered **by chip only**. v1 publishes no lexicon terms, and
+test vocabulary may not be invented (CLAUDE.md), so **free text has no
+browser test** until Philipo enters the reviewed terms.
+
+**This does not prove Chrome 80 compatibility.** Playwright ships a current
+Chromium. The run is at a 360×640 phone viewport with touch, and Chrome 80
+still rests on the build target (`chrome80`) and a real handset.
+
+#### What seeing the apps found
+
+Every screen rendered and every test passed. Looking at the screenshots still
+found things no assertion was written for:
+
+1. **The result screen shows raw symptom codes to the patient.** The pill under
+   the verdict reads `chest_pain_severe_radiating` / `fever_mild`, where the
+   chip the patient tapped read "Severe chest pain radiating to arm or jaw".
+   `Result.tsx` renders `codes`, not the labels `chipsFor()` already computes.
+2. **Chip labels are the appraisal form's clinician wording**, in English
+   whatever the language ("Animal bite, skin broken, patient stable, no rabies
+   red flags"). They fall back to `displayName` because no lexicon terms exist.
+   This is content, not code: it resolves when reviewed terms are entered.
+3. **Settings: "Start over" touches the About card** above it, with no gap.
+4. **A true zero shows as `<5`** on Sync & status ("Sessions waiting on
+   devices") and on the console. This is the open zero-suppression question,
+   now visible on a real screen.
+5. The console's device row reads **Queued: "yes"** while the device holds
+   nothing. It means "has reported a queue", which reads badly next to an empty
+   queue.
+
+Not a defect: in full-page screenshots the staff sidebar stops at the viewport
+height. It is `position: sticky; height: 100vh`, correct when actually
+scrolling.
+
+#### Fixed in the same PR (Philipo approved items 1, 3 and 5)
+
+- **1, raw codes:** `symptomLabel()` in `apps/pwa/src/triage.ts` is now the one
+  place a code becomes the patient's label: the lexicon word in their language,
+  then the display name, then the code only if the bundle does not know it.
+  `chipsFor()` and the result screen both call it, so the two always agree.
+  Long labels wrap inside the pill. Covered by a unit test and by Playwright
+  asserting the pill's exact text.
+- **3, spacing:** `.push` used `margin-top: auto`, which collapses to zero once
+  the content above fills the screen. It now also has a minimum
+  `padding-top`. All three screens that use it benefit. Playwright asserts the
+  gap.
+- **5 was a real bug, not wording.** Each upload sent `X-Pending-Sessions`
+  set to the queue **including the batch being uploaded**. After a successful
+  upload nothing corrected it until the phone's next ruleset check, so the
+  server believed a phone that had sent everything still held its last batch.
+  That is why the console said "yes" and the portal's "Sessions waiting on
+  devices" read `<5` instead of zero. `sync.ts` now reports what will remain
+  once the batch lands. The unit test that asserted the header was `> 0` had
+  baked in the bug, and it now asserts the emptying batch reports `0`. The
+  console column reads "Holding sessions: none / some waiting / not reported".
+  It stays yes/no deliberately, because a per-device count under 5 would get
+  round suppression.
+
+Items 2 (chip wording) and 4 (true zero) remain Philipo's: content and an open
+decision, not code.

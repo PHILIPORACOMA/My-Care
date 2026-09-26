@@ -55,7 +55,24 @@ jobs:
       DB_DATABASE: mycare_test
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+
+      # The API shells out to Node: aggregation, reports and system health
+      # replay stored sessions through the real triage engine (ADR-0007), and
+      # the v1 import test reads the exported bundle. Without these three steps
+      # 25 tests fail with "engine replay unavailable" - which is what happened
+      # on the first push of Phases 4-8 to main.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Build engine replay and export v1
+        working-directory: .
+        run: |
+          npm ci
+          npm run build -w @mycare/engine-replay
+          npm run export:v1 -w @mycare/ruleset
 
       - name: Set up PHP 8.4
         uses: shivammathur/setup-php@v2
@@ -69,7 +86,7 @@ jobs:
           coverage: none
 
       - name: Cache Composer packages
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/composer/files
           key: composer-${{ runner.os }}-php8.4-${{ hashFiles('apps/api/composer.lock') }}

@@ -1,0 +1,40 @@
+# Every TypeScript workspace except the engine and the matcher, which have
+# their own fast job (engine-purity.yml): the shared packages, the three apps'
+# unit tests, and a production build of each app.
+#
+# The build matters on its own. Each app's `build` runs `tsc --noEmit` and then
+# Vite, and the patient app's build is also what generates its service worker -
+# a PWA that fails to build here would reach the device with no offline mode.
+name: frontend
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - name: Package tests
+        run: |
+          npm test -w @mycare/engine-replay
+          npm test -w @mycare/api-client
+          npm test -w @mycare/ui
+      - name: App tests
+        run: |
+          npm test -w @mycare/pwa
+          npm test -w @mycare/portal
+          npm test -w @mycare/console
+      - name: Production builds
+        run: |
+          npm run build -w @mycare/pwa
+          npm run build -w @mycare/portal
+          npm run build -w @mycare/console

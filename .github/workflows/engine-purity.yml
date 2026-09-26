@@ -9,8 +9,8 @@ jobs:
   purity:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: npm
@@ -18,3 +18,9 @@ jobs:
       - run: npm run typecheck -w @mycare/triage-engine
       - run: npm test -w @mycare/triage-engine
       - run: npm run purity -w @mycare/triage-engine
+      # The lexicon matcher is the other half of the safety argument: it may
+      # propose symptom codes but never a tier, and it runs on the device, so it
+      # is held to the same purity rules as the engine.
+      - run: npm run typecheck -w @mycare/lexicon-matcher
+      - run: npm test -w @mycare/lexicon-matcher
+      - run: npm run purity -w @mycare/lexicon-matcher

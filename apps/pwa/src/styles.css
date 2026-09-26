@@ -318,6 +318,10 @@ button.pill {
 
 .push {
   margin-top: auto;
+  /* margin-top: auto collapses to zero once the content above fills the
+     screen, which left Settings' "Start over" touching the card above it
+     (BUILD-LOG 9a). The padding keeps a minimum gap either way. */
+  padding-top: var(--s-4);
 }
 
 /* --------------------------------------------------------------- splash */
@@ -648,6 +652,11 @@ button.pill {
   padding: var(--s-1) var(--s-3);
   font-size: var(--fs-caption);
   font-weight: 500;
+  /* Chips carry the symptom's readable label now, not its code, and v1's
+     display names can run to a line and a half. */
+  max-width: 100%;
+  text-align: center;
+  line-height: 1.35;
 }
 
 .result-sheet {

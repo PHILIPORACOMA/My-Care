@@ -68,3 +68,24 @@ do not let this drift from the code.
   a health worker. **Philipo's call, still open** (see `docs/STATUS.md`). If it
   goes the other way, that test and `SuppressionRule::render()` change
   together — the matrix row does not.
+
+## End-to-end coverage (Phase 8, `e2e/`)
+
+Table 31 describes unit tests, and the rows above stay the registry. These
+Playwright specs are an additional layer: the same behavior checked in a real
+browser against the real API, MySQL 8 and the patient app's production build
+(BUILD-LOG 9a). Nothing in them is stubbed.
+
+| Test Case ID | Also covered end to end by |
+|---|---|
+| UT-001 | `e2e/tests/patient.offline.spec.ts` ("onboards with signal and caches the published rules") |
+| UT-006 | `e2e/tests/patient.offline.spec.ts` ("triages all three tiers with no signal at all") |
+| UT-012 | `e2e/tests/patient.offline.spec.ts` ("uploads on reconnect, and a retried upload is not double-counted") |
+| UT-013 | `e2e/tests/patient.offline.spec.ts` (first two tests: download and cache, then triage from the cache after a hard reload with no network) |
+| UT-014 | `e2e/tests/portal.smoke.spec.ts` (Sync & status shows current data after the journey's upload) |
+| UT-015 | `e2e/tests/patient.offline.spec.ts` (server stores the batch, the response is dropped, the phone retries with the same batch uuid: 3 sessions, 1 batch) |
+| UT-016 | `e2e/tests/portal.smoke.spec.ts` (no other barangay appears for a Valladolid sub-admin) |
+| UT-020 | `e2e/tests/portal.smoke.spec.ts` (the journey's 3 sessions render as `<5`) |
+
+UT-002 to UT-004 (free text, lexicon matching, negation) have **no browser
+test**: v1 publishes no lexicon terms, and test vocabulary may not be invented.

@@ -34,6 +34,7 @@ import {
   matchSymptoms,
   questionsFor,
   runTriage,
+  symptomLabel,
   tipsFor,
   type TriageInputState,
 } from "./triage";
@@ -339,7 +340,7 @@ export function App() {
         <ResultScreen
           t={t}
           result={check.result}
-          chips={codes}
+          chips={bundle ? codes.map((code) => symptomLabel(bundle, code, language)) : codes}
           facilities={prefs.facilities ?? []}
           barangayId={prefs.barangay.id}
           onTips={() => setScreen("tips")}
