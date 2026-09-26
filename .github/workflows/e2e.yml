@@ -1,0 +1,79 @@
+# Phase 8: the three apps in a real browser, against the real API and MySQL 8
+# (e2e/). The patient app runs from its production build, so the service
+# worker and the offline path are real.
+#
+# Slower than the other jobs (it builds the patient app and boots four
+# servers), so it runs in its own workflow and fails independently.
+name: e2e
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  playwright:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: mycare_e2e
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      # An ephemeral service container, as in api.yml: not secrets.
+      DB_USERNAME: root
+      DB_PASSWORD: root
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Set up PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, mbstring, bcmath, intl
+          coverage: none
+
+      - name: Install
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          composer install --prefer-dist --no-interaction --no-progress --working-dir=apps/api
+
+      - name: Prepare API environment
+        working-directory: apps/api
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      # global-setup.ts builds engine replay, exports v1, rebuilds the
+      # mycare_e2e schema and seeds the fixture before any test runs.
+      - name: Run Playwright
+        run: npm run e2e -w @mycare/e2e
+
+      - name: Upload report and screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+            e2e/screenshots
+          retention-days: 14
