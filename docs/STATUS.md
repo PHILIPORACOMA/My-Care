@@ -1,19 +1,17 @@
 # Development status checkpoint
 
-Last updated: **2026-09-25.** Phases 4–9 are being built on branch
-`feat/UT-020-laravel-api-schema`. All backend work for Phases 4, 6 (server side) and
-7 is done and verified, and **all three front ends are built** — the super-admin
-console, the sub-admin portal, and now the patient PWA with the device half of
-the sync layer. The team's design canvas has been applied throughout. What
-remains is Milestone 9 (browser + offline E2E, CI) and Milestone 10
-(deployment). `docs/BUILD-LOG.md` is the long-form record.
+Last updated: **2026-09-26.** Phase 8 (integration and offline E2E) is built
+and green on **PR #3, `feat/UT-012-offline-e2e`**, waiting for review and merge.
+`main` is now the former `feat/UT-020-laravel-api-schema` (force-pushed
+2026-09-26 at Philipo's instruction). What remains is Phase 9, deployment.
+`docs/BUILD-LOG.md` is the long-form record.
 
-**`v1` is published and the whole chain is verified** (BUILD-LOG 8h): a
-device pulls 23 appraised rules, triages on-device to the right tier, syncs,
-and the aggregates carry tiers recovered by engine replay. 41 sessions of
-local synthetic data make the dashboards show numbers on both sides of the
-`<5` suppression rule. **What remains unverified is every UI in a browser**,
-and four appraisal items are still owed by the reviewer (BUILD-LOG 8i).
+**All three apps have now been opened in a real browser** (BUILD-LOG 9a). The
+Playwright suite runs the patient journey against the real API, MySQL 8 and
+the patient app's production build: triage offline across all three tiers,
+upload on reconnect, and a dropped response retried without double-counting.
+Portal and console are smoke-tested screen by screen. **All four CI checks
+pass on GitHub**: `api`, `frontend`, `engine-purity`, `e2e`.
 
 Update this file at the end of any session that changes phase status, adds a
 major decision, or closes/opens a known gap — don't let it drift.
@@ -22,54 +20,44 @@ major decision, or closes/opens a known gap — don't let it drift.
 
 Paste this into a new chat session to pick up where this one left off:
 
-> Read `CLAUDE.md`, `docs/STATUS.md` and `docs/BUILD-LOG.md` first (the log's
-> entries 8a-8i cover the recent work), then ADRs 0005-0007 in `docs/adr/`.
-> Skim `docs/REPO.md` and `docs/ut-matrix.md`. The long-form record of the last
-> two sessions is in `my-care-session-transcript-2026-09-18.txt` and
-> `my-care-session-transcript-2026-09-25.txt` if you need detail.
+> Read `CLAUDE.md`, `docs/STATUS.md` and `docs/BUILD-LOG.md` first (entries
+> 8h, 8i and 9a cover the recent work), then ADRs 0005-0007 in `docs/adr/`.
+> Skim `docs/REPO.md` and `docs/ut-matrix.md` (its end-to-end section is new).
 >
-> One branch: **`feat/UT-020-laravel-api-schema`**, pushed, and PR #1 carries
-> all of it (Phases 3-8). Standing rule: **no manuscript amendments**.
+> `main` was force-pushed on 2026-09-26 to what was
+> `feat/UT-020-laravel-api-schema`. PR #1 closed as merged. The old `main`
+> (PR #2's patient app) is kept locally as
+> `backup/main-before-force-2026-09-26`. Phase 8 is on **PR #3,
+> `feat/UT-012-offline-e2e`**, with all four CI checks green. Standing rule:
+> **no manuscript amendments**.
 >
-> **The system now runs end to end and has been verified** (BUILD-LOG 8h):
-> `v1` - the clinician-appraised ruleset, 23 rules, 6 home / 8 RHU / 9
-> emergency - is published; a device pulls and caches it, triages on-device to
-> the correct tier for all three tiers, syncs de-identified records, refuses to
-> double-count a replay, and still triages with `fetch` throwing on every call.
-> Aggregates carry tiers recovered by engine replay under Node (ADR-0007). The
-> dev database holds 41 sessions of local synthetic data, shaped so both sides
-> of the `<5` suppression rule are visible. Pest 176/716; `npm test` 48.
+> **Phase 8 is done once PR #3 is merged:** Playwright (`e2e/`) drives all
+> three apps against the real API, MySQL 8 (`mycare_e2e`, rebuilt every run)
+> and the patient app's production build. Run it with
+> `npm run e2e -w @mycare/e2e`. It needs MySQL80 up, and it uses its own
+> ports and schema, so it never touches the dev database. Screenshots named
+> for the manuscript figures land in `e2e/screenshots/`.
 >
-> **The one thing never done: no UI has ever been opened in a browser.** Not
-> the patient app, not the portal, not the console. Two real bugs slipped
-> through 47 passing tests for exactly this reason (BUILD-LOG 8f: two classes
-> used but never defined in the patient app, causing visible duplicate text and
-> a row with no layout). **Milestone 9's Playwright pass is the next task** and
-> it is the demo a defence panel will want.
->
-> After that: CI (the `api` job needs Node and an `engine-replay` build, and
-> the new workspaces need a frontend job), then Milestone 10 deployment and
-> `docs/DEPLOYMENT.md`.
+> **Next is Phase 9, deployment:** nginx, PHP-FPM, scheduler cron, Node 20
+> plus an `engine-replay` build on the server, HTTPS, env checklist
+> (`APP_DEBUG=false`), and `docs/DEPLOYMENT.md`.
 >
 > **Things to ask Philipo about rather than do:** anything that types a
-> password or gives a clinical-review attestation; merging `main` or
-> re-merging PR #2's second patient app at `apps/pwa` (PR #1 conflicts with
-> `main`, which is also why GitHub has never run CI on Phases 4-8, and the
-> team has not yet decided which patient app survives); and writing lexicon
-> terms, which are his to enter.
+> password or gives a clinical-review attestation; writing lexicon terms,
+> which are his to enter; the zero-suppression decision; and anything touching
+> kizaru3214's `feat/pwa-ui-polish`, which is built on the replaced `main`.
 >
 > **Owed by humans, not code:** the reviewer's initials on the revised
 > appraisal form (v1.1), one written confirmation from her for the appendix,
-> clarification of 8 under-triage flags she has not spoken to, a scan of the
-> completed form, and the two manuscript `.docx` edits (Table 19 `created_at`,
-> the Data Dictionary intro sentence).
+> clarification of 8 under-triage flags, a scan of the completed form, the
+> reviewed lexicon terms, and the two manuscript `.docx` edits (Table 19
+> `created_at`, the Data Dictionary intro sentence).
 >
 > To run it: MySQL80 must be up, then
 > `cd apps/api && php -d variables_order=EGPCS artisan serve --no-reload`, and
 > `npm run dev -w @mycare/pwa|portal|console` (5173 / 5174 / 5175). Offline
-> testing needs the production build: `npm run build -w @mycare/pwa` then
-> `npm run preview -w @mycare/pwa` on 4173 - the dev server registers no
-> service worker.
+> testing by hand needs the production build: `npm run build -w @mycare/pwa`
+> then `npm run preview -w @mycare/pwa` on 4173.
 >
 > Tell me what you understand the current state to be, and wait for direction -
 > don't start new work yet.
@@ -84,16 +72,16 @@ BS Information Technology capstone; the manuscript is the specification.
 
 | Phase | Scope | Status |
 |---|---|---|
-| 0 | Monorepo, CI, conventions | ✅ — CI workflows not yet updated for the new packages (Milestone 9) |
+| 0 | Monorepo, CI, conventions | ✅ four CI workflows: `api`, `frontend`, `engine-purity`, `e2e` |
 | 1 | Triage engine + ruleset schema | ✅ 12/12 |
-| 2 | Ruleset v1 from the Clinical Appraisal Form | ✅ encoded; ⚠️ **not clinician-reviewed** |
+| 2 | Ruleset v1 from the Clinical Appraisal Form | ✅ appraised and published (BUILD-LOG 8h, 8i); reviewer paperwork still owed |
 | 3 | Laravel API + 20 migrations | ✅ no open defects |
-| 4 | Super-admin console | ✅ API + UI built and verified (not yet clicked through in a browser) |
-| 5 | Patient PWA | ✅ Figures 17–29 built; 24/24 (no browser run yet) |
-| 6 | Offline sync layer | ✅ both halves — server (self-registration, idempotent sync, queue reporting) and device (IndexedDB queue, stable batch uuid, bundle caching) |
-| 7 | Sub-admin dashboard | ✅ API + UI built and verified (not yet clicked through in a browser) |
-| 8 | Integration + offline E2E | ⬜ |
-| 9 | Deployment | ⬜ |
+| 4 | Super-admin console | ✅ built, and smoke-tested in a browser |
+| 5 | Patient PWA | ✅ Figures 17–29, driven in a browser, offline included |
+| 6 | Offline sync layer | ✅ both halves; retry without double-counting proven end to end |
+| 7 | Sub-admin dashboard | ✅ built, and smoke-tested in a browser |
+| 8 | Integration + offline E2E | ✅ on PR #3, all checks green, awaiting merge |
+| 9 | Deployment | ⬜ next |
 
 ## Decisions taken 2026-09-17 (details in BUILD-LOG and ADRs)
 
@@ -112,92 +100,62 @@ BS Information Technology capstone; the manuscript is the specification.
 - **No microphone button** (Figure 22): no offline Tagalog/Cebuano speech
   recogniser fits the device limits. Reasoning in BUILD-LOG.
 
+## Decisions taken 2026-09-26
+
+- **`main` replaced by our branch** (force-push, Philipo's instruction). The old
+  `main` is kept locally as `backup/main-before-force-2026-09-26`.
+- **E2E runs in its own schema, `mycare_e2e`**, on its own ports. `E2eSeeder`
+  publishes v1 there as test fixture, not as an attestation, and refuses any
+  other schema.
+- **Symptoms in browser tests are entered by chip only** until reviewed
+  lexicon terms exist. No test vocabulary is invented.
+
 ## What's built and verified
 
-Backend (`apps/api`) — **Pest 176 passed, 716 assertions** against MySQL 8:
+- **Backend** (`apps/api`): Pest **176 passed, 716 assertions** against MySQL 8,
+  locally and in CI.
+- **Packages:** `triage-engine` 12/12 plus purity, `lexicon-matcher` 11/11
+  plus purity, `engine-replay` 5/5, `api-client` 5/5, `ui` 9/9.
+  `npm audit`: 0 vulnerabilities.
+- **Apps:** `pwa` 26/26, `portal` 5/5, `console` 4/4. All three build for
+  production in CI.
+- **End to end** (`e2e/`): **6/6**, locally and in CI, in about a minute and a
+  half. What each spec proves is in BUILD-LOG 9a and the end-to-end section of
+  `docs/ut-matrix.md`.
 
-- Device API: self-registration, hashed tokens, public barangay list,
-  facilities for "Call for help", `X-Pending-Sessions` queue reporting.
-- Console API: ruleset versions (draft → review → publish, rollback, import),
-  symptom codes, sub-admin accounts (create, deactivate, reactivate, reassign),
-  devices (revoke/reinstate), audit log (read-only), system health.
-- Staff API: dashboard, trends with cluster detection, sync status, map,
-  CSV/PDF reports, de-identified audit export.
-- `mycare:aggregate` (scheduled every 10 min), `mycare:ruleset:import`,
-  `mycare:facilities:import`, `mycare:staff:create-super-admin`.
-- `BarangaySeeder` (15 Carcar barangays, PhilAtlas) now in `migrate --seed`.
-
-Packages — all typecheck clean:
-
-- `triage-engine` 12/12 + purity ✅ · `lexicon-matcher` 11/11 + purity ✅ ·
-  `engine-replay` 5/5 · `api-client` 5/5 · `ui` 9/9.
-- `npm audit`: 0 vulnerabilities; `composer audit`: clean.
-
-`apps/console` (Figures 36–41) — login, system dashboard, user management,
-rules & lexicon editor with a test/explain panel, symptom codes, sync & health
-with device revocation, audit log with export. **Verified 2026-09-18:**
-typecheck clean, 4/4 tests, production build (242 kB, 76 kB gzipped), and a live
-sign-in through the Vite proxy with every console and staff endpoint
-returning 200.
-
-`apps/portal` (Figures 30–35) — login, dashboard, trends with the cluster
-banner and watch list, sync & status, data & reports, aggregate map. **Verified
-2026-09-18:** typecheck clean, 4/4 tests, production build (207 kB, 68 kB
-gzipped), and a live sign-in as the sub-admin: every staff endpoint 200, the
-barangay list correctly showing only Valladolid, the console refusing them with
-403, and a CSV report generated and downloaded with every count suppressed.
-
-`apps/pwa` (Figures 17–29) — splash, the three onboarding steps (language,
-18+, barangay), home, symptom input by free text or chips, clarification,
-processing, the three result screens, health tips, settings. **The tier is
-computed on the device** by the real matcher and the real engine against a
-cached bundle; finished sessions queue in IndexedDB and upload with a stable
-batch uuid. **Verified 2026-09-18:** typecheck clean, 24/24 tests (triage 13,
-sync 8, and three full journeys driving the real UI — a Cebuano walk-through, a
-red-flag escalation, and a triage completed with `fetch` throwing on every
-call), production build 59 kB gzipped, 225 KiB precached, Poppins self-hosted
-at 31 kB. **Run against the live API 2026-09-20** (BUILD-LOG 8d): registration,
-ruleset pull, on-device matching and triage, sync, and a replayed batch that
-did not double-count. **Still never opened in a browser.**
+**What the browser run cannot prove:** Chrome 80 compatibility (Playwright
+ships a current Chromium, so that rests on the `chrome80` build target and a
+real handset), and free-text matching (no lexicon terms are published, and
+test vocabulary may not be invented).
 
 ## Git state
 
-**There is now one branch: `feat/UT-020-laravel-api-schema`.** Phases 4–9 were
-built on a second branch, `feat/UT-011-phases-4-to-9`, stacked on this one so
-that PR #1 could stay a reviewable Phase 3 on its own. Nobody ever reviewed it
-separately, so on 2026-09-19 this branch was fast-forwarded to match and on
-2026-09-20 the duplicate was **deleted**, locally and on GitHub. Every commit
-survives here; nothing was lost. Do not recreate it.
-
-- **`feat/UT-020-laravel-api-schema`** — `99d0e44`, 42 commits ahead of `main`,
-  pushed and in sync. The branch name is a misnomer now: it carries Phases 3
-  through 8.
-- **PR #1 now contains all of it** — Phases 3 through 8, 278 files. Its title
-  still says "Phase 3", which no longer describes it.
-- **PR #1 is `CONFLICTING`, so GitHub will not run CI on it.** Pull-request
-  workflows build a trial merge into `main`; with conflicts there is nothing to
-  build, and no run exists for `1b51e0a`. **Phases 4–8 have never been through
-  CI.** Resolving the `apps/pwa` conflict unblocks both the merge and CI.
-- **Someone else is working in this repo.** The duplicate branch had already
-  been deleted from GitHub by the time we went to delete it (2026-09-20), and
-  `origin/Gil` exists. Fetch before assuming remote state.
-- **`main` has moved and we have not merged it.** kizaru3214's PR #2 (patient
-  PWA + a 124-term invented lexicon draft) landed on `main` 2026-09-18 03:36Z
-  and occupies `apps/pwa`, the same path as ours. Merging it here was tried and
-  **reverted at Philipo's instruction** — he is taking the overlap to the team.
-  A dry-run merge gives 8 add/add conflicts; the two patient apps cannot be
-  reconciled line by line, so one of them has to win.
-- `CLAUDE.md` and the four session transcripts are untracked on purpose.
+- **`main` = `49b2d9a`**, force-pushed 2026-09-26 from
+  `feat/UT-020-laravel-api-schema`. PR #1 shows as merged. `main` has no
+  branch protection.
+- **The old `main` (`55abd3b`, PR #2) is kept locally only**, as
+  `backup/main-before-force-2026-09-26`. To restore it:
+  `git push --force origin backup/main-before-force-2026-09-26:main`.
+- **PR #3, `feat/UT-012-offline-e2e`**: Phase 8, all four checks green.
+- **`origin/feat/pwa-ui-polish`** (kizaru3214, 2026-09-26) is built on the
+  replaced `main`'s patient app. It cannot merge cleanly; it needs a
+  conversation with the team, not a merge.
+- `origin/Gil` points at the very old `9358811`. Untouched.
+- `feat/UT-020-laravel-api-schema` is now identical to `main` and can be
+  deleted.
+- **Someone else is working in this repo.** Fetch before assuming remote state.
+- `CLAUDE.md` and the session transcripts are untracked on purpose.
 
 ## Environment notes (needed to run this on a fresh machine)
 
 - **`pdo_mysql` must be enabled in `D:\php-8.4.13\php.ini`** (done; backup at
   `php.ini.bak-20260909`). That PHP install is shared with another project.
-- MySQL 8 service `MySQL80`, user `root`, schemas `mycare` and `mycare_test`.
-  **The service was stopped once this session** and had to be started from an
-  elevated prompt (`net start MySQL80`) — this session cannot start it.
+- MySQL 8 service `MySQL80`, user `root`, schemas `mycare`, `mycare_test` and
+  `mycare_e2e` (the last is created by the E2E run itself).
+  **The service was stopped once** and had to be started from an elevated
+  prompt (`net start MySQL80`) — Claude's session cannot start it.
 - Credentials only in gitignored `apps/api/.env` and `.env.testing`.
-- **Node 20.20 is now needed by the API too**: dashboards refresh by replaying
+- **Node 20.20 is needed by the API too**: dashboards refresh by replaying
   sessions through `packages/engine-replay`. Build it with
   `npm run build -w @mycare/engine-replay` before running Pest or aggregation.
 - The v1 import test reads `packages/ruleset/dist/v1.json`; create it with
@@ -208,13 +166,13 @@ survives here; nothing was lost. Do not recreate it.
   run Node: the System Health screen then reports engine replay as down. The
   `mycare:aggregate` command from a normal terminal is unaffected, and so is
   Linux deployment under php-fpm.
-- Windows gotchas hit this session: `pest --filter 'a|b'` fails in PowerShell
-  (cmd reads `|` as a pipe — use Bash), and Windows Python cannot read Git
-  Bash's `/tmp`.
+- Playwright's Chromium is installed once with `npx playwright install chromium`.
+- Windows gotchas: `pest --filter 'a|b'` fails in PowerShell (cmd reads `|` as
+  a pipe — use Bash), and Windows Python cannot read Git Bash's `/tmp`.
 
 ## Known gaps / open items
 
-### Closed this session, without amendments
+### Closed, without amendments
 
 - ~~`auth:sanctum` bearer 500; remember-me 500; no-`Accept` 500~~ (ADR-0004).
 - ~~Phase 4 tripwire: override-threshold tier unrecoverable~~ — engine replay
@@ -225,34 +183,25 @@ survives here; nothing was lost. Do not recreate it.
   console's import (both land as a draft).
 - ~~`DEVICE.api_token` stored in plaintext~~ — prefix + digest (ADR-0005).
 - ~~`FACILITY` orphaned~~ — it powers "Call for help" (ADR-0005).
+- ~~v1 not published~~ — published by Philipo 2026-09-25 (BUILD-LOG 8h).
+- ~~CI red on `main` (25 Pest failures)~~ — the `api` job builds engine
+  replay; a `frontend` job exists (BUILD-LOG 9a).
+- ~~No UI ever opened in a browser~~ — the Playwright suite (BUILD-LOG 9a).
+- ~~Result screen showed raw symptom codes; Settings spacing; devices
+  over-reporting their queue after an upload~~ — fixed on PR #3
+  (BUILD-LOG 9a).
 
 ### Still open
 
-- **v1 is appraised, but not yet published.** The clinical appraisal form came
-  back 2026-09-20: all appropriateness items 4, no under-triage risk (physical
-  copy; the .docx is the blank template and **the filled one still needs
-  scanning for the appendix**). The encoded ruleset was verified row by row
-  against the form - 23 of 23 match. It sits in the database as a **draft**;
-  publishing it records the attestation and is Philipo's to do.
-- **No lexicon terms, clarification questions or health tips exist.** Free text
-  therefore matches nothing and patients rely on chips. Philipo has the
-  reviewed terms and will enter them himself.
-- **The dev database was reset 2026-09-20** (BUILD-LOG 8e): 15 barangays, `v1`
-  imported as a draft with 23 rules and 23 conditions, and no test junk. Two
-  consequences until Philipo acts: **there are no staff accounts** (recreate
-  with `php artisan mycare:staff:create-super-admin <email>`, which prompts for
-  the password), and **nothing is published, so `/api/v1/ruleset/current`
-  returns 503 and the patient app cannot triage.**
-- **No UI has been seen rendered, and that has already cost something.** The
-  2026-09-23 styling pass (BUILD-LOG 8f) found two classes used but never
-  defined in the patient app: screen-reader-only labels were rendering as
-  visible duplicate text, and Home's pill row had no layout. 47 passing tests
-  did not catch either. Playwright is the fix.
+- **No lexicon terms, clarification questions or health tips exist.** Free
+  text matches nothing, and chips show v1's clinician wording in English
+  whatever the language. Philipo has the reviewed terms and will enter them.
+- **Zero suppression** — `SuppressionRule` renders a true 0 as `<5`. It is now
+  visible on real screens ("Sessions waiting on devices" when nothing is
+  waiting). Philipo's call, still not made.
 - **The PWA's Tagalog and Cebuano interface copy is an unreviewed draft.** It
   needs a native speaker and a clinician, especially the three verdicts, the
   advice under each, the disclaimer and the emergency instruction.
-- **Zero suppression** — `SuppressionRule` still renders a true 0 as `<5`.
-  Philipo's call, still not made.
 - **Figure 38's "Sub-admin · RHU/LGU" label** cannot be stored (one role, no
   column); the console shows "Sub-admin".
 - **Figure 37's "report worker"** does not exist (no queue); the service panel
@@ -265,10 +214,8 @@ survives here; nothing was lost. Do not recreate it.
 - **Cluster-detection thresholds** (`config/mycare.php`) need review by the
   City Health Office before anyone acts on a banner.
 - **Barangay list** (from PhilAtlas) and the **facility CSV** need confirming
-  or supplying by the City Health Office.
-- **CI is not updated**: the `api` job needs Node and an `engine-replay` build
-  (replay tests fail otherwise), and the new packages and apps need a frontend
-  job. `actions/checkout@v4` / `cache@v4` → `@v5` still pending.
+  or supplying by the City Health Office. With no facilities, "Call for help"
+  falls back to 911.
 - `apps/api/composer.json` still has the dead `post-create-project-cmd` line
   touching `database/database.sqlite`.
 - `APP_DEBUG=false` in production (deployment checklist).
@@ -279,41 +226,15 @@ intro sentence that claims only aggregates sync.
 
 ## Next steps, in order
 
-**Philipo first — nothing below him can be tested until these are done.**
-
-1. **Create the super-admin.** The command prompts for the password rather
-   than taking it as an argument, so it never lands in shell history; typing
-   it is his, not Claude's:
-   ```bash
-   cd apps/api && php artisan mycare:staff:create-super-admin super@mycare.test
-   ```
-   At least 12 characters, letters and numbers.
-2. **Publish `v1`.** Sign in at the console (`:5175`), Rules & Lexicon →
-   **Submit for review** → **Publish**, ticking the clinical-review
-   confirmation. `v1` is a draft, and publish only accepts a version that is
-   in review. This is an attestation: `RulesetLifecycle::publish()` refuses
-   without it and audits who gave it, so **Claude must not click it** — the
-   record would name Philipo for a sign-off he did not give. The paper
-   appraisal (all items 4, no under-triage risk) is the basis for giving it.
-3. **Enter the reviewed lexicon terms** he holds. Until they exist, free text
-   matches nothing and patients rely on chips.
-4. **Scan the completed appraisal form** for the manuscript appendix — the
-   .docx in hand is the blank template.
-
-**Then, in order:**
-
-5. **Verify the patient app end to end** against the published ruleset: chips
-   for all 23 presentations, a real tier, and the session reaching the
-   portal's sync screen. Then the offline run from the production build
-   (`:4173`, DevTools → Offline).
-6. **Milestone 9 — E2E + CI:** Playwright offline triage-and-sync test (which
-   also finally opens all three apps in a real browser), CI for the packages
-   and apps, Node and an `engine-replay` build in the `api` job.
-7. **Milestone 10 — deployment:** nginx, PHP-FPM, scheduler cron, Node, HTTPS,
-   env checklist, `docs/DEPLOYMENT.md`.
-8. **Final docs pass:** REPO.md, ut-matrix, CLAUDE.md phase table, README.
-9. **The two patient apps.** Settle with the team which survives, then resolve
-   PR #1's conflict with `main` — that unblocks both the merge and CI.
+1. **Review and merge PR #3** (Philipo).
+2. **Talk to the team about `feat/pwa-ui-polish`.** It is built on the patient
+   app `main` no longer has.
+3. **Phase 9, deployment:** nginx, PHP-FPM, scheduler cron for
+   `mycare:aggregate`, Node 20 plus the `engine-replay` build on the server,
+   HTTPS, env checklist, `docs/DEPLOYMENT.md`.
+4. **Enter the reviewed lexicon terms** (Philipo), then add a free-text
+   browser test that uses them.
+5. **Final docs pass:** REPO.md, README, CLAUDE.md phase table.
 
 ## Commands to re-verify state
 
@@ -331,28 +252,30 @@ npm run purity -w @mycare/lexicon-matcher
 
 npm test -w @mycare/console              # 4/4
 npm test -w @mycare/portal               # 5/5
-npm test -w @mycare/pwa                  # 25/25
+npm test -w @mycare/pwa                  # 26/26
 
 cd apps/api
 php artisan migrate:fresh --seed --force
 ./vendor/bin/pest                        # 176 passed, 716 assertions
+cd ../..
+
+# End to end. MySQL80 must be up. Own ports (8100/4273/5274/5275) and own
+# schema (mycare_e2e), so the dev servers and dev database are untouched.
+npx playwright install chromium          # once
+npm run e2e -w @mycare/e2e               # 6/6
+npm run e2e:report -w @mycare/e2e        # open the HTML report
 
 # Run it locally (the flags matter on Windows — see Environment notes):
 php -d variables_order=EGPCS artisan serve --no-reload
 npm run dev -w @mycare/console           # http://localhost:5175
 npm run dev -w @mycare/portal            # http://localhost:5174/portal/
 npm run dev -w @mycare/pwa               # http://localhost:5173
-
-# Testing offline needs the PRODUCTION build: the dev server does not register
-# a service worker, so going offline against :5173 proves nothing.
-npm run build -w @mycare/pwa
-npm run preview -w @mycare/pwa           # http://localhost:4173, /api proxied
-# then: onboard while online, DevTools > Network > Offline, hard reload.
 ```
 
 ## Repo pointers
 
-- Remote: `origin` → `PHILIPORACOMA/My-Care.git`. PR #1:
+- Remote: `origin` → `PHILIPORACOMA/My-Care.git`.
+- PR #3 (Phase 8): https://github.com/PHILIPORACOMA/My-Care/pull/3
+- PR #1 (Phases 3–8, merged by the force-push):
   https://github.com/PHILIPORACOMA/My-Care/pull/1
-- `main` is still at `9358811`.
 - `CLAUDE.md` is intentionally **not committed**.
