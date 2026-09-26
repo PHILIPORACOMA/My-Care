@@ -1,0 +1,147 @@
+# Phase 9: prove the deployment files work, by deploying with them.
+#
+# A fresh Ubuntu 24.04 runner is set up the way docs/DEPLOYMENT.md tells a
+# person to set up a server - nginx, PHP 8.4-FPM from the same PPA, Node 20,
+# MySQL 8 - using the committed files in deploy/ unmodified, and deploy.sh does
+# the build and release. Then the Playwright suite runs against it at
+# http://localhost: patient app, portal and console, one host, through nginx.
+#
+# Two differences from production, both forced by CI having no public host
+# name: the site config is deploy/nginx/mycare-ci.conf (plain HTTP on
+# localhost, where browsers still allow service workers) instead of the
+# certbot-backed mycare.conf, and the schema is mycare_e2e so the E2E fixture
+# will agree to run. APP_ENV=production, APP_DEBUG=false, the PHP-FPM pool,
+# the location rules and the headers are exactly production's.
+name: deploy-smoke
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    env:
+      APP_DIR: /var/www/mycare
+      DB_PASSWORD: ci-only-not-a-secret
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # ---- DEPLOYMENT.md step 2: packages -----------------------------------
+      - name: Install nginx, PHP 8.4-FPM and Node 20
+        run: |
+          sudo add-apt-repository -y ppa:ondrej/php
+          sudo apt-get update -q
+          sudo apt-get install -y -q nginx \
+            php8.4-fpm php8.4-cli php8.4-mysql php8.4-mbstring php8.4-xml \
+            php8.4-bcmath php8.4-intl php8.4-curl php8.4-zip php8.4-gd
+          sudo update-alternatives --set php /usr/bin/php8.4
+          curl -fsSL https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
+          node --version | grep -q '^v20\.' || { echo "Node 20 is required"; exit 1; }
+          php --version | head -1
+
+      # ---- step 3: database ---------------------------------------------------
+      # The runner ships MySQL 8 (root/root); a server installs mysql-server.
+      - name: Database and a dedicated user
+        run: |
+          sudo systemctl start mysql
+          mysql -uroot -proot <<SQL
+          CREATE DATABASE mycare_e2e CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+          CREATE USER 'mycare'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';
+          GRANT ALL PRIVILEGES ON mycare_e2e.* TO 'mycare'@'localhost';
+          SQL
+
+      # ---- step 4: code -------------------------------------------------------
+      - name: Put the code in /var/www/mycare
+        run: |
+          sudo mkdir -p "$APP_DIR"
+          sudo rsync -a --exclude node_modules ./ "$APP_DIR/"
+          sudo git config --global --add safe.directory "$APP_DIR"
+
+      # ---- step 5: environment ------------------------------------------------
+      - name: .env from deploy/env.production.example
+        run: |
+          sudo sed \
+            -e 's/CHANGE-ME\.example\.org/localhost/g' \
+            -e "s/^DB_PASSWORD=.*/DB_PASSWORD=${DB_PASSWORD}/" \
+            -e 's/^DB_DATABASE=.*/DB_DATABASE=mycare_e2e/' \
+            -e 's#^APP_URL=.*#APP_URL=http://localhost#' \
+            -e 's#^FRONTEND_URL=.*#FRONTEND_URL=http://localhost#' \
+            "$APP_DIR/deploy/env.production.example" | sudo tee "$APP_DIR/apps/api/.env" > /dev/null
+          grep -E '^(APP_ENV|APP_DEBUG|SESSION_SECURE_COOKIE|SANCTUM_STATEFUL_DOMAINS)=' "$APP_DIR/apps/api/.env"
+
+      # ---- step 6: web server and PHP-FPM ------------------------------------
+      - name: Install the nginx, PHP-FPM and cron files
+        run: |
+          sudo cp "$APP_DIR/deploy/nginx/mycare-app.conf" "$APP_DIR/deploy/nginx/mycare-headers.conf" /etc/nginx/snippets/
+          sudo rm -f /etc/nginx/sites-enabled/default
+          sudo cp "$APP_DIR/deploy/nginx/mycare-ci.conf" /etc/nginx/sites-enabled/mycare
+          sudo cp "$APP_DIR/deploy/php-fpm/mycare.conf" /etc/php/8.4/fpm/pool.d/mycare.conf
+          sudo cp "$APP_DIR/deploy/cron/mycare" /etc/cron.d/mycare
+          sudo nginx -t
+          sudo php-fpm8.4 -t
+          sudo systemctl restart php8.4-fpm nginx
+
+      # ---- step 7: deploy -----------------------------------------------------
+      - name: deploy.sh
+        run: sudo SKIP_PULL=1 APP_DIR="$APP_DIR" "$APP_DIR/deploy/deploy.sh"
+
+      # ---- what nginx actually serves ----------------------------------------
+      - name: Check the served layout and headers
+        run: |
+          set -e
+          code() { curl -s -o /dev/null -w '%{http_code}' "$1"; }
+          header() { curl -sI "$1" | tr -d '\r' | grep -i "^$2:" || true; }
+
+          test "$(code http://localhost/up)" = 200
+          test "$(code http://localhost/)" = 200
+          test "$(code http://localhost/portal/)" = 200
+          test "$(code http://localhost/console/)" = 200
+          test "$(code http://localhost/portal/trends)" = 200     # SPA fallback
+          test "$(code http://localhost/console/audit)" = 200
+          test "$(code http://localhost/api/v1/barangays)" = 200
+          test "$(code http://localhost/api/v1/ruleset/current)" = 401  # device token required
+          test "$(code http://localhost/.env)" = 403
+          # Only /api and /sanctum reach PHP. Anything else ending in .php gets
+          # the patient app's HTML shell, never executed PHP.
+          curl -s http://localhost/index.php | grep -qi '<!doctype html'
+
+          header http://localhost/sw.js cache-control | grep -q no-cache
+          header http://localhost/ x-content-type-options | grep -q nosniff
+          header http://localhost/ permissions-policy | grep -q 'geolocation=()'
+          # APP_DEBUG=false: an error must not leak a stack trace.
+          ! curl -s -H 'Accept: application/json' http://localhost/api/v1/does-not-exist | grep -q '"trace"'
+          echo "layout and headers ok"
+
+      # ---- the whole suite, through nginx ------------------------------------
+      - name: Playwright against the deployed site
+        env:
+          E2E_BASE_URL: http://localhost
+          E2E_API_DIR: /var/www/mycare/apps/api
+          E2E_ARTISAN_USER: www-data
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          npm run e2e -w @mycare/e2e
+
+      - name: Server logs on failure
+        if: failure()
+        run: |
+          sudo tail -n 80 /var/log/nginx/error.log || true
+          sudo tail -n 80 /var/log/php8.4-fpm.log || true
+          sudo sh -c 'tail -n 120 /var/www/mycare/apps/api/storage/logs/*.log' || true
+
+      - name: Upload report and screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: deploy-smoke-playwright
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+            e2e/screenshots
+          retention-days: 14

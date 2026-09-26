@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { PORTS, STAFF } from "../support/env";
+import { STAFF, URLS } from "../support/env";
 import { collectConsoleErrors, settled, shot } from "../support/page";
 
 /*
@@ -8,7 +8,7 @@ import { collectConsoleErrors, settled, shot } from "../support/page";
  * device, the sub-admin account.
  */
 
-const base = `http://localhost:${PORTS.console}`;
+const base = URLS.console;
 
 test("a super-admin signs in and every screen renders", async ({ page }) => {
   const errors = collectConsoleErrors(page);
