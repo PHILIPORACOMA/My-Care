@@ -1249,3 +1249,34 @@ the background fetch of the server list failed. PWA 33/33, E2E 7/7.
 
 Also found while looking: VS Code's built-in browser is a webview and did not
 load the list; Chrome did. Only Chrome and real phones count.
+
+---
+
+### 9d - End of session (2026-09-26)
+
+**Merged today:** PR #3 (Phase 8), PR #4 (Phase 9), PR #5 (the shipped
+barangay list), plus docs commits straight to `main` at Philipo's request.
+`main` is green on all five CI checks: `api`, `frontend`, `engine-purity`,
+`e2e`, `deploy-smoke`.
+
+**Two local-run problems Philipo hit, both environment rather than code:**
+
+- **VS Code's built-in browser** did not load the barangay list; Chrome did.
+  It is a webview, not a full browser. Use Chrome, or a phone.
+- **"Cannot reach the health office"** turned out to be the API on **port
+  8001**. `php artisan serve` quietly moves to the next free port when 8000 is
+  taken (an earlier API process still held it), and the Vite proxies look on
+  8000, so they answered 502. The app's message was the accurate one (a
+  server problem, not missing signal). Start the API with `--port=8000` so it
+  fails loudly instead of moving. Added to STATUS.md's environment notes.
+
+**Transcript:** `my-care-session-transcript-2026-09-26.txt` (untracked, like
+the others), generated from the session log. The real `APP_KEY` appeared
+twice in the log, printed when `.env.testing` was read. It is redacted in the
+transcript. The dev `.env` shares the same key; it is local-only, but rotating
+it with `php artisan key:generate` costs nothing but a sign-in.
+
+**Next session starts with** whatever Philipo picks from STATUS.md's next
+steps: a server and domain, the lexicon terms, the conversation with
+kizaru3214, or porting the icons, language pill and age-gate layout from his
+branch (a plan first).

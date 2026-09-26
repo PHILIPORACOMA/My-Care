@@ -27,8 +27,10 @@ major decision, or closes/opens a known gap — don't let it drift.
 Paste this into a new chat session to pick up where this one left off:
 
 > Read `CLAUDE.md`, `docs/STATUS.md` and `docs/BUILD-LOG.md` first (entries
-> 9a to 9c cover the recent work), then `docs/DEPLOYMENT.md` and ADRs
-> 0004-0007 in `docs/adr/` (0004 was amended 2026-09-26).
+> 9a to 9d cover the recent work), then `docs/DEPLOYMENT.md` and ADRs
+> 0004-0007 in `docs/adr/` (0004 was amended 2026-09-26). The long-form record
+> of the last session is `my-care-session-transcript-2026-09-26.txt` if you
+> need detail.
 > Skim `docs/REPO.md` and `docs/ut-matrix.md` (its end-to-end section is new).
 >
 > `main` was force-pushed on 2026-09-26 to what was
@@ -67,7 +69,7 @@ Paste this into a new chat session to pick up where this one left off:
 > `created_at`, the Data Dictionary intro sentence).
 >
 > To run it: MySQL80 must be up, then
-> `cd apps/api && php -d variables_order=EGPCS artisan serve --no-reload`, and
+> `cd apps/api && php -d variables_order=EGPCS artisan serve --no-reload --port=8000`, and
 > `npm run dev -w @mycare/pwa|portal|console` (5173 / 5174 / 5175). Offline
 > testing by hand needs the production build: `npm run build -w @mycare/pwa`
 > then `npm run preview -w @mycare/pwa` on 4173.
@@ -196,12 +198,18 @@ test vocabulary may not be invented).
 - The v1 import test reads `packages/ruleset/dist/v1.json`; create it with
   `npm run export:v1 -w @mycare/ruleset` (the test skips without it).
 - **Run the API locally with**
-  `php -d variables_order=EGPCS artisan serve --no-reload`. Plain
+  `php -d variables_order=EGPCS artisan serve --no-reload --port=8000`.
+  **Pin the port.** Without `--port`, `artisan serve` quietly moves to 8001
+  when 8000 is taken, and every Vite proxy (patient, portal, console) then
+  answers 502. The patient app shows "Cannot reach the health office"
+  (2026-09-26, BUILD-LOG 9d). Plain
   `php artisan serve` drops `TMP`/`TEMP` from the server process, so PHP cannot
   run Node: the System Health screen then reports engine replay as down. The
   `mycare:aggregate` command from a normal terminal is unaffected, and so is
   Linux deployment under php-fpm.
 - Playwright's Chromium is installed once with `npx playwright install chromium`.
+- **Test in Chrome, not VS Code's built-in browser.** It is a webview and did
+  not load the barangay list that Chrome loaded fine (2026-09-26).
 - Windows gotchas: `pest --filter 'a|b'` fails in PowerShell (cmd reads `|` as
   a pipe — use Bash), and Windows Python cannot read Git Bash's `/tmp`.
 
@@ -304,7 +312,7 @@ npm run e2e -w @mycare/e2e               # 7/7
 npm run e2e:report -w @mycare/e2e        # open the HTML report
 
 # Run it locally (the flags matter on Windows — see Environment notes):
-php -d variables_order=EGPCS artisan serve --no-reload
+php -d variables_order=EGPCS artisan serve --no-reload --port=8000
 npm run dev -w @mycare/console           # http://localhost:5175/console/
 npm run dev -w @mycare/portal            # http://localhost:5174/portal/
 npm run dev -w @mycare/pwa               # http://localhost:5173
