@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { PORTS, STAFF, artisan } from "../support/env";
+import { STAFF, URLS, artisan } from "../support/env";
 import { collectConsoleErrors, settled, shot } from "../support/page";
 
 /*
@@ -11,7 +11,7 @@ import { collectConsoleErrors, settled, shot } from "../support/page";
  *   UT-020  a count under 5 renders as <5 - the journey synced exactly 3
  */
 
-const base = `http://localhost:${PORTS.portal}/portal`;
+const base = URLS.portal;
 
 test.beforeAll(() => {
   // Scheduled every 10 minutes in production; run once so the dashboards have

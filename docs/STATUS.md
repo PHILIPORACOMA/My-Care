@@ -1,17 +1,22 @@
 # Development status checkpoint
 
-Last updated: **2026-09-26.** Phase 8 (integration and offline E2E) is built
-and green on **PR #3, `feat/UT-012-offline-e2e`**, waiting for review and merge.
-`main` is now the former `feat/UT-020-laravel-api-schema` (force-pushed
-2026-09-26 at Philipo's instruction). What remains is Phase 9, deployment.
-`docs/BUILD-LOG.md` is the long-form record.
+Last updated: **2026-09-26.** Phase 8 is merged (PR #3). **Phase 9
+(deployment) is built and green on PR #4, `feat/UT-011-deployment`**, waiting
+for review and merge. `deploy/` and `docs/DEPLOYMENT.md` take a fresh Ubuntu
+24.04 server to a running system, and a CI job proves it by deploying with
+them. What remains is a real server, which is a human's job.
+`docs/BUILD-LOG.md` is the long-form record (9a, 9b).
 
 **All three apps have now been opened in a real browser** (BUILD-LOG 9a). The
 Playwright suite runs the patient journey against the real API, MySQL 8 and
 the patient app's production build: triage offline across all three tiers,
 upload on reconnect, and a dropped response retried without double-counting.
-Portal and console are smoke-tested screen by screen. **All four CI checks
-pass on GitHub**: `api`, `frontend`, `engine-purity`, `e2e`.
+Portal and console are smoke-tested screen by screen. The same suite passes
+**through nginx and PHP-FPM on a freshly deployed server** (`deploy-smoke`).
+That run found that **every phone upload would have been rejected (419)** on
+the one-host layout. It is fixed and pinned by a test (BUILD-LOG 9b,
+ADR-0004 amendment). **All five CI checks pass**: `api`, `frontend`,
+`engine-purity`, `e2e`, `deploy-smoke`.
 
 Update this file at the end of any session that changes phase status, adds a
 major decision, or closes/opens a known gap — don't let it drift.
@@ -21,26 +26,33 @@ major decision, or closes/opens a known gap — don't let it drift.
 Paste this into a new chat session to pick up where this one left off:
 
 > Read `CLAUDE.md`, `docs/STATUS.md` and `docs/BUILD-LOG.md` first (entries
-> 8h, 8i and 9a cover the recent work), then ADRs 0005-0007 in `docs/adr/`.
+> 9a and 9b cover the recent work), then `docs/DEPLOYMENT.md` and ADRs
+> 0004-0007 in `docs/adr/` (0004 was amended 2026-09-26).
 > Skim `docs/REPO.md` and `docs/ut-matrix.md` (its end-to-end section is new).
 >
 > `main` was force-pushed on 2026-09-26 to what was
 > `feat/UT-020-laravel-api-schema`. PR #1 closed as merged. The old `main`
 > (PR #2's patient app) is kept locally as
-> `backup/main-before-force-2026-09-26`. Phase 8 is on **PR #3,
-> `feat/UT-012-offline-e2e`**, with all four CI checks green. Standing rule:
-> **no manuscript amendments**.
+> `backup/main-before-force-2026-09-26`. Phase 8 is merged (PR #3). Phase 9
+> is on **PR #4, `feat/UT-011-deployment`**, with all five CI checks green.
+> Standing rule: **no manuscript amendments**.
 >
-> **Phase 8 is done once PR #3 is merged:** Playwright (`e2e/`) drives all
+> **Phase 9:** one host, split by path (`/`, `/portal/`, `/console/`, `/api`).
+> `deploy/` holds the nginx, PHP-FPM, cron, backup, env and `deploy.sh`
+> files; `docs/DEPLOYMENT.md` is the guide; the `deploy-smoke` workflow
+> deploys a fresh Ubuntu 24.04 runner with them and runs the E2E suite
+> through nginx. No real server exists yet.
+>
+> **Phase 8:** Playwright (`e2e/`) drives all
 > three apps against the real API, MySQL 8 (`mycare_e2e`, rebuilt every run)
 > and the patient app's production build. Run it with
 > `npm run e2e -w @mycare/e2e`. It needs MySQL80 up, and it uses its own
 > ports and schema, so it never touches the dev database. Screenshots named
 > for the manuscript figures land in `e2e/screenshots/`.
 >
-> **Next is Phase 9, deployment:** nginx, PHP-FPM, scheduler cron, Node 20
-> plus an `engine-replay` build on the server, HTTPS, env checklist
-> (`APP_DEBUG=false`), and `docs/DEPLOYMENT.md`.
+> **All nine phases are built.** What is left is human: a server and domain,
+> DEPLOYMENT.md section 8's first-run steps, the lexicon terms, the appraisal
+> paperwork, and the open decisions below.
 >
 > **Things to ask Philipo about rather than do:** anything that types a
 > password or gives a clinical-review attestation; writing lexicon terms,
@@ -80,8 +92,8 @@ BS Information Technology capstone; the manuscript is the specification.
 | 5 | Patient PWA | ✅ Figures 17–29, driven in a browser, offline included |
 | 6 | Offline sync layer | ✅ both halves; retry without double-counting proven end to end |
 | 7 | Sub-admin dashboard | ✅ built, and smoke-tested in a browser |
-| 8 | Integration + offline E2E | ✅ on PR #3, all checks green, awaiting merge |
-| 9 | Deployment | ⬜ next |
+| 8 | Integration + offline E2E | ✅ merged (PR #3) |
+| 9 | Deployment | ✅ on PR #4, proven by `deploy-smoke`, awaiting merge. No real server yet |
 
 ## Decisions taken 2026-09-17 (details in BUILD-LOG and ADRs)
 
@@ -109,19 +121,27 @@ BS Information Technology capstone; the manuscript is the specification.
   other schema.
 - **Symptoms in browser tests are entered by chip only** until reviewed
   lexicon terms exist. No test vocabulary is invented.
+- **Deployment: one host split by path**, a guide with no server yet
+  (Philipo's choice). The console moved to `/console/`.
+- **Sanctum's session middleware is scoped to the staff and console routes**,
+  not all of `/api`, so devices never get a session (ADR-0004 amendment).
 
 ## What's built and verified
 
-- **Backend** (`apps/api`): Pest **176 passed, 716 assertions** against MySQL 8,
+- **Backend** (`apps/api`): Pest **181 passed, 731 assertions** against MySQL 8,
   locally and in CI.
 - **Packages:** `triage-engine` 12/12 plus purity, `lexicon-matcher` 11/11
   plus purity, `engine-replay` 5/5, `api-client` 5/5, `ui` 9/9.
   `npm audit`: 0 vulnerabilities.
 - **Apps:** `pwa` 26/26, `portal` 5/5, `console` 4/4. All three build for
   production in CI.
-- **End to end** (`e2e/`): **6/6**, locally and in CI, in about a minute and a
-  half. What each spec proves is in BUILD-LOG 9a and the end-to-end section of
-  `docs/ut-matrix.md`.
+- **End to end** (`e2e/`): **6/6**, locally, in CI, **and through nginx on a
+  freshly deployed server** (`deploy-smoke`). What each spec proves is in
+  BUILD-LOG 9a and the end-to-end section of `docs/ut-matrix.md`.
+- **Deployment** (`deploy/`, `docs/DEPLOYMENT.md`): proven by `deploy-smoke`
+  on every PR. It builds a fresh Ubuntu 24.04 machine with the guide's
+  commands, runs `deploy.sh`, checks the layout, headers, `/.env` refused and
+  no stack traces, then runs the suite.
 
 **What the browser run cannot prove:** Chrome 80 compatibility (Playwright
 ships a current Chromium, so that rests on the `chrome80` build target and a
@@ -136,13 +156,14 @@ test vocabulary may not be invented).
 - **The old `main` (`55abd3b`, PR #2) is kept locally only**, as
   `backup/main-before-force-2026-09-26`. To restore it:
   `git push --force origin backup/main-before-force-2026-09-26:main`.
-- **PR #3, `feat/UT-012-offline-e2e`**: Phase 8, all four checks green.
+- **PR #3** (Phase 8) is merged (`a1d0e40`). Its branch is kept.
+- **PR #4, `feat/UT-011-deployment`**: Phase 9, all five checks green.
 - **`origin/feat/pwa-ui-polish`** (kizaru3214, 2026-09-26) is built on the
   replaced `main`'s patient app. It cannot merge cleanly; it needs a
   conversation with the team, not a merge.
 - `origin/Gil` points at the very old `9358811`. Untouched.
-- `feat/UT-020-laravel-api-schema` is now identical to `main` and can be
-  deleted.
+- `feat/UT-020-laravel-api-schema` and `feat/UT-012-offline-e2e` are fully
+  merged. Philipo asked to keep them: do not delete.
 - **Someone else is working in this repo.** Fetch before assuming remote state.
 - `CLAUDE.md` and the session transcripts are untracked on purpose.
 
@@ -190,6 +211,11 @@ test vocabulary may not be invented).
 - ~~Result screen showed raw symptom codes; Settings spacing; devices
   over-reporting their queue after an upload~~ — fixed on PR #3
   (BUILD-LOG 9a).
+- ~~Phone uploads rejected with 419 on the one-host layout~~ — Sanctum's
+  session middleware scoped to staff and console (PR #4, ADR-0004).
+- ~~`composer.json`'s dead `database.sqlite` line~~ — removed (PR #4).
+- ~~`APP_DEBUG=false` in production~~ — in `deploy/env.production.example`,
+  and `deploy-smoke` checks that no stack trace leaks.
 
 ### Still open
 
@@ -216,9 +242,8 @@ test vocabulary may not be invented).
 - **Barangay list** (from PhilAtlas) and the **facility CSV** need confirming
   or supplying by the City Health Office. With no facilities, "Call for help"
   falls back to 911.
-- `apps/api/composer.json` still has the dead `post-create-project-cmd` line
-  touching `database/database.sqlite`.
-- `APP_DEBUG=false` in production (deployment checklist).
+- **No real server yet.** DEPLOYMENT.md is proven on a CI machine, not on the
+  host a defence panel would see. It needs a server, a domain and certbot.
 
 **Manuscript edits still owed by Philipo** — both approved long ago, neither is
 a new amendment: the `created_at` row in Table 19, and the Data Dictionary
@@ -226,15 +251,15 @@ intro sentence that claims only aggregates sync.
 
 ## Next steps, in order
 
-1. **Review and merge PR #3** (Philipo).
-2. **Talk to the team about `feat/pwa-ui-polish`.** It is built on the patient
+1. **Review and merge PR #4** (Philipo).
+2. **Get a server and a domain**, then follow `docs/DEPLOYMENT.md`. The
+   first-run steps in section 8 are yours: super-admin password, the v1
+   publish attestation, facilities CSV, sub-admin accounts.
+3. **Talk to the team about `feat/pwa-ui-polish`.** It is built on the patient
    app `main` no longer has.
-3. **Phase 9, deployment:** nginx, PHP-FPM, scheduler cron for
-   `mycare:aggregate`, Node 20 plus the `engine-replay` build on the server,
-   HTTPS, env checklist, `docs/DEPLOYMENT.md`.
 4. **Enter the reviewed lexicon terms** (Philipo), then add a free-text
    browser test that uses them.
-5. **Final docs pass:** REPO.md, README, CLAUDE.md phase table.
+5. **Final docs pass:** REPO.md (add `deploy/`, `e2e/`), README.
 
 ## Commands to re-verify state
 
@@ -256,7 +281,7 @@ npm test -w @mycare/pwa                  # 26/26
 
 cd apps/api
 php artisan migrate:fresh --seed --force
-./vendor/bin/pest                        # 176 passed, 716 assertions
+./vendor/bin/pest                        # 181 passed, 731 assertions
 cd ../..
 
 # End to end. MySQL80 must be up. Own ports (8100/4273/5274/5275) and own
@@ -267,7 +292,7 @@ npm run e2e:report -w @mycare/e2e        # open the HTML report
 
 # Run it locally (the flags matter on Windows — see Environment notes):
 php -d variables_order=EGPCS artisan serve --no-reload
-npm run dev -w @mycare/console           # http://localhost:5175
+npm run dev -w @mycare/console           # http://localhost:5175/console/
 npm run dev -w @mycare/portal            # http://localhost:5174/portal/
 npm run dev -w @mycare/pwa               # http://localhost:5173
 ```
@@ -275,7 +300,9 @@ npm run dev -w @mycare/pwa               # http://localhost:5173
 ## Repo pointers
 
 - Remote: `origin` → `PHILIPORACOMA/My-Care.git`.
-- PR #3 (Phase 8): https://github.com/PHILIPORACOMA/My-Care/pull/3
+- PR #4 (Phase 9): https://github.com/PHILIPORACOMA/My-Care/pull/4
+- PR #3 (Phase 8, merged): https://github.com/PHILIPORACOMA/My-Care/pull/3
+- Deployment guide: `docs/DEPLOYMENT.md`
 - PR #1 (Phases 3–8, merged by the force-push):
   https://github.com/PHILIPORACOMA/My-Care/pull/1
 - `CLAUDE.md` is intentionally **not committed**.

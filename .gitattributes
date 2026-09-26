@@ -1,0 +1,5 @@
+# Server files are read by bash, cron, nginx and PHP-FPM on Linux, which take a
+# carriage return as part of the value (bash: "/usr/bin/env: bash\r"; cron
+# ignores the file; PHP-FPM gets a socket path ending in \r). Keep them LF
+# whatever the editor on Windows writes. The rest of the repo is untouched.
+deploy/** text eol=lf

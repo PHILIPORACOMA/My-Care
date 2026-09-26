@@ -14,9 +14,11 @@ use RuntimeException;
  *
  * It publishes the v1 bundle and mints two staff accounts with known
  * passwords, so it **refuses to run against any schema but `mycare_e2e`**:
- * not the development database, not `mycare_test`, never production. The
- * guard is on the schema name rather than APP_ENV because the risk is the
- * data, and the E2E server runs with the ordinary local environment.
+ * not the development database, not `mycare_test`, not a real deployment's
+ * `mycare`. The guard is on the schema name rather than APP_ENV because the
+ * risk is the data: the CI deploy-smoke job runs this seeder against a server
+ * configured exactly like production (APP_ENV=production), pointed at a
+ * throwaway `mycare_e2e` schema, and that is the point of the job.
  *
  * The publish below is **not a clinical-review attestation.** It happens only
  * inside a throwaway schema that `migrate:fresh` wipes before every run, the
@@ -44,7 +46,7 @@ class E2eSeeder extends Seeder
     {
         $schema = config('database.connections.'.config('database.default').'.database');
 
-        if ($schema !== self::SCHEMA || app()->environment('production')) {
+        if ($schema !== self::SCHEMA) {
             throw new RuntimeException("E2eSeeder only runs against the '".self::SCHEMA."' schema; this is '{$schema}'.");
         }
 

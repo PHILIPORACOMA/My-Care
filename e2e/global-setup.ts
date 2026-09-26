@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { REPO_ROOT, artisan } from "./support/env";
+import { DEPLOYED_URL, REPO_ROOT, artisan } from "./support/env";
 
 /*
  * Rebuild the E2E world from nothing, every run:
@@ -12,8 +12,11 @@ import { REPO_ROOT, artisan } from "./support/env";
  *     against any other schema.
  */
 export default function globalSetup(): void {
-  execSync("npm run build -w @mycare/engine-replay", { cwd: REPO_ROOT, stdio: "inherit" });
-  execSync("npm run export:v1 -w @mycare/ruleset", { cwd: REPO_ROOT, stdio: "inherit" });
+  // A deployed server built both already (deploy/deploy.sh).
+  if (!DEPLOYED_URL) {
+    execSync("npm run build -w @mycare/engine-replay", { cwd: REPO_ROOT, stdio: "inherit" });
+    execSync("npm run export:v1 -w @mycare/ruleset", { cwd: REPO_ROOT, stdio: "inherit" });
+  }
 
   artisan("migrate", "--force");
   artisan("migrate:fresh", "--seed", "--force");

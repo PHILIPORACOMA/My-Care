@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\Staff\ReportController;
 use App\Http\Controllers\Api\V1\Staff\SurveillanceController;
 use App\Http\Controllers\Api\V1\SyncBatchController;
 use Illuminate\Support\Facades\Route;
+use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 /*
 | The v1 API has two populations that never overlap.
@@ -23,7 +24,11 @@ use Illuminate\Support\Facades\Route;
 | scope of its own, and must never reach a staff route.
 |
 | **Staff** are people with a USER row, authenticating with a first-party
-| session cookie via Sanctum's SPA mode. No token is ever issued.
+| session cookie via Sanctum's SPA mode. No token is ever issued. Sanctum's
+| session and CSRF middleware (EnsureFrontendRequestsAreStateful) sit on the
+| staff and console groups only - never on the device routes, which share the
+| staff apps' origin in production and must never be given a session
+| (BUILD-LOG 9b, tests/Feature/Api/DeviceStatelessTest.php).
 |
 | Keeping the two groups textually separate is deliberate — the failure mode
 | worth designing against is a staff route quietly ending up behind `device`,
@@ -47,11 +52,11 @@ Route::prefix('v1')->group(function (): void {
     | present — a table SPA mode deliberately never creates — so any stray
     | `Authorization: Bearer` header on a staff route became an unauthenticated
     | 500 that echoed SQL in debug mode. No token is ever issued here, so the
-    | token path could only fail. The web guard reads the same session that
-    | statefulApi() starts, which is the only way staff authenticate
-    | (ADR-0004).
+    | token path could only fail. The web guard reads the session that
+    | EnsureFrontendRequestsAreStateful starts, which is the only way staff
+    | authenticate (ADR-0004).
     */
-    Route::prefix('staff')->group(function (): void {
+    Route::prefix('staff')->middleware(EnsureFrontendRequestsAreStateful::class)->group(function (): void {
         Route::post('/login', [AuthController::class, 'login'])->name('api.v1.staff.login');
 
         Route::middleware('auth:web')->group(function (): void {
@@ -80,7 +85,7 @@ Route::prefix('v1')->group(function (): void {
     | Console — super-admin only (Figures 36–41).
     */
     Route::prefix('console')
-        ->middleware(['auth:web', 'role:super_admin'])
+        ->middleware([EnsureFrontendRequestsAreStateful::class, 'auth:web', 'role:super_admin'])
         ->name('api.v1.console.')
         ->group(function (): void {
             // Figure 39 / UT-007–UT-011.

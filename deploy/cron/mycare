@@ -1,0 +1,14 @@
+# My Care - scheduled work. Installed to /etc/cron.d/mycare (docs/DEPLOYMENT.md).
+# Files in /etc/cron.d name the user to run as, in the sixth field.
+
+SHELL=/bin/sh
+PATH=/usr/local/bin:/usr/bin:/bin
+
+# Laravel's scheduler, every minute. It runs mycare:aggregate every ten
+# minutes (routes/console.php), which replays synced sessions through the
+# engine and rebuilds the dashboards. Without this line the dashboards never
+# change after the first deploy.
+* * * * * www-data cd /var/www/mycare/apps/api && php artisan schedule:run >> /dev/null 2>&1
+
+# Nightly database backup at 02:30 server time, kept for 14 days.
+30 2 * * * root /var/www/mycare/deploy/backup.sh >> /var/log/mycare-backup.log 2>&1
