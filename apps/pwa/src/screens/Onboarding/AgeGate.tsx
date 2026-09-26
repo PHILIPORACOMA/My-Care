@@ -20,21 +20,25 @@ export function AgeGate(props: {
     <section className="screen">
       <ScreenHeader onBack={props.onBack} language={props.language} onLanguageClick={props.onLanguageClick} />
       <ProgressBar step={2} total={3} label={props.t("stepOf", { current: 2, total: 3 })} />
-      <span className="icon-badge icon-badge-tint" style={{ width: "3rem", height: "3rem" }}>
-        <Icon name="info" size={20} />
+      <span className="spacer" />
+      <span className="icon-badge icon-badge-tint">
+      <Icon name="user" size={26} />
       </span>
       <div>
-        <p className="field-label">{props.t("ageGateQuestion")}</p>
+        <p className="field-label screen-title">{props.t("ageGateQuestion")}</p>
         <p className="field-sublabel">{props.t("ageGateSubtitle")}</p>
       </div>
       {props.declined ? <p className="disclaimer-card">{props.t("ageGateBlocked")}</p> : null}
+      
+       <div className="age-gate-actions">
+        <button type="button" className="primary-button" onClick={props.onConfirm}>
+          {props.t("ageGateYes")}
+        </button>
+        <button type="button" className="outline-button" onClick={props.onDecline}>
+          {props.t("ageGateNo")}
+        </button>
+      </div>
       <span className="spacer" />
-      <button type="button" className="primary-button" onClick={props.onConfirm}>
-        {props.t("ageGateYes")}
-      </button>
-      <button type="button" className="outline-button" onClick={props.onDecline}>
-        {props.t("ageGateNo")}
-      </button>
     </section>
   );
 }

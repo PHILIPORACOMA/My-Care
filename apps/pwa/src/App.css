@@ -400,6 +400,7 @@ button, input, textarea {
 }
 
 .check-symptoms-card h3 {
+  margin: 0;
   font-size: 1.25rem;
 font-weight: 800;
 
@@ -414,7 +415,6 @@ font-weight: 800;
 .check-symptoms-card .primary-button {
   background: white;
   color: var(--color-primary);
-  max-width: 12rem;
   font-weight: 700;
 }
 
@@ -661,6 +661,7 @@ font-weight: 800;
 
 .splash-screen .splash-cta {
   border-radius: var(--radius-pill);
+  font-weight: 700;
 }
 
 .loading {
@@ -721,3 +722,11 @@ font-weight: 800;
 .symptom-hint { font-size: 0.8rem; font-weight: 600; color: #5b5b5b; margin-bottom: 0.6rem; }
 .symptom-continue { border-radius: 1rem; padding: 1rem 1.5rem; font-weight: 700; }
 .symptom-continue:not(:disabled) { box-shadow: 0 8px 20px rgba(20, 128, 111, 0.3); }
+/* Age Gate buttons (Figure 17): sit right under the text, not pinned to the bottom */
+.age-gate-actions { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; }
+
+/* "Yes": bold, more rounded, with the teal glow */
+.age-gate-actions .primary-button { border-radius: 1rem; padding: 1rem 1.5rem; font-weight: 700; box-shadow: 0 8px 20px rgba(20, 128, 111, 0.3); }
+
+/* "No": white fill, same shape, slightly bolder text */
+.age-gate-actions .outline-button { border-radius: 1rem; padding: 1rem 1.5rem; font-weight: 600; background: var(--color-surface); }
