@@ -90,7 +90,11 @@ log "Version stamp and caches"
 VERSION=$(git -C "$APP_DIR" rev-parse --short HEAD)
 sed -i "s/^MYCARE_VERSION=.*/MYCARE_VERSION=$VERSION/" "$API/.env"
 artisan optimize:clear >/dev/null
-artisan optimize
+# Not `artisan optimize`: that also caches Blade views, and this API has no
+# resources/views - it answers JSON, and PDF reports are built without Blade.
+artisan config:cache
+artisan route:cache
+artisan event:cache
 
 log "Maintenance mode off"
 artisan up
