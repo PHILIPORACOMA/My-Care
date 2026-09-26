@@ -57,9 +57,13 @@ export const STAFF = {
 export function artisan(...args: string[]): string {
   const php = ["-d", "variables_order=EGPCS", "artisan", ...args];
   const user = process.env.E2E_ARTISAN_USER;
-  // As www-data, HOME is /var/www, which it cannot write - and tinker's shell
-  // (PsySH) insists on a config directory there. /tmp gives it one.
-  const [command, argv] = user ? ["sudo", ["-u", user, "env", "HOME=/tmp", "php", ...php]] : ["php", php];
+  // Tinker's shell (PsySH) insists on writable config and data directories,
+  // looked up through XDG_* first and HOME second. As www-data, HOME is
+  // /var/www (not writable) and sudo passes the caller's XDG_* through, so
+  // point all of them at /tmp. In production mode Laravel turns PsySH's
+  // "not allowed" notice into a failed command.
+  const home = ["HOME=/tmp", "XDG_CONFIG_HOME=/tmp/psysh", "XDG_DATA_HOME=/tmp/psysh", "XDG_RUNTIME_DIR=/tmp/psysh"];
+  const [command, argv] = user ? ["sudo", ["-u", user, "env", ...home, "php", ...php]] : ["php", php];
 
   try {
     return execFileSync(command, argv, {
