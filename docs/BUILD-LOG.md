@@ -1197,3 +1197,55 @@ double-counting, and both staff apps. Pest 181/181.
 **What still needs a human:** a real server, a domain and its certificate,
 and the first-run steps in DEPLOYMENT.md §8 (super-admin password, the v1
 publish attestation, facilities CSV, lexicon terms, sub-admin accounts).
+
+---
+
+### 9c - The barangay list ships in the app (2026-09-26)
+
+**Branch `feat/UT-001-bundled-barangays`.** Philipo asked why the barangay
+screen was empty. The cause was that the API wasn't running, and the patient
+app loads the list from it. He then chose to ship the list inside the app, so a
+phone can choose its barangay before it has ever had signal.
+
+**Names only, never ids.** A barangay's id is an auto-increment number from
+whichever server seeded it (in `BarangaySeeder` insertion order), and the City
+Health Office may still correct the list. A shipped id could count every
+session under the wrong barangay. So:
+
+- `apps/pwa/src/barangays.ts` ships the 15 names. `barangays.test.ts` reads
+  `BarangaySeeder.php` and fails if the two lists drift.
+- A choice from that list is saved with `id: null` (`ChosenBarangay`).
+- **`completeSetup()`** resolves the id by name from the server's list at first
+  contact, then registers and pulls the rules. It runs on confirm, when the app
+  opens with setup unfinished, and on every `online` event.
+- If the server has no such name (renamed or removed), the choice is cleared
+  and the patient is asked again, with a new `barangayNotFound` string. It is
+  never guessed. The `tl` and `ceb` wording is a draft, like the rest of
+  `i18n.ts`.
+- `finishCheck()` refuses to record a session without a server id. In practice
+  this can't happen (the rules only arrive after the id is resolved), but the
+  guard makes it impossible.
+- The emergency result screen accepts a missing id and falls back to the
+  city-wide number or 911. It is never withheld.
+
+**An existing gap this closed.** Before this change, a phone that confirmed its
+barangay offline never retried registration, not on restart and not on
+reconnect. It sat on "needs a connection" until Start over. Shipping the list
+makes choosing offline the normal path, so setup now finishes by itself when
+signal returns.
+
+**What did not change:** the first run still needs signal once, for the
+published rules and registration. That is deliberate: the rules a phone
+triages with must be the version a person published with the attestation.
+Shipping v1 as a fallback was discussed and left for Philipo and his adviser.
+
+**Tests:** `barangays.test.ts` (5) and two journeys in `app.test.tsx`
+(onboarding offline and finishing on reconnect; the rename case). A new
+Playwright spec, `patient.first-run-offline.spec.ts`, covers a phone that
+installed the app, lost signal before onboarding, chose offline, and
+registered under the server's real Valladolid id once signal returned. The
+barangay screen no longer shows the "needs a connection" banner just because
+the background fetch of the server list failed. PWA 33/33, E2E 7/7.
+
+Also found while looking: VS Code's built-in browser is a webview and did not
+load the list; Chrome did. Only Chrome and real phones count.

@@ -3,6 +3,7 @@ import type { ClarificationQuestion, LanguageCode } from "@mycare/ruleset";
 import type { TriageResult } from "@mycare/triage-engine";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { deviceApi, OfflineError } from "./api";
+import { bundledBarangays, resolveBarangay } from "./barangays";
 import { LANGUAGES, translatorFor } from "./i18n";
 import { AgeScreen, BarangayScreen, LanguageScreen, SplashScreen } from "./screens/Onboarding";
 import { ClarifyScreen, InputScreen, ProcessingScreen } from "./screens/Check";
@@ -14,6 +15,7 @@ import {
   readPrefs,
   writePrefs,
   type Barangay,
+  type ChosenBarangay,
   type Prefs,
 } from "./storage";
 import {
@@ -87,7 +89,9 @@ export function App() {
   const [screen, setScreen] = useState<Screen>("loading");
   const [prefs, setPrefs] = useState<Prefs>({});
   const [barangays, setBarangays] = useState<Barangay[]>([]);
-  const [choice, setChoice] = useState<Barangay>();
+  const [choice, setChoice] = useState<ChosenBarangay>();
+  // The server no longer has the barangay chosen from the shipped list.
+  const [barangayGone, setBarangayGone] = useState(false);
   const [check, setCheck] = useState<Check>(emptyCheck);
   const [sync, setSync] = useState<SyncState>({ pending: 0, syncing: false });
   const [busy, setBusy] = useState(false);
@@ -98,6 +102,8 @@ export function App() {
    * which sends someone looking for signal they do not need.
    */
   const [blocker, setBlocker] = useState<BundleBlocker>();
+  const blockerFor = (e: unknown): BundleBlocker =>
+    e instanceof BundleUnavailable ? e.reason : e instanceof OfflineError ? "offline" : "server";
   const blockerBody = (reason: BundleBlocker) =>
     reason === "offline" ? t("needConnectionBody") : reason === "unpublished" ? t("noRulesBody") : t("serverProblemBody");
 
@@ -112,6 +118,11 @@ export function App() {
       setPrefs(stored);
       setBarangays(stored.barangays ?? []);
       setScreen(stored.barangay && stored.ageConfirmed ? "home" : "splash");
+
+      // Onboarded without signal last time: finish setting up now if we can.
+      if (stored.barangay && stored.ageConfirmed && !stored.device) {
+        void completeSetup().catch((e: unknown) => setBlocker(blockerFor(e)));
+      }
 
       if (stored.device) {
         void refreshBundle()
@@ -136,41 +147,91 @@ export function App() {
     setPrefs(await writePrefs(changes));
   }, []);
 
-  /** The barangay list is public and cached; onboarding needs it once. */
+  /**
+   * The server's barangay list, fetched and cached when there is signal. A
+   * failure is not an error the patient needs to see: the screen falls back
+   * to the list shipped in the app (barangays.ts), and what is still missing
+   * is explained on Home after they confirm.
+   */
   const loadBarangays = useCallback(async () => {
     if (barangays.length > 0) return;
     try {
       const fetched = await deviceApi.barangays();
       setBarangays(fetched);
       await save({ barangays: fetched });
-      setBlocker(undefined);
-    } catch (e) {
-      setBlocker(e instanceof OfflineError ? "offline" : "server");
+    } catch {
+      /* No signal or no server: the shipped list stands in. */
     }
   }, [barangays.length, save]);
 
   /**
-   * Confirming a barangay is also this installation's first contact with the
-   * server: it registers anonymously and pulls the ruleset. Offline, the
-   * choice is still saved and the home screen explains what is missing.
+   * First contact with the server: resolve the chosen barangay to the
+   * server's id (a choice from the shipped list has none), register
+   * anonymously, and pull the ruleset.
+   *
+   * Runs when the patient confirms a barangay, when the app opens with setup
+   * unfinished, and whenever the phone regains signal - so a phone onboarded
+   * with no signal finishes by itself later. Safe to call any time: it does
+   * nothing once the device is registered.
+   *
+   * Returns false when the server no longer has the chosen barangay (renamed
+   * or removed): the choice is cleared and the patient is asked again, never
+   * guessed. Throws when the server cannot be reached.
+   */
+  const completeSetup = useCallback(async (): Promise<boolean> => {
+    const stored = await readPrefs();
+    if (!stored.barangay || stored.device) return true;
+
+    let id = stored.barangay.id;
+    if (id === null) {
+      const serverList = await deviceApi.barangays();
+      setBarangays(serverList);
+      const resolved = resolveBarangay(stored.barangay, serverList);
+      if (!resolved) {
+        setPrefs(await writePrefs({ barangays: serverList, barangay: undefined }));
+        setChoice(undefined);
+        setBarangayGone(true);
+        setScreen("barangay");
+        return false;
+      }
+      await writePrefs({ barangays: serverList, barangay: resolved });
+      id = resolved.id;
+    }
+
+    await ensureRegistered(id);
+    await refreshBundle(true);
+    await refreshFacilities();
+    setPrefs(await readPrefs());
+    setBlocker(undefined);
+    return true;
+  }, []);
+
+  // Signal is back: finish a setup that could not complete offline.
+  useEffect(() => {
+    const onOnline = () => void completeSetup().catch((e: unknown) => setBlocker(blockerFor(e)));
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
+  }, [completeSetup]);
+
+  /**
+   * Confirming a barangay saves it at once - with no signal too - then tries
+   * first contact. Offline, the patient still reaches home, where the banner
+   * explains what is missing; setup finishes when signal returns.
    */
   async function confirmBarangay() {
     if (!choice) return;
     setBusy(true);
     setBlocker(undefined);
+    setBarangayGone(false);
+    let rechoose = false;
     try {
       await save({ barangay: choice });
-      await ensureRegistered(choice.id);
-      await refreshBundle(true);
-      await refreshFacilities();
-      setPrefs(await readPrefs());
+      rechoose = !(await completeSetup());
     } catch (e) {
-      // Whatever went wrong, the barangay is saved and the patient reaches
-      // home; the banner there explains what is missing and who fixes it.
-      setBlocker(e instanceof BundleUnavailable ? e.reason : e instanceof OfflineError ? "offline" : "server");
+      setBlocker(blockerFor(e));
     } finally {
       setBusy(false);
-      setScreen("home");
+      if (!rechoose) setScreen("home");
     }
   }
 
@@ -203,7 +264,12 @@ export function App() {
 
   /** The engine decides; the result is queued for sync and shown. */
   async function finishCheck() {
-    if (!bundle || !prefs.barangay) return;
+    // Never record a session without the server's barangay id. Unreachable in
+    // practice - the rules only arrive after the id is resolved - but a
+    // session counted under no barangay, or the wrong one, is the failure
+    // this guard exists to make impossible.
+    const barangayId = prefs.barangay?.id;
+    if (!bundle || barangayId == null) return;
 
     const result = runTriage(bundle, input);
     setCheck((c) => ({ ...c, result }));
@@ -214,7 +280,7 @@ export function App() {
         bundle,
         input,
         result,
-        barangayId: prefs.barangay.id,
+        barangayId,
         language,
         startedAt: check.startedAt,
       })
@@ -271,12 +337,16 @@ export function App() {
       return (
         <BarangayScreen
           t={t}
-          barangays={barangays}
+          barangays={barangays.length > 0 ? barangays : bundledBarangays()}
           selected={choice ?? prefs.barangay}
+          notice={barangayGone ? t("barangayNotFound") : undefined}
           busy={busy}
           error={blocker && blockerBody(blocker)}
           onBack={() => setScreen("age")}
-          onSelect={setChoice}
+          onSelect={(barangay) => {
+            setChoice(barangay);
+            setBarangayGone(false);
+          }}
           onConfirm={() => void confirmBarangay()}
         />
       );

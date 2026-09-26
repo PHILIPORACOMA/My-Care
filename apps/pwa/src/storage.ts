@@ -52,6 +52,14 @@ export interface Barangay {
   city: string;
 }
 
+/**
+ * The barangay the patient chose. `id` is null while the choice came from the
+ * list shipped in the app and the server has not yet confirmed it
+ * (barangays.ts); it is filled in at first contact, before anything can be
+ * triaged.
+ */
+export type ChosenBarangay = Omit<Barangay, "id"> & { id: number | null };
+
 /** One finished triage, in the shape the sync endpoint accepts. */
 export interface QueuedSession {
   client_session_uuid: string;
@@ -67,7 +75,7 @@ export interface QueuedSession {
 
 export interface Prefs {
   language?: LanguageCode;
-  barangay?: Barangay;
+  barangay?: ChosenBarangay;
   ageConfirmed?: boolean;
   device?: DeviceCredential;
   bundle?: CachedBundle;
