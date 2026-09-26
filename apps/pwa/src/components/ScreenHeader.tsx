@@ -1,7 +1,7 @@
 import type { LanguageCode } from "@mycare/ruleset";
 import { Icon } from "./Icon.js";
 
-const LANGUAGE_SHORT: Record<LanguageCode, string> = { en: "EN", tl: "TL", ceb: "CEB" };
+const LANGUAGE_NAME: Record<LanguageCode, string> = { en: "English", tl: "Filipino", ceb: "Cebuano" };
 
 export function ScreenHeader(props: {
   onBack?: () => void;
@@ -22,7 +22,7 @@ export function ScreenHeader(props: {
       {props.language ? (
         <button type="button" className="pill" onClick={props.onLanguageClick}>
           <Icon name="globe" size={14} />
-          {LANGUAGE_SHORT[props.language]}
+          {LANGUAGE_NAME[props.language]}
         </button>
       ) : null}
     </header>

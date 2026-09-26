@@ -34,7 +34,7 @@ export function HomeScreen(props: {
           Brgy. {props.barangayCode}, Carcar City
         </p>
       </div>
-
+      <span className="spacer" />
       <div className="check-symptoms-card">
         <span className="icon-badge">
           <Icon name="mic" size={26} />

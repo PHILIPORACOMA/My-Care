@@ -24,7 +24,7 @@ import type { AppStep } from "./types/index.js";
 export function App() {
   const [bundle, setBundle] = useState<RulesetBundle | null>(null);
   const [step, setStep] = useState<AppStep>("splash");
-  const [language, setLanguage] = useState<LanguageCode>("ceb");
+  const [language, setLanguage] = useState<LanguageCode>("en");
   const [ageDeclined, setAgeDeclined] = useState(false);
   const [barangayCode, setBarangayCode] = useState<string | null>(null);
   const [symptomCodes, setSymptomCodes] = useState<string[]>([]);

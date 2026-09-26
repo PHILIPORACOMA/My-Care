@@ -17,13 +17,14 @@ export function LanguageSelect(props: {
   return (
     <section className="screen">
       <ProgressBar step={1} total={3} label={props.t("stepOf", { current: 1, total: 3 })} />
+      <span className="spacer" />
       <div style={{ textAlign: "center" }}>
-        <span className="icon-badge icon-badge-tint">
-          <Icon name="globe" />
+        <span className="language-icon-badge">
+          <Icon name="globe" size = {30}/>
         </span>
       </div>
       <div style={{ textAlign: "center" }}>
-        <p className="field-label">{props.t("languagePrompt")}</p>
+        <p className="field-label language-title">{props.t("languagePrompt")}</p>
         <p className="field-sublabel">{props.t("languageSubtitle")}</p>
       </div>
       <div className="barangay-list">
@@ -31,8 +32,8 @@ export function LanguageSelect(props: {
           <button
             key={code}
             type="button"
-            className={code === props.language ? "option-card option-card-selected" : "option-card"}
-            onClick={() => props.onSelect(code)}
+            className={code === props.language ? "language-card language-card-selected" : "language-card"}
+            onClick={() => { props.onSelect(code); props.onNext(); }}
           >
             <strong>{props.t(labelKey)}</strong>
             <span>{nativeLabel}</span>
@@ -40,9 +41,7 @@ export function LanguageSelect(props: {
         ))}
       </div>
       <span className="spacer" />
-      <button type="button" className="primary-button" onClick={props.onNext}>
-        {props.t("next")}
-      </button>
-    </section>
+</section>
+
   );
 }

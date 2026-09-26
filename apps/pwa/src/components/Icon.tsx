@@ -17,7 +17,8 @@ export type IconName =
   | "thermometer"
   | "pillOff"
   | "calendarClock"
-  | "upload";
+  | "upload"
+  | "tag";
 
 const PATHS: Record<IconName, string> = {
   home: "M4 11.5 12 4l8 7.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z",
@@ -39,6 +40,7 @@ const PATHS: Record<IconName, string> = {
   pillOff: "M4.5 4.5 19.5 19.5M9 15l6-6a4.24 4.24 0 0 0-6-6L5.3 6.7a4.24 4.24 0 0 0 0 6zM9 15l6 6a4.24 4.24 0 0 0 6-6l-2-2",
   calendarClock: "M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM4 9.5h16M8 3v3M16 3v3M15 14.5a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM15 16v1.5l1 .75",
   upload: "M12 16V4M8 8l4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3",
+  tag: "M20 12.5V6a1 1 0 0 0-1-1h-6.5a1 1 0 0 0-.7.29l-8 8a1 1 0 0 0 0 1.42l6.5 6.5a1 1 0 0 0 1.42 0l8-8a1 1 0 0 0 .28-.71zM15.5 8.01h.01",
 };
 
 export function Icon(props: { name: IconName; size?: number }) {

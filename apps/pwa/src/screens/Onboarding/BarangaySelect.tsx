@@ -27,11 +27,12 @@ export function BarangaySelect(props: {
     <section className="screen">
       <ScreenHeader onBack={props.onBack} language={props.language} onLanguageClick={props.onLanguageClick} />
       <ProgressBar step={3} total={3} label={props.t("stepOf", { current: 3, total: 3 })} />
-      <p className="field-label">{props.t("barangayPrompt")}</p>
+      <p className="field-label barangay-title">{props.t("barangayPrompt")}</p>
       <div className="barangay-search">
+        <span className="barangay-search-icon"><Icon name="search" size={16} /></span>
         <input
           type="text"
-          className="text-input"
+          className="text-input barangay-search-input"
           placeholder={props.t("barangaySearchPlaceholder")}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -47,15 +48,17 @@ export function BarangaySelect(props: {
           >
             <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <strong>{name}</strong>
-              {name === selected ? <Icon name="check" size={16} /> : null}
+              
+              {name === selected ? <Icon name="check" size={16} /> : <Icon name="chevronRight" size={16} />}
             </span>
           </button>
         ))}
       </div>
       <span className="spacer" />
       <button type="button" className="text-link-button" onClick={() => setShowWhy((v) => !v)}>
-        {props.t("whyDoWeAsk")}
-      </button>
+  <Icon name="info" size={14} />
+  {props.t("whyDoWeAsk")}
+</button>
       {showWhy ? <p className="disclaimer-card">{props.t("whyDoWeAskBody")}</p> : null}
       <button
         type="button"
