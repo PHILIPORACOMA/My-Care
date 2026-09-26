@@ -57,14 +57,21 @@ export const STAFF = {
 export function artisan(...args: string[]): string {
   const php = ["-d", "variables_order=EGPCS", "artisan", ...args];
   const user = process.env.E2E_ARTISAN_USER;
-  const [command, argv] = user ? ["sudo", ["-u", user, "php", ...php]] : ["php", php];
+  // As www-data, HOME is /var/www, which it cannot write - and tinker's shell
+  // (PsySH) insists on a config directory there. /tmp gives it one.
+  const [command, argv] = user ? ["sudo", ["-u", user, "env", "HOME=/tmp", "php", ...php]] : ["php", php];
 
-  return execFileSync(command, argv, {
-    cwd: apiDir,
-    env: E2E_ENV,
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
+  try {
+    return execFileSync(command, argv, {
+      cwd: apiDir,
+      env: E2E_ENV,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+  } catch (error) {
+    const { stdout, stderr } = error as { stdout?: string; stderr?: string };
+    throw new Error(`artisan ${args[0]} failed.\nstdout: ${stdout ?? ""}\nstderr: ${stderr ?? ""}`);
+  }
 }
 
 /** Read one number from the E2E schema: what the server actually stored. */
