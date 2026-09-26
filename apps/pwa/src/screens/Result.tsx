@@ -26,9 +26,11 @@ const MARK: Record<Tier, string> = { home: "🏠", rhu: "🏥", emergency: "🚨
  */
 const NATIONAL_EMERGENCY = "911";
 
-function emergencyNumber(facilities: Facility[], barangayId: number): string {
+function emergencyNumber(facilities: Facility[], barangayId: number | null): string {
   const withNumber = facilities.filter((f) => f.contactNumber);
-  const local = withNumber.filter((f) => f.barangayId === barangayId);
+  // No confirmed barangay yet means no local match: fall through to the
+  // city-wide numbers, and to 911 - an emergency screen is never withheld.
+  const local = barangayId === null ? [] : withNumber.filter((f) => f.barangayId === barangayId);
   const pick =
     local.find((f) => f.type === "emergency_hotline") ??
     withNumber.find((f) => f.type === "emergency_hotline") ??
@@ -53,7 +55,7 @@ export function ResultScreen(props: {
   result: TriageResult;
   chips: string[];
   facilities: Facility[];
-  barangayId: number;
+  barangayId: number | null;
   onTips: () => void;
   onAgain: () => void;
 }) {

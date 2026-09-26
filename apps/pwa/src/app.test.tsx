@@ -224,3 +224,70 @@ describe("a patient checking their symptoms", () => {
     expect(screen.queryByText(/needs an internet connection/)).not.toBeInTheDocument();
   }, 20000);
 });
+
+/*
+ * UT-001 with no signal at all. The barangay list ships inside the app (names
+ * only - barangays.ts), so a phone that has never been online can still
+ * choose. The server's id is resolved by name at first contact, which also
+ * registers the device and downloads the rules; nothing is triaged before it.
+ */
+describe("choosing a barangay before the phone has ever had signal", () => {
+  async function onboardOffline(user: Awaited<ReturnType<typeof launch>>, barangay: RegExp) {
+    await user.click(await screen.findByRole("button", { name: /Get started/ }));
+    await user.click(await screen.findByRole("button", { name: /English/ }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: /Yes, I'm 18/ }));
+    // The shipped list, with no server behind it.
+    await user.click(await screen.findByRole("button", { name: barangay }));
+    await user.click(screen.getByRole("button", { name: /Confirm barangay/ }));
+  }
+
+  it("offers the shipped list offline, then finishes setup by itself when signal returns", async () => {
+    vi.stubGlobal("fetch", async () => {
+      throw new TypeError("offline");
+    });
+    const user = await launch();
+
+    await onboardOffline(user, /Valladolid/);
+
+    // Home, honest about what is missing; the choice is saved without an id.
+    expect(await screen.findByText(/needs an internet connection/)).toBeInTheDocument();
+    const storage = await import("./storage");
+    const offline = await storage.readPrefs();
+    expect(offline.barangay).toMatchObject({ name: "Valladolid", id: null });
+    expect(offline.device).toBeUndefined();
+
+    // Signal comes back.
+    stubApi();
+    window.dispatchEvent(new Event("online"));
+
+    // The device registered under the SERVER's id for Valladolid, and has rules.
+    expect(await screen.findByRole("button", { name: /Check symptoms/ }, { timeout: 5000 })).toBeInTheDocument();
+    const registration = posted.find((p) => p.url.endsWith("/api/v1/devices"));
+    expect(registration?.body.barangay_id).toBe(1);
+    expect((await storage.readPrefs()).barangay).toMatchObject({ name: "Valladolid", id: 1 });
+  }, 20000);
+
+  it("asks again, rather than guessing, when the server no longer has the chosen barangay", async () => {
+    vi.stubGlobal("fetch", async () => {
+      throw new TypeError("offline");
+    });
+    const user = await launch();
+
+    // Tuyom is on the shipped list; the stub server below knows only Valladolid.
+    await onboardOffline(user, /Tuyom/);
+    expect(await screen.findByText(/needs an internet connection/)).toBeInTheDocument();
+
+    stubApi();
+    window.dispatchEvent(new Event("online"));
+
+    expect(await screen.findByText(/no longer has the barangay you chose/, {}, { timeout: 5000 })).toBeInTheDocument();
+    expect(posted.some((p) => p.url.endsWith("/api/v1/devices"))).toBe(false);
+    const storage = await import("./storage");
+    expect((await storage.readPrefs()).barangay).toBeUndefined();
+
+    // The server's own list is offered now.
+    expect(screen.getByRole("button", { name: /Valladolid/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Tuyom/ })).not.toBeInTheDocument();
+  }, 20000);
+});

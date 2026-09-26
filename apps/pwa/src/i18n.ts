@@ -51,6 +51,7 @@ const en = {
   whyAsk: "Why do we ask?",
   whyAskBody:
     "Your barangay is the only location we record. It lets health workers see how many people in your area report the same symptoms. We never ask for your name and never use GPS.",
+  barangayNotFound: "The health office's list no longer has the barangay you chose. Please choose it again.",
   back: "Back",
 
   // Figure 21
@@ -150,6 +151,7 @@ const tl: Dictionary = {
   whyAsk: "Bakit namin itinatanong?",
   whyAskBody:
     "Ang barangay mo lang ang aming itinatala. Nakikita ng mga health worker kung ilan sa inyong lugar ang may parehong sintomas. Hindi namin hinihingi ang iyong pangalan at hindi kami gumagamit ng GPS.",
+  barangayNotFound: "Wala na sa listahan ng health office ang barangay na pinili mo. Pakipiling muli.",
   back: "Bumalik",
 
   hello: "Kumusta!",
@@ -244,6 +246,7 @@ const ceb: Dictionary = {
   whyAsk: "Nganong among gipangutana?",
   whyAskBody:
     "Ang imong barangay ra ang among girekord. Makita sa mga health worker kung pila ka tawo sa inyong lugar ang parehas ug sintomas. Wala mi mangayo sa imong ngalan ug wala mi mogamit ug GPS.",
+  barangayNotFound: "Wala na sa lista sa health office ang barangay nga imong gipili. Palihug pilia pag-usab.",
   back: "Balik",
 
   hello: "Kumusta!",

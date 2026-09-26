@@ -58,6 +58,7 @@ async function pendingInSettings(): Promise<string> {
 }
 
 test("onboards with signal and caches the published rules (UT-001, UT-013)", async () => {
+  const devicesBefore = count("devices");
   await page.goto("/");
 
   // Figure 17
@@ -86,8 +87,9 @@ test("onboards with signal and caches the published rules (UT-001, UT-013)", asy
   await expect(page.getByRole("button", { name: /Check symptoms/ })).toBeVisible();
   await shot(page, "21-home");
 
-  // The server now knows one anonymous device, and nothing else about it.
-  expect(count("devices")).toBe(1);
+  // The server now knows one more anonymous device, and nothing else about
+  // it. (Other specs register devices too, so count from where we started.)
+  expect(count("devices")).toBe(devicesBefore + 1);
 
   // The service worker must control the page before going offline means anything.
   await page.evaluate(async () => {

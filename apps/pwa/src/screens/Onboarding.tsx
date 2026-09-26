@@ -1,7 +1,7 @@
 import type { LanguageCode } from "@mycare/ruleset";
 import { useMemo, useState } from "react";
 import { LANGUAGES, type Translator } from "../i18n";
-import type { Barangay } from "../storage";
+import type { ChosenBarangay } from "../storage";
 import { CareMark, OfflineBadge, Steps } from "./parts";
 
 /** Figure 17, Welcome Page. No login, no registration — one button in. */
@@ -100,16 +100,23 @@ export function AgeScreen(props: { t: Translator; onBack: () => void; onConfirm:
   );
 }
 
-/** Figure 20, Select Barangay — search or scroll, no GPS, with "Why do we ask?". */
+/**
+ * Figure 20, Select Barangay — search or scroll, no GPS, with "Why do we ask?".
+ *
+ * The list is the server's when the device has fetched it, and the one
+ * shipped in the app otherwise (barangays.ts), so it is never empty. Entries
+ * are matched by name: a shipped entry has no id until the server confirms it.
+ */
 export function BarangayScreen(props: {
   t: Translator;
-  barangays: Barangay[];
-  selected?: Barangay;
+  barangays: ChosenBarangay[];
+  selected?: ChosenBarangay;
   onBack: () => void;
-  onSelect: (barangay: Barangay) => void;
+  onSelect: (barangay: ChosenBarangay) => void;
   onConfirm: () => void;
   busy?: boolean;
   error?: string;
+  notice?: string;
 }) {
   const [query, setQuery] = useState("");
   const [why, setWhy] = useState(false);
@@ -143,18 +150,18 @@ export function BarangayScreen(props: {
       <div className="list">
         {visible.map((barangay) => (
           <button
-            key={barangay.id}
+            key={barangay.name}
             className="choice"
-            aria-pressed={props.selected?.id === barangay.id}
+            aria-pressed={props.selected?.name === barangay.name}
             onClick={() => props.onSelect(barangay)}
           >
             {barangay.name}
             <small>{barangay.city}</small>
           </button>
         ))}
-        {props.barangays.length === 0 && !props.error && <p className="banner">{props.t("needConnectionBody")}</p>}
       </div>
 
+      {props.notice && <p className="banner banner-warn">{props.notice}</p>}
       {why && <p className="banner">{props.t("whyAskBody")}</p>}
       {props.error && <p className="banner banner-warn">{props.error}</p>}
 

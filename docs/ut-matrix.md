@@ -7,7 +7,7 @@ do not let this drift from the code.
 
 | Test Case ID | Module | Unit | Description | Expected Result | Status | Implemented in |
 |---|---|---|---|---|---|---|
-| UT-001 | On-Device Triage Engine | Barangay Selection | Patient selects a barangay from the cached list | Selected barangay is stored in the session and applied to the triage record | **Implemented.** The barangay list is fetched once and cached for offline use; the choice is stored on the device and written onto every session that syncs | `apps/pwa/src/app.test.tsx` |
+| UT-001 | On-Device Triage Engine | Barangay Selection | Patient selects a barangay from the cached list | Selected barangay is stored in the session and applied to the triage record | **Implemented.** The list ships inside the app (names only, `apps/pwa/src/barangays.ts`), so a phone can choose with no signal, and is replaced by the server's list once fetched. The server's barangay id is resolved by name at first contact, before any triage, and written onto every session that syncs; a name the server no longer has is asked again, never guessed | `apps/pwa/src/barangays.test.ts`, `apps/pwa/src/app.test.tsx` ("choosing a barangay before the phone has ever had signal"), `e2e/tests/patient.first-run-offline.spec.ts` |
 | UT-002 | On-Device Triage Engine | Symptom Text Input | Patient types a symptom phrase in Tagalog or Cebuano | Input is accepted and passed to the lexicon matcher | **Implemented.** Free text is matched against the published lexicon as the patient types, and the matched words are shown back; tapping a chip produces the same structured codes | `apps/pwa/src/app.test.tsx`, `apps/pwa/src/triage.test.ts` |
 | UT-003 | On-Device Triage Engine | Lexicon Matching | Input "sip-on" is compared against lexicon term "sipon" | Correct symptom code is assigned despite spelling variation | **Implemented** in `packages/lexicon-matcher`, and used by the patient app for every free-text entry | `packages/lexicon-matcher/src/match.test.ts`, `apps/pwa/src/app.test.tsx` |
 | UT-004 | On-Device Triage Engine | Negation Detection | Patient enters "walay hilanat" (no fever) | Symptom is correctly excluded, not flagged as present | **Implemented** in `packages/lexicon-matcher`; a negated code is recorded as negated rather than dropped, so the surveillance record still shows it was asked about | `packages/lexicon-matcher/src/match.test.ts`, `apps/pwa/src/triage.test.ts` ("records a negated symptom as negated rather than dropping it") |
@@ -78,7 +78,7 @@ browser against the real API, MySQL 8 and the patient app's production build
 
 | Test Case ID | Also covered end to end by |
 |---|---|
-| UT-001 | `e2e/tests/patient.offline.spec.ts` ("onboards with signal and caches the published rules") |
+| UT-001 | `e2e/tests/patient.offline.spec.ts` ("onboards with signal and caches the published rules"), `e2e/tests/patient.first-run-offline.spec.ts` (chooses offline, registers under the server's id when signal returns) |
 | UT-006 | `e2e/tests/patient.offline.spec.ts` ("triages all three tiers with no signal at all") |
 | UT-012 | `e2e/tests/patient.offline.spec.ts` ("uploads on reconnect, and a retried upload is not double-counted") |
 | UT-013 | `e2e/tests/patient.offline.spec.ts` (first two tests: download and cache, then triage from the cache after a hard reload with no network) |

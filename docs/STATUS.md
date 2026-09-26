@@ -125,6 +125,10 @@ BS Information Technology capstone; the manuscript is the specification.
   (Philipo's choice). The console moved to `/console/`.
 - **Sanctum's session middleware is scoped to the staff and console routes**,
   not all of `/api`, so devices never get a session (ADR-0004 amendment).
+- **The barangay list ships in the patient app, names only** (BUILD-LOG 9c).
+  The server's id is resolved by name at first contact; the first run still
+  needs signal once, for the published rules. Shipping v1 as an offline
+  fallback was left for Philipo and his adviser.
 
 ## What's built and verified
 
@@ -133,9 +137,9 @@ BS Information Technology capstone; the manuscript is the specification.
 - **Packages:** `triage-engine` 12/12 plus purity, `lexicon-matcher` 11/11
   plus purity, `engine-replay` 5/5, `api-client` 5/5, `ui` 9/9.
   `npm audit`: 0 vulnerabilities.
-- **Apps:** `pwa` 26/26, `portal` 5/5, `console` 4/4. All three build for
+- **Apps:** `pwa` 33/33, `portal` 5/5, `console` 4/4. All three build for
   production in CI.
-- **End to end** (`e2e/`): **6/6**, locally, in CI, **and through nginx on a
+- **End to end** (`e2e/`): **7/7**, locally, in CI, **and through nginx on a
   freshly deployed server** (`deploy-smoke`). What each spec proves is in
   BUILD-LOG 9a and the end-to-end section of `docs/ut-matrix.md`.
 - **Deployment** (`deploy/`, `docs/DEPLOYMENT.md`): proven by `deploy-smoke`
@@ -277,7 +281,7 @@ npm run purity -w @mycare/lexicon-matcher
 
 npm test -w @mycare/console              # 4/4
 npm test -w @mycare/portal               # 5/5
-npm test -w @mycare/pwa                  # 26/26
+npm test -w @mycare/pwa                  # 33/33
 
 cd apps/api
 php artisan migrate:fresh --seed --force
@@ -287,7 +291,7 @@ cd ../..
 # End to end. MySQL80 must be up. Own ports (8100/4273/5274/5275) and own
 # schema (mycare_e2e), so the dev servers and dev database are untouched.
 npx playwright install chromium          # once
-npm run e2e -w @mycare/e2e               # 6/6
+npm run e2e -w @mycare/e2e               # 7/7
 npm run e2e:report -w @mycare/e2e        # open the HTML report
 
 # Run it locally (the flags matter on Windows — see Environment notes):
