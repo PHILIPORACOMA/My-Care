@@ -29,6 +29,7 @@ export function SymptomInputScreen(props: {
   const [text, setText] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showAll, setShowAll] = useState(false);
+  const [showVoiceNote, setShowVoiceNote] = useState(false);
 
   function toggle(code: string) {
     setSelected((prev) => {
@@ -50,19 +51,20 @@ export function SymptomInputScreen(props: {
       <ScreenHeader onBack={props.onBack} language={props.language} onLanguageClick={props.onLanguageClick} />
       <p className="field-label screen-title">{props.t("symptomPrompt")}</p>
 
-      <div className="textarea-wrap">
-        <textarea
-          className="textarea-input"
-          value={text}
-          placeholder={props.t("symptomPlaceholder")}
-          onChange={(event) => setText(event.target.value)}
-        />
-        <button type="button" className="mic-button" aria-label="Voice input" disabled>
-          <Icon name="mic" size={16} />
-        </button>
-      </div>
+     <textarea
+  className="textarea-input"
+  value={text}
+  placeholder={props.t("symptomPlaceholder")}
+  onChange={(event) => { setText(event.target.value); setShowVoiceNote(false); }}
+/>
+{/* Voice input needs an online speech service, which would send audio off the device
+    (README privacy rule), so the button explains instead of recording. */}
+<button type="button" className="mic-button" aria-label="Voice input" onClick={() => setShowVoiceNote(true)}>
+  <Icon name="mic" size={16} />
+</button>
 
       <div>
+        {showVoiceNote ? <p className="disclaimer-card" role="status">{props.t("voiceUnavailable")}</p> : null}
         <p className="field-sublabel symptom-hint">{props.t("symptomQuickSelectHint")}</p>
         <div className="chip-row">
           {CURATED_SYMPTOMS.map(({ code, labelKey }) => (

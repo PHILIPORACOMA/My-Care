@@ -19,9 +19,11 @@ export type IconName =
   | "calendarClock"
   | "upload"
   | "tag"
+  | "smartphone"
   |  "user";
 
 const PATHS: Record<IconName, string> = {
+  smartphone: "M8 3h8a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM11 18h2",
   user: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20a7.5 7.5 0 0 1 15 0",
   home: "M4 11.5 12 4l8 7.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z",
   clinic: "M8 3h8v4h4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7h4zM12 9v6M9 12h6",

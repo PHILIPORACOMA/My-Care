@@ -11,11 +11,11 @@
   --color-text: #1c1c1c;
   --color-text-muted: #6b6b6b;
 
-  --color-tier-home: #2f9364;
+  --color-tier-home: #2e7d32;
   --color-tier-home-tint: #e7f5ec;
-  --color-tier-rhu: #e0791f;
+  --color-tier-rhu: #f5821f;
   --color-tier-rhu-tint: #fdf0e2;
-  --color-tier-emergency: #d64545;
+  --color-tier-emergency: #c62828;
   --color-tier-emergency-tint: #fbe7e7;
 
   --radius-sm: 0.5rem;
@@ -469,17 +469,11 @@ font-weight: 800;
   padding: 1.5rem 1.25rem 2rem;
 }
 
-.result-tier-home {
-  background: var(--color-tier-home);
-}
-
-.result-tier-rhu {
-  background: var(--color-tier-rhu);
-}
-
-.result-tier-emergency {
-  background: var(--color-tier-emergency);
-}
+/* --tier-color is set once per tier and reused by the buttons below */
+.result-tier-home { background: var(--color-tier-home); --tier-color: var(--color-tier-home); }
+.result-tier-rhu { background: var(--color-tier-rhu); --tier-color: var(--color-tier-rhu);
+color: #2b1a00; }
+.result-tier-emergency { background: var(--color-tier-emergency); --tier-color: var(--color-tier-emergency); }
 
 .result-header {
   display: flex;
@@ -502,8 +496,9 @@ font-weight: 800;
 .result-card {
   background: var(--color-surface);
   color: var(--color-text);
-  border-radius: var(--radius-lg);
-  padding: 1.25rem;
+  border-radius: 1.5rem 1.5rem 0 0;
+  margin: 0 -1.25rem -2rem;
+  padding: 1.5rem 1.25rem 2rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -516,17 +511,10 @@ font-weight: 800;
   gap: 0.6rem;
 }
 
-.result-actions .primary-button.tier-home {
-  background: var(--color-tier-home);
-}
-
-.result-actions .primary-button.tier-rhu {
-  background: var(--color-tier-rhu);
-}
-
-.result-actions .primary-button.tier-emergency {
-  background: var(--color-tier-emergency);
-}
+.result-actions .primary-button,
+.result-actions .outline-button { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; border-radius: 1rem; padding: 1rem 1.5rem; font-weight: 700; }
+.result-actions .primary-button { background: var(--tier-color); }
+.result-actions .outline-button { background: var(--color-surface); border-color: var(--tier-color); color: var(--tier-color); }
 
 .tips-list {
   display: flex;
@@ -730,3 +718,11 @@ font-weight: 800;
 
 /* "No": white fill, same shape, slightly bolder text */
 .age-gate-actions .outline-button { border-radius: 1rem; padding: 1rem 1.5rem; font-weight: 600; background: var(--color-surface); }
+/* Processing screen: tinted badge and a heavier caption, with the badge closer to the text */
+.processing-screen { gap: 0.75rem; }
+.processing-screen .pulse-ring { margin-bottom: 1rem; }
+.processing-screen .field-label { font-size: 1.1rem; font-weight: 800; }
+.processing-screen .pill { background: var(--color-primary-tint); color: var(--color-primary-dark); border-color: transparent; font-weight: 600; }
+/* Message inside the white result sheet: slightly larger and semi-bold, like the mockup */
+.result-message { margin: 0; font-size: 1.05rem; font-weight: 600; line-height: 1.4; }
+.result-body .chip-static { font-size: 0.8rem; font-weight: 600; padding: 0.35rem 0.8rem; }

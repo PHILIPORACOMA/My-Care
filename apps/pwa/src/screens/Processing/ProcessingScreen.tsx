@@ -10,7 +10,7 @@ export function ProcessingScreen(props: { t: (key: string) => string }) {
         </span>
       </span>
       <p className="field-label">{props.t("analyzing")}</p>
-      <span className="pill">{props.t("onDeviceAnalysis")}</span>
+      <span className="pill"><Icon name="smartphone" size={14} />{props.t("onDeviceAnalysis")}</span>
     </section>
   );
 }

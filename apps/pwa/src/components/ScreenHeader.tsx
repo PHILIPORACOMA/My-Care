@@ -1,7 +1,7 @@
 import type { LanguageCode } from "@mycare/ruleset";
 import { Icon } from "./Icon.js";
 
-const LANGUAGE_NAME: Record<LanguageCode, string> = { en: "English", tl: "Filipino", ceb: "Cebuano" };
+export const LANGUAGE_NAME: Record<LanguageCode, string> = { en: "English", tl: "Filipino", ceb: "Cebuano" };
 
 export function ScreenHeader(props: {
   onBack?: () => void;

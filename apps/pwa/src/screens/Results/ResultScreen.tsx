@@ -1,4 +1,5 @@
 import type { LanguageCode, SymptomCode, Tier } from "@mycare/ruleset";
+import { LANGUAGE_NAME } from "../../components/ScreenHeader.js";
 import { Icon, type IconName } from "../../components/Icon.js";
 import { shortLabel } from "../../lib/shortLabel.js";
 
@@ -31,9 +32,9 @@ export function ResultScreen(props: {
   return (
     <section className={`result-screen ${config.className}`}>
       <div className="result-header">
-        <span className="pill chip-static">{props.language.toUpperCase()}</span>
-      </div>
-      <div className="result-body">
+  <span className="pill chip-static"><Icon name="globe" size={14} />{LANGUAGE_NAME[props.language]}</span>
+</div>
+        <div className="result-body">
         <span className="icon-badge">
           <Icon name={config.icon} size={30} />
         </span>
@@ -47,20 +48,23 @@ export function ResultScreen(props: {
         </div>
       </div>
       <div className="result-card">
-        <p>{props.t(config.bodyKey)}</p>
-        <p className="disclaimer-card">{props.t("notADiagnosisResult")}</p>
+       <p className="result-message">{props.t(config.bodyKey)}</p>
+<p className="disclaimer-card">{props.t("notADiagnosisResult")}</p>
         <span className="spacer" />
         <div className="result-actions">
           {props.tier === "emergency" ? (
             <a className={`primary-button tier-${props.tier}`} style={{ textAlign: "center" }} href={`tel:${EMERGENCY_HOTLINE}`}>
+               <Icon name="phone" size={16} />
               {props.t("callForHelp")}
             </a>
           ) : (
             <button type="button" className={`primary-button tier-${props.tier}`} onClick={props.onViewHealthTips}>
               {props.t("viewHealthTips")}
+              {props.t("viewHealthTips")}
             </button>
           )}
           <button type="button" className="outline-button" onClick={props.onCheckAgain}>
+            <Icon name="refresh" size={16} />
             {props.t("checkAgain")}
           </button>
         </div>

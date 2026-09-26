@@ -8,6 +8,9 @@
 const SHORT_LABELS: Record<string, string> = {
   fever_mild: "Fever",
   cold_cough_no_sob: "Cough",
+  spotting_first_trimester_mild: "Spotting",
+vaginal_bleeding_heavy_pregnancy: "Heavy bleeding",
+fever_high_stiff_neck_altered_consciousness: "Stiff neck",
   headache_mild_moderate: "Headache",
   minor_wound_no_infection: "Minor wound",
   diarrhea_mild_no_dehydration: "Diarrhea",
