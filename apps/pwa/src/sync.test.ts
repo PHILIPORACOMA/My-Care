@@ -113,16 +113,23 @@ describe("queueing a finished check", () => {
     expect(await storage.queueLength()).toBe(1);
   });
 
-  /* Figures 33 and 40 show the queue still sitting on devices. */
-  it("reports how many sessions are waiting, in a header", async () => {
-    const { sync } = await freshModules();
+  /*
+   * Figures 33 and 40 show the queue still sitting on devices. An upload
+   * reports what will be left once it lands: the batch that empties the
+   * queue must report 0, or the dashboards count sessions the server
+   * already has as still waiting on the phone.
+   */
+  it("reports how many sessions will still be waiting, in a header", async () => {
+    const { storage, sync } = await freshModules();
     await sync.recordSession(session("a1"));
     await sync.recordSession(session("a2"));
     await sync.flush();
 
-    const batch = calls.find((c) => c.url.includes("/sync/batches"));
-    expect(batch?.headers["X-Pending-Sessions"]).toBeDefined();
-    expect(Number(batch?.headers["X-Pending-Sessions"])).toBeGreaterThan(0);
+    const batches = calls.filter((c) => c.url.includes("/sync/batches"));
+    expect(batches.length).toBeGreaterThan(0);
+    expect(batches.every((b) => b.headers["X-Pending-Sessions"] !== undefined)).toBe(true);
+    expect(await storage.queueLength()).toBe(0);
+    expect(batches.at(-1)?.headers["X-Pending-Sessions"]).toBe("0");
   });
 });
 

@@ -96,7 +96,12 @@ export async function flush(): Promise<void> {
     // One uuid per batch, created once and reused until the batch lands.
     batchUuid ??= crypto.randomUUID();
 
-    const result = await deviceApi.sync(device.token, batchUuid, batch, sessions.length);
+    // Report what this device will still hold once the batch lands, not the
+    // queue including it. Reporting sessions.length left the server believing
+    // a phone that had sent everything still held its last batch, until its
+    // next ruleset check (found in the Phase 8 browser run, BUILD-LOG 9a). If
+    // the upload fails, the next request reports the true number again.
+    const result = await deviceApi.sync(device.token, batchUuid, batch, sessions.length - batch.length);
 
     await dequeueSessions(batch.map((s) => s.client_session_uuid));
     batchUuid = null;

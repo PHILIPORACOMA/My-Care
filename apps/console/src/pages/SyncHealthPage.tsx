@@ -96,7 +96,9 @@ export function SyncHealthPage() {
                     { key: "barangay", header: "Barangay", render: (d) => d.barangayName ?? "—" },
                     { key: "registered", header: "Registered", render: (d) => formatDateTime(d.registeredAt) },
                     { key: "sync", header: "Last sync", render: (d) => formatRelative(d.lastSyncAt) },
-                    { key: "pending", header: "Queued", numeric: true, render: (d) => (d.pendingSessions === null ? "—" : d.pendingSessions > 0 ? "yes" : "0") },
+                    // Yes/no, never the count: a per-device number under 5 would get round
+                    // the suppression rule. "yes" beside an empty queue read as a fault.
+                    { key: "pending", header: "Holding sessions", render: (d) => (d.pendingSessions === null ? "not reported" : d.pendingSessions > 0 ? "some waiting" : "none") },
                     { key: "state", header: "State", render: (d) => <Badge tone={d.approved ? "ok" : "danger"}>{d.approved ? "approved" : "revoked"}</Badge> },
                     {
                       key: "action",

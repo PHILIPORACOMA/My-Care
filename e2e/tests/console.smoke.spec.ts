@@ -29,7 +29,8 @@ test("a super-admin signs in and every screen renders", async ({ page }) => {
     ["User management", /User management/, "38-console-users", new RegExp(STAFF.sub.email)],
     ["Rules & lexicon", /Triage rules & lexicon/, "39-console-rules", /v1/],
     ["Symptom codes", /Symptom codes/, "39b-console-symptom-codes", /fever_mild/],
-    ["Sync & system health", /Sync & system health/, "40-console-sync-health"],
+    // The phone sent everything, so it must not be shown as still holding any.
+    ["Sync & system health", /Sync & system health/, "40-console-sync-health", /^none$/],
     ["Audit log", /Audit log/, "41-console-audit"],
   ];
 

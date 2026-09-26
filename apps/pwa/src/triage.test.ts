@@ -1,7 +1,7 @@
 import type { RulesetBundle } from "@mycare/ruleset";
 import { describe, expect, it } from "vitest";
 import { DICTIONARIES, translate } from "./i18n";
-import { buildSession, canonicalAnswer, chipsFor, matchSymptoms, questionsFor, resolveCodes, runTriage, tipsFor } from "./triage";
+import { buildSession, canonicalAnswer, chipsFor, matchSymptoms, questionsFor, resolveCodes, runTriage, symptomLabel, tipsFor } from "./triage";
 
 /*
  * Fixture bundle. "sipon", "hilanat" and "walay hilanat" are the manuscript's
@@ -110,6 +110,17 @@ describe("chips and questions", () => {
     expect(chips[0]?.label).toBe("sipon");
     // English has no lexicon term here, so the display name stands in.
     expect(chipsFor(bundle, "en")[0]?.label).toBe("Fixture cold");
+  });
+
+  it("labels a symptom on the result screen exactly as its chip did, never as a raw code", () => {
+    for (const language of ["ceb", "en"] as const) {
+      for (const chip of chipsFor(bundle, language)) {
+        expect(symptomLabel(bundle, chip.code, language)).toBe(chip.label);
+      }
+    }
+    expect(symptomLabel(bundle, "code_cold", "en")).not.toBe("code_cold");
+    // A code the bundle does not know falls back to itself rather than vanishing.
+    expect(symptomLabel(bundle, "code_unknown", "en")).toBe("code_unknown");
   });
 
   it("asks only for symptoms flagged as needing clarification, in the chosen language", () => {

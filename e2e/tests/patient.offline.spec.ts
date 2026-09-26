@@ -112,6 +112,9 @@ test("triages all three tiers with no signal at all, and queues them (UT-006, UT
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByText("Can be managed at home.")).toBeVisible();
   await expect(page.getByText(/not a diagnosis/i).first()).toBeVisible();
+  // The symptom is named as the patient chose it, never by its internal code.
+  await expect(page.locator(".result-chip")).toHaveText("Fever, mild, <3 days, no red flags");
+  await expect(page.getByText("fever_mild")).toHaveCount(0);
   await shot(page, "25-result-home");
   await checkAgain();
 
@@ -125,6 +128,7 @@ test("triages all three tiers with no signal at all, and queues them (UT-006, UT
   // Figure 27: emergency, with a number to call even with no facility loaded.
   await triageByChip(/Severe chest pain radiating/);
   await expect(page.getByText("Seek emergency help immediately.")).toBeVisible();
+  await expect(page.locator(".result-chip")).toHaveText("Severe chest pain radiating to arm or jaw");
   await expect(page.getByRole("link", { name: /Call for help|911/ }).first()).toHaveAttribute("href", /^tel:/);
   await shot(page, "27-result-emergency");
   await checkAgain();
@@ -133,6 +137,10 @@ test("triages all three tiers with no signal at all, and queues them (UT-006, UT
   expect(count("triage_sessions")).toBe(0);
   expect(await pendingInSettings()).toMatch(/3 finished checks waiting to send/);
   await page.getByRole("button", { name: "Settings" }).click();
+  // "Start over" keeps clear of the card above it (it used to touch).
+  const aboutBottom = await page.getByText("About My Care").locator("..").evaluate((el) => el.getBoundingClientRect().bottom);
+  const startOverTop = await page.getByRole("button", { name: /Start over/ }).evaluate((el) => el.getBoundingClientRect().top);
+  expect(startOverTop - aboutBottom).toBeGreaterThanOrEqual(12);
   await shot(page, "29-settings-offline");
   await page.getByRole("button", { name: "Back" }).click();
 });
