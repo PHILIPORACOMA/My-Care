@@ -61,6 +61,21 @@ export default defineConfig({
       dependencies: ["patient"],
       use: { browserName: "chromium", viewport: { width: 1366, height: 800 } },
     },
+    {
+      // Free text with the invented TEST lexicon. Last, because publishing it
+      // retires v1 and adds sessions the specs above count from a known state.
+      name: "lexicon",
+      testMatch: /lexicon..*.spec.ts/,
+      dependencies: ["staff"],
+      use: {
+        baseURL: URLS.pwa,
+        browserName: "chromium",
+        viewport: { width: 360, height: 640 },
+        deviceScaleFactor: 2,
+        isMobile: true,
+        hasTouch: true,
+      },
+    },
   ],
   webServer: DEPLOYED_URL ? [] : [
     {

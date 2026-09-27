@@ -239,8 +239,9 @@ have been run. Nothing else needs starting by hand.
    The patient app runs from its production build on purpose: the dev server
    registers no service worker, so an offline test against it would prove
    nothing.
-3. **Runs the specs serially** (one worker, one shared database), patient
-   first, then staff. The staff screens read what the patient journey synced.
+3. **Runs the specs serially** (one worker, one shared database): patient,
+   then staff (the staff screens read what the patient journey synced), then
+   lexicon (publishing a new version would change what the others count).
 
 **What it covers:**
 
@@ -250,6 +251,7 @@ have been run. Nothing else needs starting by hand.
 | `patient.first-run-offline.spec.ts` | Choose a barangay with no signal ever; setup finishes by itself once signal returns. | UT-001 |
 | `portal.smoke.spec.ts` | A sub-admin sees only their barangay, the sync status is current, and the journey's sessions render as `<5`. | UT-014, UT-016, UT-020 |
 | `console.smoke.spec.ts` | A super-admin signs in and every screen renders. | — |
+| `lexicon.free-text.spec.ts` | A super-admin publishes a lexicon in the console; a phone downloads it and triages Cebuano, Tagalog and English free text offline, negation and spelling variation included; the sessions upload with the matched entry. Uses the **invented test lexicon**, never v1's. Runs last. | UT-002 – UT-005, UT-011, UT-013 |
 
 The phone is emulated at 360 × 640 with touch. Playwright ships a current
 Chromium, so the suite does **not** prove Chrome 80 compatibility. That rests on

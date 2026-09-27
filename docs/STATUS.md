@@ -122,8 +122,12 @@ BS Information Technology capstone; the manuscript is the specification.
 - **E2E runs in its own schema, `mycare_e2e`**, on its own ports. `E2eSeeder`
   publishes v1 there as test fixture, not as an attestation, and refuses any
   other schema.
-- **Symptoms in browser tests are entered by chip only** until reviewed
-  lexicon terms exist. No test vocabulary is invented.
+- **Free text is tested with an invented TEST lexicon** (BUILD-LOG 9e,
+  Philipo's approval 2026-09-27): kizaru3214's PR #2 draft, unchanged, in
+  `packages/ruleset/src/testing/`, reachable only as `@mycare/ruleset/testing`.
+  v1 still has no terms, and a guard test fails if that changes.
+  `npm run export:test-lexicon` writes `dist/v1-test-lexicon.json` for a
+  development database only.
 - **Deployment: one host split by path**, a guide with no server yet
   (Philipo's choice). The console moved to `/console/`.
 - **Sanctum's session middleware is scoped to the staff and console routes**,
@@ -137,12 +141,13 @@ BS Information Technology capstone; the manuscript is the specification.
 
 - **Backend** (`apps/api`): Pest **181 passed, 731 assertions** against MySQL 8,
   locally and in CI.
-- **Packages:** `triage-engine` 12/12 plus purity, `lexicon-matcher` 11/11
+- **Packages:** `ruleset` 4/4 (test-lexicon guards), `triage-engine` 12/12 plus purity, `lexicon-matcher` 11/11
   plus purity, `engine-replay` 5/5, `api-client` 5/5, `ui` 9/9.
   `npm audit`: 0 vulnerabilities.
-- **Apps:** `pwa` 33/33, `portal` 5/5, `console` 4/4. All three build for
+- **Apps:** `pwa` 50/50, `portal` 5/5, `console` 4/4. All three build for
   production in CI.
-- **End to end** (`e2e/`): **7/7**, locally, in CI, **and through nginx on a
+- **End to end** (`e2e/`): **11/11** locally (the 4 free-text tests are
+  skipped on a deployed host), in CI, **and through nginx on a
   freshly deployed server** (`deploy-smoke`). What each spec proves is in
   BUILD-LOG 9a and the end-to-end section of `docs/ut-matrix.md`.
 - **Deployment** (`deploy/`, `docs/DEPLOYMENT.md`): proven by `deploy-smoke`
@@ -152,8 +157,8 @@ BS Information Technology capstone; the manuscript is the specification.
 
 **What the browser run cannot prove:** Chrome 80 compatibility (Playwright
 ships a current Chromium, so that rests on the `chrome80` build target and a
-real handset), and free-text matching (no lexicon terms are published, and
-test vocabulary may not be invented).
+real handset), and whether any Cebuano or Tagalog phrase is the right one:
+free text is proven only with the invented test lexicon.
 
 ## Git state
 
@@ -241,8 +246,8 @@ test vocabulary may not be invented).
 
 ### Still open
 
-- **No lexicon terms, clarification questions or health tips exist.** Free
-  text matches nothing, and chips show v1's clinician wording in English
+- **No reviewed lexicon terms, clarification questions or health tips
+  exist.** In v1 free text matches nothing (the test lexicon is not v1), and chips show v1's clinician wording in English
   whatever the language. Philipo has the reviewed terms and will enter them.
 - **Zero suppression** — `SuppressionRule` renders a true 0 as `<5`. It is now
   visible on real screens ("Sessions waiting on devices" when nothing is
@@ -278,8 +283,8 @@ intro sentence that claims only aggregates sync.
    publish attestation, facilities CSV, sub-admin accounts.
 2. **Talk to the team about `feat/pwa-ui-polish`.** It is built on the patient
    app `main` no longer has.
-3. **Enter the reviewed lexicon terms** (Philipo), then add a free-text
-   browser test that uses them.
+3. **Enter the reviewed lexicon terms** (Philipo). They replace the test
+   fixture wholesale; point `lexicon.free-text.spec.ts` at them then.
 4. **Final docs pass:** REPO.md (add `deploy/`, `e2e/`), README.
 
 ## Commands to re-verify state
@@ -288,6 +293,7 @@ intro sentence that claims only aggregates sync.
 npm install
 npm run build -w @mycare/engine-replay
 npm run export:v1 -w @mycare/ruleset
+npm test -w @mycare/ruleset              # 4/4
 npm test -w @mycare/triage-engine        # 12/12
 npm test -w @mycare/lexicon-matcher      # 11/11
 npm test -w @mycare/engine-replay        # 5/5
@@ -298,7 +304,7 @@ npm run purity -w @mycare/lexicon-matcher
 
 npm test -w @mycare/console              # 4/4
 npm test -w @mycare/portal               # 5/5
-npm test -w @mycare/pwa                  # 33/33
+npm test -w @mycare/pwa                  # 50/50
 
 cd apps/api
 php artisan migrate:fresh --seed --force
@@ -308,7 +314,7 @@ cd ../..
 # End to end. MySQL80 must be up. Own ports (8100/4273/5274/5275) and own
 # schema (mycare_e2e), so the dev servers and dev database are untouched.
 npx playwright install chromium          # once
-npm run e2e -w @mycare/e2e               # 7/7
+npm run e2e -w @mycare/e2e               # 11/11
 npm run e2e:report -w @mycare/e2e        # open the HTML report
 
 # Run it locally (the flags matter on Windows — see Environment notes):

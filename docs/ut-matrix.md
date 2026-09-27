@@ -78,17 +78,29 @@ browser against the real API, MySQL 8 and the patient app's production build
 
 | Test Case ID | Also covered end to end by |
 |---|---|
+| UT-002 | `e2e/tests/lexicon.free-text.spec.ts` (Cebuano, Tagalog and English free text typed offline, matched, triaged) |
+| UT-003 | `e2e/tests/lexicon.free-text.spec.ts` ("sip on" matches the sip-on / sipon entry) |
+| UT-004 | `e2e/tests/lexicon.free-text.spec.ts` ("walay hilanat" alone leaves nothing to check; next to "sakit sa ulo" it excludes only fever) |
+| UT-005 | `e2e/tests/lexicon.free-text.spec.ts` (free text reaches v1's rules: home, RHU and emergency) |
 | UT-001 | `e2e/tests/patient.offline.spec.ts` ("onboards with signal and caches the published rules"), `e2e/tests/patient.first-run-offline.spec.ts` (chooses offline, registers under the server's id when signal returns) |
 | UT-006 | `e2e/tests/patient.offline.spec.ts` ("triages all three tiers with no signal at all") |
+| UT-011 | `e2e/tests/lexicon.free-text.spec.ts` (a super-admin submits and publishes a version in the console, attestation checkbox required) |
 | UT-012 | `e2e/tests/patient.offline.spec.ts` ("uploads on reconnect, and a retried upload is not double-counted") |
-| UT-013 | `e2e/tests/patient.offline.spec.ts` (first two tests: download and cache, then triage from the cache after a hard reload with no network) |
+| UT-013 | `e2e/tests/patient.offline.spec.ts` (first two tests: download and cache, then triage from the cache after a hard reload with no network), `e2e/tests/lexicon.free-text.spec.ts` (a phone downloads the newly published version, lexicon included; sessions upload against it with the matched lexicon entry) |
 | UT-014 | `e2e/tests/portal.smoke.spec.ts` (Sync & status shows current data after the journey's upload) |
 | UT-015 | `e2e/tests/patient.offline.spec.ts` (server stores the batch, the response is dropped, the phone retries with the same batch uuid: 3 sessions, 1 batch) |
 | UT-016 | `e2e/tests/portal.smoke.spec.ts` (no other barangay appears for a Valladolid sub-admin) |
 | UT-020 | `e2e/tests/portal.smoke.spec.ts` (the journey's 3 sessions render as `<5`) |
 
-UT-002 to UT-004 (free text, lexicon matching, negation) have **no browser
-test**: v1 publishes no lexicon terms, and test vocabulary may not be invented.
+**UT-002 to UT-005 by free text use an invented TEST lexicon** (BUILD-LOG 9e).
+v1 still publishes no lexicon terms. On 2026-09-27 Philipo approved using
+kizaru3214's existing draft terms from PR #2, unchanged, as a test fixture
+only: `packages/ruleset/src/testing/lexicon-fixture.ts`, reachable only
+through `@mycare/ruleset/testing`. The browser spec publishes it inside the
+throwaway `mycare_e2e` schema, and the unit tests in
+`apps/pwa/src/free-text.test.ts` run it through the real matcher and engine.
+These prove the mechanism, not the vocabulary: whether a Cebuano or Tagalog
+phrase is the right one is still for the reviewed terms to settle.
 
 **Against a deployed server too.** The `deploy-smoke` workflow runs the same
 specs through nginx and PHP-FPM on a fresh Ubuntu 24.04 machine built from

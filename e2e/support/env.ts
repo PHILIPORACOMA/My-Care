@@ -80,10 +80,15 @@ export function artisan(...args: string[]): string {
 
 /** Read one number from the E2E schema: what the server actually stored. */
 export function count(table: string): number {
-  const out = artisan("tinker", `--execute=echo DB::table('${table}')->count();`);
+  return scalar(`DB::table('${table}')->count()`);
+}
+
+/** Evaluate one PHP expression that yields a whole number, in the E2E schema. */
+export function scalar(expression: string): number {
+  const out = artisan("tinker", `--execute=echo ${expression};`);
   // The count is the last line that is only digits. Anything before it -
   // PsySH warning that www-data's home is not writable, say - is noise.
   const line = out.trim().split(/\r?\n/).reverse().find((l) => /^\d+$/.test(l.trim()));
-  if (line === undefined) throw new Error(`Could not read a row count for ${table} from: ${out}`);
+  if (line === undefined) throw new Error(`Could not read a number for ${expression} from: ${out}`);
   return Number(line.trim());
 }
