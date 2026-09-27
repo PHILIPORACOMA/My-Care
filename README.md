@@ -9,6 +9,7 @@ entirely on a patient's own device — in Cebuano and Filipino, with no internet
 no account, and no personal data collected.
 
 [![api](https://github.com/PHILIPORACOMA/My-Care/actions/workflows/api.yml/badge.svg)](https://github.com/PHILIPORACOMA/My-Care/actions/workflows/api.yml)
+[![e2e](https://github.com/PHILIPORACOMA/My-Care/actions/workflows/e2e.yml/badge.svg)](https://github.com/PHILIPORACOMA/My-Care/actions/workflows/e2e.yml)
 [![engine-purity](https://github.com/PHILIPORACOMA/My-Care/actions/workflows/engine-purity.yml/badge.svg)](https://github.com/PHILIPORACOMA/My-Care/actions/workflows/engine-purity.yml)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![PHP](https://img.shields.io/badge/PHP-8.4-777BB4)
@@ -141,7 +142,7 @@ check guards `lexicon-matcher`.
 | Triage engine | Pure TypeScript, zero dependencies |
 | Backend | Laravel 13 · PHP 8.4 |
 | Database | MySQL 8 |
-| Testing | Vitest · Pest |
+| Testing | Vitest · Pest · Playwright |
 | CI | GitHub Actions |
 
 ## Getting started
@@ -201,6 +202,71 @@ npm test                          # every workspace
 npm run typecheck
 cd apps/api && ./vendor/bin/pest  # needs MySQL 8, never SQLite
 ```
+
+## End-to-end tests (Playwright)
+
+The unit suites prove each piece on its own. The Playwright suite in
+[`e2e/`](e2e) proves they work together: all three apps in a real Chromium,
+against the real Laravel API and a real MySQL 8 database. Nothing is stubbed.
+
+```bash
+npx playwright install chromium   # once per machine
+npm run e2e -w @mycare/e2e        # the whole suite
+npm run e2e:report -w @mycare/e2e # open the HTML report of the last run
+```
+
+**Before you run it:** MySQL 8 must be up, and `apps/api/.env` must hold working
+database credentials (the suite reuses them). The API's `composer install` must
+have been run. Nothing else needs starting by hand.
+
+**What a run does by itself:**
+
+1. **Builds its own world** (`e2e/global-setup.ts`). It builds `engine-replay`,
+   exports the v1 bundle, then wipes and rebuilds a separate schema,
+   **`mycare_e2e`**, and publishes v1 there with two test staff accounts.
+   Your development database (`mycare`) is never touched, and the seeder refuses
+   to run against any other schema.
+2. **Starts its own servers on its own ports**, so it never collides with your
+   dev servers:
+
+   | Server | E2E port | Dev port |
+   |---|---|---|
+   | Laravel API | 8100 | 8000 |
+   | Patient app (**production build**) | 4273 | 5173 / 4173 |
+   | RHU / LGU portal | 5274 | 5174 |
+   | Super-admin console | 5275 | 5175 |
+
+   The patient app runs from its production build on purpose: the dev server
+   registers no service worker, so an offline test against it would prove
+   nothing.
+3. **Runs the specs serially** (one worker, one shared database), patient
+   first, then staff. The staff screens read what the patient journey synced.
+
+**What it covers:**
+
+| Spec | Proves | Test cases |
+|---|---|---|
+| `patient.offline.spec.ts` | Onboard with signal and cache the rules. Hard-reload with no network and triage all three tiers from the cache. Upload on reconnect, and a retried upload is not double-counted. No unexpected console errors. | UT-001, UT-006, UT-012, UT-013, UT-015 |
+| `patient.first-run-offline.spec.ts` | Choose a barangay with no signal ever; setup finishes by itself once signal returns. | UT-001 |
+| `portal.smoke.spec.ts` | A sub-admin sees only their barangay, the sync status is current, and the journey's sessions render as `<5`. | UT-014, UT-016, UT-020 |
+| `console.smoke.spec.ts` | A super-admin signs in and every screen renders. | — |
+
+The phone is emulated at 360 × 640 with touch. Playwright ships a current
+Chromium, so the suite does **not** prove Chrome 80 compatibility. That rests on
+the build target (`chrome80`) and a real handset.
+
+**Output** (all gitignored): the HTML report in `e2e/playwright-report/`,
+traces and failure screenshots in `e2e/test-results/`, and the screenshots of
+each patient screen (Figures 17–27) in `e2e/screenshots/`.
+
+**Against a deployed server:** set `E2E_BASE_URL` and no servers are started;
+the suite targets `/`, `/portal/` and `/console/` on that host. The CI
+`deploy-smoke` job does this against nginx and PHP-FPM. See
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
+**In CI:** the `e2e` workflow runs the whole suite on every pull request and
+every push to `main`, with a MySQL 8 service container, and uploads the report
+and screenshots as the `playwright` artifact (kept 14 days).
 
 Full setup notes, repository conventions, the Laravel domain layout and the
 Windows-specific gotchas are in [`docs/REPO.md`](docs/REPO.md) and
