@@ -4,7 +4,7 @@ import type { TriageResult } from "@mycare/triage-engine";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { deviceApi, OfflineError } from "./api";
 import { bundledBarangays, resolveBarangay } from "./barangays";
-import { LANGUAGES, translatorFor } from "./i18n";
+import { translatorFor } from "./i18n";
 import { AgeScreen, BarangayScreen, LanguageScreen, SplashScreen } from "./screens/Onboarding";
 import { ClarifyScreen, InputScreen, ProcessingScreen } from "./screens/Check";
 import { HomeScreen } from "./screens/Home";
@@ -33,6 +33,7 @@ import {
   buildSession,
   canonicalAnswer,
   chipsFor,
+  localizedQuestion,
   matchSymptoms,
   questionsFor,
   runTriage,
@@ -302,7 +303,7 @@ export function App() {
     );
   }
 
-  const languageLabel = LANGUAGES.find((l) => l.code === language)?.label ?? "English";
+  const changeLanguage = (next: LanguageCode) => void save({ language: next });
 
   switch (screen) {
     case "splash":
@@ -356,7 +357,8 @@ export function App() {
         <HomeScreen
           t={t}
           barangayName={prefs.barangay?.name ?? ""}
-          languageLabel={languageLabel}
+          language={language}
+          onLanguage={changeLanguage}
           blocker={bundle ? undefined : (blocker ?? "offline")}
           onCheck={() => {
             setCheck(emptyCheck());
@@ -370,6 +372,8 @@ export function App() {
       return (
         <InputScreen
           t={t}
+          language={language}
+          onLanguage={changeLanguage}
           text={check.text}
           onText={(text) => setCheck((c) => ({ ...c, text }))}
           chips={bundle ? chipsFor(bundle, language) : []}
@@ -393,7 +397,9 @@ export function App() {
       return (
         <ClarifyScreen
           t={t}
-          question={question}
+          language={language}
+          onLanguage={changeLanguage}
+          question={bundle ? localizedQuestion(bundle, question, language) : question}
           index={check.questionIndex}
           total={check.questions.length}
           onBack={() => (check.questionIndex === 0 ? setScreen("input") : setCheck((c) => ({ ...c, questionIndex: c.questionIndex - 1 })))}
@@ -409,6 +415,8 @@ export function App() {
       return check.result && prefs.barangay ? (
         <ResultScreen
           t={t}
+          language={language}
+          onLanguage={changeLanguage}
           result={check.result}
           chips={bundle ? codes.map((code) => symptomLabel(bundle, code, language)) : codes}
           facilities={prefs.facilities ?? []}
@@ -422,6 +430,8 @@ export function App() {
       return check.result && bundle ? (
         <TipsScreen
           t={t}
+          language={language}
+          onLanguage={changeLanguage}
           tier={check.result.tier}
           tips={tipsFor(bundle, check.result.tier, codes, language)}
           onBack={() => setScreen("result")}

@@ -77,6 +77,15 @@ export function questionsFor(bundle: RulesetBundle, codes: string[], language: L
 }
 
 /**
+ * A question already being asked, in the language the patient has switched
+ * to. Same key, so the same answer positions (canonicalAnswer); the variant
+ * it was first shown in if there is none in the new language.
+ */
+export function localizedQuestion(bundle: RulesetBundle, question: ClarificationQuestion, language: LanguageCode): ClarificationQuestion {
+  return bundle.clarificationQuestions.find((q) => q.questionKey === question.questionKey && q.language === language) ?? question;
+}
+
+/**
  * The answer value to submit for a chosen option.
  *
  * The engine resolves a question by key alone — the first variant in bundle

@@ -2,6 +2,7 @@ import type { LanguageCode } from "@mycare/ruleset";
 import { useMemo, useState } from "react";
 import { LANGUAGES, type Translator } from "../i18n";
 import type { ChosenBarangay } from "../storage";
+import { Icon } from "./Icon";
 import { CareMark, OfflineBadge, Steps } from "./parts";
 
 /** Figure 17, Welcome Page. No login, no registration — one button in. */
@@ -17,7 +18,8 @@ export function SplashScreen({ t, onStart }: { t: Translator; onStart: () => voi
       </div>
       <div className="stack">
         <span className="pill pill-ghost self-center">
-          ✓ {t("worksOffline")} · {t("offlineReady")}
+          <Icon name="check" size={14} />
+          {t("worksOffline")} · {t("offlineReady")}
         </span>
         <button className="btn btn-light" onClick={onStart}>
           {t("getStarted")}
@@ -72,7 +74,7 @@ export function AgeScreen(props: { t: Translator; onBack: () => void; onConfirm:
     <div className="screen">
       <div className="top-row">
         <button className="icon-btn" onClick={props.onBack} aria-label={props.t("back")}>
-          ←
+          <Icon name="chevronLeft" size={18} />
         </button>
         <OfflineBadge t={props.t} />
       </div>
@@ -130,7 +132,7 @@ export function BarangayScreen(props: {
     <div className="screen">
       <div className="top-row">
         <button className="icon-btn" onClick={props.onBack} aria-label={props.t("back")}>
-          ←
+          <Icon name="chevronLeft" size={18} />
         </button>
         <OfflineBadge t={props.t} />
       </div>
@@ -138,7 +140,7 @@ export function BarangayScreen(props: {
       <h1 className="title">{props.t("selectBarangay")}</h1>
 
       <div className="search">
-        <span aria-hidden="true">🔍</span>
+        <Icon name="search" size={18} />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}

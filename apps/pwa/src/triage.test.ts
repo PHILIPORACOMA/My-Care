@@ -1,7 +1,7 @@
 import type { RulesetBundle } from "@mycare/ruleset";
 import { describe, expect, it } from "vitest";
 import { DICTIONARIES, translate } from "./i18n";
-import { buildSession, canonicalAnswer, chipsFor, matchSymptoms, questionsFor, resolveCodes, runTriage, symptomLabel, tipsFor } from "./triage";
+import { buildSession, canonicalAnswer, chipsFor, localizedQuestion, matchSymptoms, questionsFor, resolveCodes, runTriage, symptomLabel, tipsFor } from "./triage";
 
 /*
  * Fixture bundle. "sipon", "hilanat" and "walay hilanat" are the manuscript's
@@ -126,6 +126,14 @@ describe("chips and questions", () => {
   it("asks only for symptoms flagged as needing clarification, in the chosen language", () => {
     expect(questionsFor(bundle, ["code_cold"], "ceb")).toHaveLength(0);
     expect(questionsFor(bundle, ["code_fever"], "ceb")[0]?.prompt).toBe("Unsa ka grabe?");
+  });
+
+  it("re-asks an open question in the language the patient switches to, same key", () => {
+    const [asked] = questionsFor(bundle, ["code_fever"], "ceb");
+    expect(localizedQuestion(bundle, asked!, "en").prompt).toBe("How bad is it?");
+    expect(localizedQuestion(bundle, asked!, "en").questionKey).toBe(asked!.questionKey);
+    // No Tagalog variant: keep asking it the way it was first asked.
+    expect(localizedQuestion(bundle, asked!, "tl")).toBe(asked);
   });
 
   /*

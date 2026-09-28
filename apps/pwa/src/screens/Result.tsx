@@ -1,8 +1,9 @@
-import type { HealthTip, Tier } from "@mycare/ruleset";
+import type { HealthTip, LanguageCode, Tier } from "@mycare/ruleset";
 import type { TriageResult } from "@mycare/triage-engine";
 import type { CopyKey, Translator } from "../i18n";
 import type { Facility } from "../storage";
-import { OfflineBadge } from "./parts";
+import { Icon, type IconName } from "./Icon";
+import { LanguagePill, OfflineBadge } from "./parts";
 
 const VERDICT: Record<Tier, CopyKey> = {
   home: "resultHome",
@@ -16,7 +17,7 @@ const ADVICE: Record<Tier, CopyKey> = {
   emergency: "adviceEmergency",
 };
 
-const MARK: Record<Tier, string> = { home: "🏠", rhu: "🏥", emergency: "🚨" };
+const MARK: Record<Tier, IconName> = { home: "home", rhu: "clinic", emergency: "alert" };
 
 /**
  * The national emergency number, used only when no facility has been loaded.
@@ -52,6 +53,8 @@ function emergencyNumber(facilities: Facility[], barangayId: number | null): str
  */
 export function ResultScreen(props: {
   t: Translator;
+  language: LanguageCode;
+  onLanguage: (language: LanguageCode) => void;
   result: TriageResult;
   chips: string[];
   facilities: Facility[];
@@ -65,11 +68,12 @@ export function ResultScreen(props: {
   return (
     <div className={`result result-${tier}`}>
       <div className="result-head">
-        <div className="self-end">
+        <div className="top-row result-top">
+          <LanguagePill t={props.t} language={props.language} onChange={props.onLanguage} />
           <OfflineBadge t={props.t} />
         </div>
         <div className="result-mark" aria-hidden="true">
-          {MARK[tier]}
+          <Icon name={MARK[tier]} size={38} />
         </div>
         <h1 className="result-verdict">{props.t(VERDICT[tier])}</h1>
         {props.chips.length > 0 && (
@@ -98,7 +102,8 @@ export function ResultScreen(props: {
         <div className="push stack">
           {tier === "emergency" && (
             <a className="btn btn-danger btn-link" href={`tel:${number}`}>
-              📞 {props.t("callForHelp")} · {number}
+              <Icon name="phone" size={20} />
+              {props.t("callForHelp")} · {number}
             </a>
           )}
           <button className="btn" onClick={props.onTips}>
@@ -119,14 +124,24 @@ export function ResultScreen(props: {
 }
 
 /** Figure 28, Health Tips — tier-specific guidance as scannable cards. */
-export function TipsScreen(props: { t: Translator; tips: HealthTip[]; tier: Tier; onBack: () => void }) {
+export function TipsScreen(props: {
+  t: Translator;
+  language: LanguageCode;
+  onLanguage: (language: LanguageCode) => void;
+  tips: HealthTip[];
+  tier: Tier;
+  onBack: () => void;
+}) {
   return (
     <div className="screen">
       <div className="top-row">
         <button className="icon-btn icon-btn-round" onClick={props.onBack} aria-label={props.t("back")}>
-          ←
+          <Icon name="chevronLeft" size={18} />
         </button>
-        <OfflineBadge t={props.t} />
+        <div className="row-inline">
+          <LanguagePill t={props.t} language={props.language} onChange={props.onLanguage} />
+          <OfflineBadge t={props.t} />
+        </div>
       </div>
 
       <h1 className="title">
@@ -138,7 +153,7 @@ export function TipsScreen(props: { t: Translator; tips: HealthTip[]; tier: Tier
         {props.tips.map((tip, index) => (
           <div className="tip" key={`${tip.title}-${index}`}>
             <span className="tip-mark" aria-hidden="true">
-              💡
+              <Icon name="info" size={20} />
             </span>
             <div className="tip-body">
               <strong>{tip.title}</strong>
