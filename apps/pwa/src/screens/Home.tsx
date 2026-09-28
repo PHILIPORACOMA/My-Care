@@ -1,6 +1,8 @@
+import type { LanguageCode } from "@mycare/ruleset";
 import type { Translator } from "../i18n";
 import type { BundleBlocker } from "../sync";
-import { CareMark, OfflineBadge } from "./parts";
+import { Icon } from "./Icon";
+import { CareMark, LanguagePill, OfflineBadge } from "./parts";
 
 /*
  * Three reasons a device can have no rules, and they are not interchangeable:
@@ -27,7 +29,8 @@ const BLOCKER_BODY: Record<BundleBlocker, "needConnectionBody" | "noRulesBody" |
 export function HomeScreen(props: {
   t: Translator;
   barangayName: string;
-  languageLabel: string;
+  language: LanguageCode;
+  onLanguage: (language: LanguageCode) => void;
   blocker?: BundleBlocker;
   onCheck: () => void;
   onSettings: () => void;
@@ -37,9 +40,9 @@ export function HomeScreen(props: {
       <div className="top-row">
         <OfflineBadge t={props.t} />
         <div className="row-inline">
-          <span className="pill">{props.languageLabel}</span>
+          <LanguagePill t={props.t} language={props.language} onChange={props.onLanguage} />
           <button className="icon-btn icon-btn-round" onClick={props.onSettings} aria-label={props.t("settings")}>
-            ⚙
+            <Icon name="gear" size={20} />
           </button>
         </div>
       </div>
@@ -48,7 +51,10 @@ export function HomeScreen(props: {
         {props.t("hello")}
       </p>
       <h1 className="title title-lg">{props.t("howAreYouFeeling")}</h1>
-      <p className="subtitle">📍 {props.t("barangayLine", { barangay: props.barangayName })}</p>
+      <p className="subtitle with-icon">
+        <Icon name="mapPin" size={16} />
+        {props.t("barangayLine", { barangay: props.barangayName })}
+      </p>
 
       <div className="grow">
         {props.blocker ? (

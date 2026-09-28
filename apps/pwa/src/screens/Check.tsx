@@ -1,9 +1,10 @@
-import type { ClarificationQuestion } from "@mycare/ruleset";
+import type { ClarificationQuestion, LanguageCode } from "@mycare/ruleset";
 import type { SymptomMatch } from "@mycare/lexicon-matcher";
 import { useEffect } from "react";
 import type { Translator } from "../i18n";
 import type { SymptomChoice } from "../triage";
-import { CareMark, OfflineBadge } from "./parts";
+import { Icon } from "./Icon";
+import { CareMark, LanguagePill, OfflineBadge } from "./parts";
 
 /**
  * Figure 22, Input Symptom — "two parallel paths: a free-text field and a row
@@ -17,6 +18,8 @@ import { CareMark, OfflineBadge } from "./parts";
  */
 export function InputScreen(props: {
   t: Translator;
+  language: LanguageCode;
+  onLanguage: (language: LanguageCode) => void;
   text: string;
   onText: (text: string) => void;
   chips: SymptomChoice[];
@@ -31,9 +34,12 @@ export function InputScreen(props: {
     <div className="screen">
       <div className="top-row">
         <button className="icon-btn" onClick={props.onBack} aria-label={props.t("back")}>
-          ←
+          <Icon name="chevronLeft" size={18} />
         </button>
-        <OfflineBadge t={props.t} />
+        <div className="row-inline">
+          <LanguagePill t={props.t} language={props.language} onChange={props.onLanguage} />
+          <OfflineBadge t={props.t} />
+        </div>
       </div>
 
       <h1 className="title">
@@ -69,7 +75,7 @@ export function InputScreen(props: {
               aria-pressed={props.picked.includes(chip.code)}
               onClick={() => props.onToggleChip(chip.code)}
             >
-              {props.picked.includes(chip.code) ? "✓ " : "+ "}
+              <Icon name={props.picked.includes(chip.code) ? "check" : "plus"} size={16} />
               {chip.label}
             </button>
           ))}
@@ -94,6 +100,8 @@ export function InputScreen(props: {
  */
 export function ClarifyScreen(props: {
   t: Translator;
+  language: LanguageCode;
+  onLanguage: (language: LanguageCode) => void;
   question: ClarificationQuestion;
   index: number;
   total: number;
@@ -104,9 +112,12 @@ export function ClarifyScreen(props: {
     <div className="screen">
       <div className="top-row">
         <button className="icon-btn" onClick={props.onBack} aria-label={props.t("back")}>
-          ←
+          <Icon name="chevronLeft" size={18} />
         </button>
-        <OfflineBadge t={props.t} />
+        <div className="row-inline">
+          <LanguagePill t={props.t} language={props.language} onChange={props.onLanguage} />
+          <OfflineBadge t={props.t} />
+        </div>
       </div>
 
       <div className="steps" aria-hidden="true">

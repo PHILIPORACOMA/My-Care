@@ -2,6 +2,7 @@ import type { LanguageCode } from "@mycare/ruleset";
 import { useState } from "react";
 import { LANGUAGES, type Translator } from "../i18n";
 import type { CachedBundle } from "../storage";
+import { Icon } from "./Icon";
 import { OfflineBadge } from "./parts";
 
 /**
@@ -30,7 +31,7 @@ export function SettingsScreen(props: {
     <div className="screen">
       <div className="top-row">
         <button className="icon-btn" onClick={props.onBack} aria-label={props.t("back")}>
-          ←
+          <Icon name="chevronLeft" size={18} />
         </button>
         <OfflineBadge t={props.t} />
       </div>
@@ -56,7 +57,10 @@ export function SettingsScreen(props: {
       <div className="rows">
         <div className="row">
           <span>
-            ✓ {props.t("worksOffline")}
+            <span className="with-icon">
+              <Icon name="check" size={16} />
+              {props.t("worksOffline")}
+            </span>
             <br />
             <span className="subtitle">{updated}</span>
           </span>

@@ -43,6 +43,19 @@ async function triageByChip(chip: RegExp): Promise<void> {
   await page.getByRole("button", { name: "Continue" }).click();
 }
 
+/** The language pill's menu opens fully on screen, wherever the pill sits. */
+async function languageMenuFits(name: string): Promise<void> {
+  await page.getByRole("button", { name: "Language: English" }).click();
+  const menu = page.getByRole("group", { name: "Language" });
+  const box = await menu.boundingBox();
+  const width = page.viewportSize()!.width;
+  expect(box!.x).toBeGreaterThanOrEqual(0);
+  expect(box!.x + box!.width).toBeLessThanOrEqual(width);
+  await shot(page, name);
+  await page.keyboard.press("Escape");
+  await expect(menu).toHaveCount(0);
+}
+
 async function checkAgain(): Promise<void> {
   await page.getByRole("button", { name: "Check again" }).click();
   await expect(page.getByText("How are you feeling today?")).toBeVisible();
@@ -110,6 +123,7 @@ test("triages all three tiers with no signal at all, and queues them (UT-006, UT
   await page.getByRole("button", { name: /Check symptoms/ }).click();
   await expect(page.getByRole("button", { name: /Fever, mild/ })).toBeVisible();
   await shot(page, "22-symptom-input");
+  await languageMenuFits("22c-language-menu");
   await page.getByRole("button", { name: /Fever, mild/ }).click();
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByText("Can be managed at home.")).toBeVisible();
@@ -133,6 +147,7 @@ test("triages all three tiers with no signal at all, and queues them (UT-006, UT
   await expect(page.locator(".result-chip")).toHaveText("Severe chest pain radiating to arm or jaw");
   await expect(page.getByRole("link", { name: /Call for help|911/ }).first()).toHaveAttribute("href", /^tel:/);
   await shot(page, "27-result-emergency");
+  await languageMenuFits("27c-language-menu");
   await checkAgain();
 
   // Nothing reached the server; all three wait on the device.

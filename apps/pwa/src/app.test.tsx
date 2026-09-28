@@ -95,7 +95,8 @@ describe("a patient checking their symptoms", () => {
 
     // Figure 18: language first, so everything after is in it.
     await user.click(await screen.findByRole("button", { name: /Cebuano/ }));
-    await user.click(screen.getByRole("button", { name: /Padayon/ }));
+    // Found, not got: the Cebuano copy appears once the choice is saved.
+    await user.click(await screen.findByRole("button", { name: /Padayon/ }));
 
     // Figure 19: the adult-only checkpoint.
     expect(await screen.findByText(/18 anyos o mas magulang/)).toBeInTheDocument();
@@ -141,7 +142,8 @@ describe("a patient checking their symptoms", () => {
 
     await user.click(await screen.findByRole("button", { name: /Get started/ }));
     await user.click(await screen.findByRole("button", { name: /Cebuano/ }));
-    await user.click(screen.getByRole("button", { name: /Padayon/ }));
+    // Found, not got: the Cebuano copy appears once the choice is saved.
+    await user.click(await screen.findByRole("button", { name: /Padayon/ }));
     await user.click(screen.getByRole("button", { name: /Oo, 18/ }));
     await user.click(await screen.findByRole("button", { name: /Valladolid/ }));
     await user.click(screen.getByRole("button", { name: /Kumpirmaha ang barangay/ }));
@@ -186,6 +188,61 @@ describe("a patient checking their symptoms", () => {
     // And the record is waiting rather than lost.
     const storage = await import("./storage");
     await waitFor(async () => expect(await storage.queueLength()).toBe(1));
+  }, 20000);
+
+  /*
+   * The language pill (every screen after onboarding). Switching mid-check
+   * changes the copy and nothing else: what was typed stays typed, and the
+   * session is recorded in the language the check finished in.
+   */
+  it("switches language mid-check from the pill without losing what was typed", async () => {
+    const startedAt = new Date().toISOString();
+    const user = await launch();
+    await user.click(await screen.findByRole("button", { name: /Get started/ }));
+    await user.click(await screen.findByRole("button", { name: /English/ }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: /Yes, I'm 18/ }));
+    await user.click(await screen.findByRole("button", { name: /Valladolid/ }));
+    await user.click(screen.getByRole("button", { name: /Confirm barangay/ }));
+
+    await user.click(await screen.findByRole("button", { name: /Check symptoms/ }));
+    await user.type(await screen.findByRole("textbox"), "naa koy hilanat");
+
+    // Closed until tapped; Escape closes it again without changing anything.
+    const pill = screen.getByRole("button", { name: "Language: English" });
+    expect(pill).toHaveAttribute("aria-expanded", "false");
+    await user.click(pill);
+    expect(screen.getByRole("group", { name: "Language" })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("group", { name: "Language" })).not.toBeInTheDocument();
+
+    await user.click(pill);
+    await user.click(screen.getByRole("button", { name: "Cebuano (Bisaya)" }));
+
+    // Same screen, now in Cebuano, the text untouched.
+    expect(await screen.findByRole("heading", { name: "Unsa imong gibati?" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox")).toHaveValue("naa koy hilanat");
+    expect(screen.getByRole("button", { name: "Pinulongan: Cebuano" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Padayon" }));
+    await user.click(await screen.findByRole("button", { name: "gamay" }));
+    expect(await screen.findByText(/Adto sa pinakaduol nga Rural Health Unit/, {}, { timeout: 4000 })).toBeInTheDocument();
+
+    // The result screen has the pill too: back to English, same result.
+    await user.click(screen.getByRole("button", { name: "Pinulongan: Cebuano" }));
+    await user.click(screen.getByRole("button", { name: /^English/ }));
+    expect(await screen.findByText(/Go to the nearest Rural Health Unit/)).toBeInTheDocument();
+
+    // Recorded in the language the check finished in. Only this test's own
+    // session counts: the previous test can still be uploading its English
+    // one through the shared fake IndexedDB when this one starts.
+    const mine = () =>
+      posted
+        .filter((p) => p.url.includes("/sync/batches"))
+        .flatMap((p) => p.body.sessions as Record<string, unknown>[])
+        .filter((s) => String(s.started_at) >= startedAt);
+    await waitFor(() => expect(mine()).toHaveLength(1));
+    expect(mine()[0]!.language).toBe("ceb");
   }, 20000);
 
   /*

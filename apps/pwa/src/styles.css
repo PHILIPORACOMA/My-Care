@@ -505,6 +505,10 @@ button.pill {
 }
 
 .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  text-align: left;
   border: 1px solid var(--line-strong);
   background: #fff;
   color: var(--ink);
@@ -859,8 +863,10 @@ button.pill {
 
 /* An anchor doing a button's job — "Call for help" is a tel: link. */
 .btn-link {
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
   text-decoration: none;
   line-height: 1.25;
 }
@@ -882,4 +888,79 @@ button.pill {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* ----------------------------------------------------------------- icons */
+
+/* Line icons (screens/Icon.tsx) take the colour of the text around them. */
+.icon {
+  flex: none;
+  display: block;
+}
+
+/* An icon leading a line of text: the pin on Home, the tick in Settings. */
+.with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+/* --------------------------------------------------------- language pill */
+
+.lang {
+  position: relative;
+}
+
+.lang > .pill {
+  min-height: 36px;
+}
+
+.lang-menu {
+  position: absolute;
+  top: calc(100% + var(--s-2));
+  right: 0;
+  z-index: 10;
+  min-width: 190px;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: var(--s-1);
+}
+
+.lang-menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-height: 44px;
+  padding: var(--s-2) var(--s-3);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-small);
+  text-align: left;
+  cursor: pointer;
+}
+
+.lang-menu button[aria-pressed="true"] {
+  background: var(--teal-tint);
+  color: var(--teal-dark);
+  font-weight: 600;
+}
+
+/* On a result screen the pill sits at the left edge, so its menu opens
+   rightwards instead of off the screen. */
+.result-top {
+  width: 100%;
+  margin-top: 0;
+}
+
+.result-top .lang-menu {
+  left: 0;
+  right: auto;
 }
