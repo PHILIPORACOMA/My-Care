@@ -1009,78 +1009,90 @@ button.pill {
 /* ------------------------------------------------------ larger screens */
 
 /*
- * Phones keep the single column above, unchanged. From tablet width up, each
- * screen becomes a centred panel on the page, and Home and the results use
- * the extra width for two columns. Same colours, same type family.
+ * Phones keep the single column above, unchanged. From tablet width up the
+ * app is laid out as a full-width web page instead of a phone-shaped column:
+ * the top row becomes a header bar across the page, content sits in a centred
+ * column, and Home and the results use the width for two columns. Font sizes
+ * and colours are the same as on the phone; only the layout changes.
  */
 @media (min-width: 768px) {
   :root {
-    --gutter: 44px;
-    --fs-display: 28px;
-    --fs-display-lg: 36px;
-  }
-
-  body {
-    background:
-      radial-gradient(circle at 12% 8%, rgba(13, 124, 108, 0.08), transparent 42%),
-      radial-gradient(circle at 88% 92%, rgba(13, 124, 108, 0.06), transparent 40%),
-      var(--ground);
-    background-attachment: fixed;
-  }
-
-  .screen,
-  .splash,
-  .result {
-    max-width: 720px;
-    min-height: calc(100% - 64px);
-    margin: 32px auto;
-    border-radius: var(--r-xl);
-    box-shadow: 0 24px 64px rgba(22, 32, 30, 0.08);
-    overflow: hidden;
+    /* The page's content width, and the inset that lines the header's
+       controls up with the content below it. */
+    --page: 720px;
+    --page-inset: max(var(--gutter), calc((100% - var(--page)) / 2));
   }
 
   .screen {
-    background: var(--surface);
-    padding-top: var(--s-7);
-    padding-bottom: var(--s-7);
+    max-width: none;
+    margin: 0;
+    padding: 0 0 var(--s-7);
   }
 
-  /* The row of controls at the top reads as the page header. */
+  /* Everything in a screen sits in the centred content column... */
+  .screen > * {
+    width: 100%;
+    max-width: var(--page);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* ...except the header bar, which runs the full width of the page. */
   .screen > .top-row {
-    padding-bottom: var(--s-5);
+    max-width: none;
+    margin: 0 0 var(--s-5);
+    padding: var(--s-4) var(--page-inset);
+    background: var(--surface);
     border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 5;
   }
 
-  .splash-tag {
-    max-width: 380px;
+  /* Screens without a header bar still need room at the top. */
+  .screen > :first-child:not(.top-row) {
+    margin-top: var(--s-7);
   }
 
-  .home-card-sub {
-    max-width: 320px;
+  /* The splash and results fill the page rather than a phone column. */
+  .splash,
+  .result {
+    max-width: none;
+    margin: 0;
   }
 
-  .btn,
-  .home-card-cta {
-    min-height: 58px;
+  .splash {
+    justify-content: center;
+  }
+
+  .splash > * {
+    width: 100%;
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
 @media (min-width: 1024px) {
-  .screen {
-    max-width: 880px;
+  :root {
+    --page: 960px;
+  }
+
+  /* Single-column screens (symptoms, settings, onboarding) stay a readable
+     width even on a wide monitor. */
+  .screen:not(.screen-home) > :not(.top-row) {
+    max-width: 760px;
   }
 
   /* Home: greeting on the left, the call to action on the right. */
   .screen-home {
-    max-width: 1080px;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr minmax(0, 480px) minmax(0, 480px) 1fr;
     grid-template-rows: auto 1fr auto;
     grid-template-areas:
-      "top top"
-      "intro main"
-      "foot foot";
-    column-gap: 64px;
+      "top top top top"
+      ". intro main ."
+      ". foot foot .";
     align-items: center;
   }
 
@@ -1091,11 +1103,7 @@ button.pill {
 
   .home-intro {
     grid-area: intro;
-  }
-
-  .home-intro .title-lg {
-    font-size: 44px;
-    line-height: 1.15;
+    padding-right: 48px;
   }
 
   .home-main {
@@ -1106,9 +1114,9 @@ button.pill {
     grid-area: foot;
   }
 
-  /* Results: the coloured verdict beside the white advice sheet. */
+  /* Results: the coloured verdict fills the left of the page, the advice the
+     right. */
   .result {
-    max-width: 1080px;
     flex-direction: row;
   }
 
@@ -1116,24 +1124,25 @@ button.pill {
     position: relative;
     flex: 0 0 44%;
     justify-content: center;
-    padding: 96px var(--s-7) var(--s-7);
+    padding: 96px 48px 48px;
   }
 
   .result-top {
     position: absolute;
     top: var(--s-6);
-    left: var(--s-6);
-    right: var(--s-6);
+    left: 48px;
+    right: 48px;
     width: auto;
-  }
-
-  .result-verdict {
-    font-size: 32px;
   }
 
   .result-sheet {
     border-radius: 0;
-    padding: var(--s-7) 48px;
+    padding: 48px 64px;
     justify-content: center;
+  }
+
+  .result-sheet > * {
+    width: 100%;
+    max-width: 560px;
   }
 }
