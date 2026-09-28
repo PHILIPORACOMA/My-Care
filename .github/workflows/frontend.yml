@@ -25,6 +25,7 @@ jobs:
       - run: npm run typecheck
       - name: Package tests
         run: |
+          npm test -w @mycare/ruleset
           npm test -w @mycare/engine-replay
           npm test -w @mycare/api-client
           npm test -w @mycare/ui

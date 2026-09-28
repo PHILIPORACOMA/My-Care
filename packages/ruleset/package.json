@@ -7,6 +7,12 @@
   "types": "src/index.ts",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "export:v1": "tsx scripts/export-bundle.ts dist/v1.json"
+    "test": "tsx --test src/testing/testing.test.ts",
+    "export:v1": "tsx scripts/export-bundle.ts dist/v1.json",
+    "export:test-lexicon": "tsx scripts/export-test-lexicon.ts dist/v1-test-lexicon.json"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing/index.ts"
   }
 }

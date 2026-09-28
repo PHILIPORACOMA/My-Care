@@ -1280,3 +1280,70 @@ it with `php artisan key:generate` costs nothing but a sign-in.
 steps: a server and domain, the lexicon terms, the conversation with
 kizaru3214, or porting the icons, language pill and age-gate layout from his
 branch (a plan first).
+
+---
+
+### 9e - Free text, tested with an invented TEST lexicon (2026-09-27)
+
+**Branch `feat/UT-003-test-lexicon`.** Philipo typed "hilanat" and nothing
+happened: v1 publishes no lexicon terms, so free text matches nothing. He
+asked to "fully test the capability" with the terms that already exist, for
+testing only. The only ones that exist are kizaru3214's invented draft from
+PR #2 (`f1d0a0a`, still on `origin/feat/pwa-ui-polish`): 124 terms covering
+all 23 v1 codes in English, Tagalog and Cebuano, with negations.
+
+**Copied unchanged, fenced off:**
+
+- `packages/ruleset/src/testing/lexicon-fixture.ts`: the draft with a new
+  header (TEST FIXTURE ONLY, where it came from, who approved it, the known
+  clinical problems). Not one term was changed, added or translated.
+- Reachable only through a second entry point, `@mycare/ruleset/testing`
+  (package `exports`). `testing.test.ts` fails if `v1Bundle.lexiconTerms`
+  stops being empty or if the main entry ever mentions `testing`.
+- `v1TestLexiconBundle` = v1 exactly, plus the fixture. A test pins that
+  nothing else differs.
+
+**Known clinical problems in the fixture, written into its header:** a bare
+"fever" / "lagnat" / "hilanat" is `fever_mild` (home), so a patient with a
+serious fever who types only that word is under-triaged; a bare "chest pain"
+is straight emergency. Fine for a test, never for a patient.
+
+**Tests:**
+
+- `apps/pwa/src/free-text.test.ts` (17): the patient's words through the
+  real matcher, the real v1 rules and the real engine, in all three
+  languages; UT-003 (`sip-on`), UT-004 (`walay hilanat`), a longer phrase
+  winning ("dugay na hilanat" is RHU, not home), mixed languages taking the
+  highest tier, unknown words resolving to nothing. Two tests pin the
+  fixture's limits so nobody reads them as correct: README's own example
+  "hilanat ug ubo, tulo ka adlaw na" comes out **home** because nothing
+  encodes the three days.
+- `e2e/tests/lexicon.free-text.spec.ts` (4), a third Playwright project run
+  after staff: import the bundle as a draft, then in the console open it
+  (Lexicon (124)), submit, publish with the attestation checkbox (UT-011); a
+  new phone onboards, downloads it (UT-013), goes offline and triages free
+  text to home, RHU and emergency; the three sessions upload against the new
+  version, each with its `matched_term_id`. Skipped against a deployed host.
+- `e2e/support/env.ts` gained `scalar()`; `count()` now uses it.
+- CI's `frontend` job runs the ruleset tests.
+
+Test inputs use only fixture terms, commas, and README's manuscript example.
+No new Cebuano or Tagalog was written.
+
+**For trying it by hand:** `npm run export:test-lexicon -w @mycare/ruleset`
+writes `dist/v1-test-lexicon.json` (gitignored). Imported with
+`mycare:ruleset:import` it becomes the next draft (**v2**: labels are
+assigned in order, and `RULESET_VERSION` has no column that could mark it as
+a test). Publishing it is Philipo's own attestation, in his development
+database only. Two things found along the way:
+
+- **A phone refreshes its rules at most every 6 hours** (`sync.ts`,
+  `refreshBundle`). A phone that already holds v1 keeps it after v2 is
+  published until then, or until Start over. Not changed.
+- **Chips take their label from the lexicon** (`symptomLabel`), so with the
+  fixture published they read "fever", "chest pain", "cold" instead of v1's
+  clinician wording. Under the fixture that is the same short-chip risk
+  noted against `feat/pwa-ui-polish`: a "fever" chip is home. The reviewed
+  terms should settle which word a chip shows. Not changed.
+
+**Results:** ruleset 4/4, PWA 50/50, E2E 11/11 locally, typecheck clean.
