@@ -1,6 +1,6 @@
 import type { ClarificationQuestion, LanguageCode } from "@mycare/ruleset";
 import type { SymptomMatch } from "@mycare/lexicon-matcher";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { Translator } from "../i18n";
 import type { SymptomChoice } from "../triage";
 import { Icon } from "./Icon";
@@ -11,10 +11,10 @@ import { CareMark, LanguagePill, OfflineBadge } from "./parts";
  * of pre-built symptom chips drawn directly from the versioned lexicon. Both
  * produce the same structured output for the triage engine."
  *
- * The design also shows a microphone. It is deliberately absent: no offline
- * speech recogniser exists for Tagalog or Cebuano within the device budget,
- * and the online one would send the patient's voice to a third party, which
- * the privacy model forbids (docs/BUILD-LOG.md).
+ * The design also shows a microphone. It is shown but does not record: no
+ * offline speech recogniser exists for Tagalog or Cebuano within the device
+ * budget, and the online one would send the patient's voice to a third party,
+ * which the privacy model forbids (docs/BUILD-LOG.md). Tapping it says so.
  */
 export function InputScreen(props: {
   t: Translator;
@@ -30,8 +30,10 @@ export function InputScreen(props: {
   onBack: () => void;
   onContinue: () => void;
 }) {
+  const [voiceNote, setVoiceNote] = useState(false);
+
   return (
-    <div className="screen">
+    <div className="screen screen-input">
       <div className="top-row">
         <button className="icon-btn" onClick={props.onBack} aria-label={props.t("back")}>
           <Icon name="chevronLeft" size={18} />
@@ -46,16 +48,29 @@ export function InputScreen(props: {
         {props.t("whatAreYourSymptoms")}
       </h1>
 
-      <label>
-        <span className="sr-only">{props.t("whatAreYourSymptoms")}</span>
-        <textarea
-          className="textarea"
-          value={props.text}
-          onChange={(e) => props.onText(e.target.value)}
-          placeholder={props.t("symptomPlaceholder")}
-          rows={5}
-        />
-      </label>
+      <div className="textarea-wrap">
+        <label>
+          <span className="sr-only">{props.t("whatAreYourSymptoms")}</span>
+          <textarea
+            className="textarea"
+            value={props.text}
+            onChange={(e) => {
+              props.onText(e.target.value);
+              setVoiceNote(false);
+            }}
+            placeholder={props.t("symptomPlaceholder")}
+            rows={5}
+          />
+        </label>
+        <button type="button" className="mic-btn" aria-label={props.t("voiceInput")} onClick={() => setVoiceNote(true)}>
+          <Icon name="mic" size={20} />
+        </button>
+      </div>
+      {voiceNote && (
+        <p className="note" role="status">
+          {props.t("voiceNotSupported")}
+        </p>
+      )}
 
       {props.matches.length > 0 && (
         <p className="matches">

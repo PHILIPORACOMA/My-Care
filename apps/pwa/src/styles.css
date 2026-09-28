@@ -964,3 +964,176 @@ button.pill {
   left: 0;
   right: auto;
 }
+
+/* ------------------------------------------------------------ microphone */
+
+/* The mic sits inside the symptom box (Figure 22). It does not record: it
+   explains that voice input is not supported yet (Check.tsx). */
+.textarea-wrap {
+  position: relative;
+}
+
+.textarea-wrap label,
+.textarea-wrap .textarea {
+  display: block;
+}
+
+.textarea-wrap .textarea {
+  padding-right: 68px;
+}
+
+.mic-btn {
+  position: absolute;
+  right: var(--s-3);
+  bottom: var(--s-3);
+  width: 46px;
+  height: 46px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--teal);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(13, 124, 108, 0.3);
+}
+
+.mic-btn:active {
+  background: var(--teal-dark);
+}
+
+.textarea-wrap + .note {
+  margin-top: var(--s-3);
+}
+
+/* ------------------------------------------------------ larger screens */
+
+/*
+ * Phones keep the single column above, unchanged. From tablet width up, each
+ * screen becomes a centred panel on the page, and Home and the results use
+ * the extra width for two columns. Same colours, same type family.
+ */
+@media (min-width: 768px) {
+  :root {
+    --gutter: 44px;
+    --fs-display: 28px;
+    --fs-display-lg: 36px;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 12% 8%, rgba(13, 124, 108, 0.08), transparent 42%),
+      radial-gradient(circle at 88% 92%, rgba(13, 124, 108, 0.06), transparent 40%),
+      var(--ground);
+    background-attachment: fixed;
+  }
+
+  .screen,
+  .splash,
+  .result {
+    max-width: 720px;
+    min-height: calc(100% - 64px);
+    margin: 32px auto;
+    border-radius: var(--r-xl);
+    box-shadow: 0 24px 64px rgba(22, 32, 30, 0.08);
+    overflow: hidden;
+  }
+
+  .screen {
+    background: var(--surface);
+    padding-top: var(--s-7);
+    padding-bottom: var(--s-7);
+  }
+
+  /* The row of controls at the top reads as the page header. */
+  .screen > .top-row {
+    padding-bottom: var(--s-5);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .splash-tag {
+    max-width: 380px;
+  }
+
+  .home-card-sub {
+    max-width: 320px;
+  }
+
+  .btn,
+  .home-card-cta {
+    min-height: 58px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .screen {
+    max-width: 880px;
+  }
+
+  /* Home: greeting on the left, the call to action on the right. */
+  .screen-home {
+    max-width: 1080px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      "top top"
+      "intro main"
+      "foot foot";
+    column-gap: 64px;
+    align-items: center;
+  }
+
+  .screen-home > .top-row {
+    grid-area: top;
+    align-self: start;
+  }
+
+  .home-intro {
+    grid-area: intro;
+  }
+
+  .home-intro .title-lg {
+    font-size: 44px;
+    line-height: 1.15;
+  }
+
+  .home-main {
+    grid-area: main;
+  }
+
+  .screen-home > .disclaimer {
+    grid-area: foot;
+  }
+
+  /* Results: the coloured verdict beside the white advice sheet. */
+  .result {
+    max-width: 1080px;
+    flex-direction: row;
+  }
+
+  .result-head {
+    position: relative;
+    flex: 0 0 44%;
+    justify-content: center;
+    padding: 96px var(--s-7) var(--s-7);
+  }
+
+  .result-top {
+    position: absolute;
+    top: var(--s-6);
+    left: var(--s-6);
+    right: var(--s-6);
+    width: auto;
+  }
+
+  .result-verdict {
+    font-size: 32px;
+  }
+
+  .result-sheet {
+    border-radius: 0;
+    padding: var(--s-7) 48px;
+    justify-content: center;
+  }
+}

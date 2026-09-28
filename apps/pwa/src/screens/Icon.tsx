@@ -20,6 +20,7 @@ export type IconName =
   | "home"
   | "info"
   | "mapPin"
+  | "mic"
   | "phone"
   | "plus"
   | "search"
@@ -36,6 +37,7 @@ const PATHS: Record<IconName, string> = {
   home: "M4 11.5 12 4l8 7.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z",
   info: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 11v6M12 7.5v.01",
   mapPin: "M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21zM12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z",
+  mic: "M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM6 11a6 6 0 0 0 12 0M12 17v4",
   phone: "M6.5 3h3l1.5 5-2.5 1.5a12 12 0 0 0 5 5L15 12l5 1.5v3a2 2 0 0 1-2 2C10.5 18.5 5.5 13.5 4.5 6a2 2 0 0 1 2-2z",
   plus: "M12 5v14M5 12h14",
   search: "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM21 21l-4.35-4.35",

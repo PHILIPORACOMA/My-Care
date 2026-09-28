@@ -36,7 +36,7 @@ export function HomeScreen(props: {
   onSettings: () => void;
 }) {
   return (
-    <div className="screen">
+    <div className="screen screen-home">
       <div className="top-row">
         <OfflineBadge t={props.t} />
         <div className="row-inline">
@@ -47,16 +47,18 @@ export function HomeScreen(props: {
         </div>
       </div>
 
-      <p className="subtitle subtitle-top">
-        {props.t("hello")}
-      </p>
-      <h1 className="title title-lg">{props.t("howAreYouFeeling")}</h1>
-      <p className="subtitle with-icon">
-        <Icon name="mapPin" size={16} />
-        {props.t("barangayLine", { barangay: props.barangayName })}
-      </p>
+      <div className="home-intro">
+        <p className="subtitle subtitle-top">
+          {props.t("hello")}
+        </p>
+        <h1 className="title title-lg">{props.t("howAreYouFeeling")}</h1>
+        <p className="subtitle with-icon">
+          <Icon name="mapPin" size={16} />
+          {props.t("barangayLine", { barangay: props.barangayName })}
+        </p>
+      </div>
 
-      <div className="grow">
+      <div className="grow home-main">
         {props.blocker ? (
           <div className="banner banner-warn">
             <strong>{props.t(BLOCKER_TITLE[props.blocker])}</strong>

@@ -66,6 +66,8 @@ const en = {
   // Figure 22
   whatAreYourSymptoms: "What are your symptoms?",
   symptomPlaceholder: "Describe how you feel, in your own words…",
+  voiceInput: "Voice input",
+  voiceNotSupported: "Voice input isn't supported yet. Please type your symptoms or tap one below.",
   orSelectCommon: "Or select a common symptom:",
   notADiagnosis: "This is not a diagnosis.",
   noSymptomsYet: "Type how you feel, or tap a symptom above.",
@@ -164,6 +166,8 @@ const tl: Dictionary = {
 
   whatAreYourSymptoms: "Ano ang iyong nararamdaman?",
   symptomPlaceholder: "Ilarawan ang nararamdaman mo, sa sarili mong salita…",
+  voiceInput: "Pagsasalita",
+  voiceNotSupported: "Hindi pa suportado ang pagsasalita. I-type ang iyong sintomas o pumili sa ibaba.",
   orSelectCommon: "O pumili ng karaniwang sintomas:",
   notADiagnosis: "Hindi ito diagnosis.",
   noSymptomsYet: "I-type ang nararamdaman mo, o pumindot ng sintomas sa itaas.",
@@ -259,6 +263,8 @@ const ceb: Dictionary = {
 
   whatAreYourSymptoms: "Unsa imong gibati?",
   symptomPlaceholder: "Isulat kung unsa imong gibati, sa imong kaugalingong pulong…",
+  voiceInput: "Pagsulti",
+  voiceNotSupported: "Dili pa suportado ang pagsulti. I-type ang imong sintomas o pagpili sa ubos.",
   orSelectCommon: "O pagpili ug komon nga sintomas:",
   notADiagnosis: "Dili kini diagnosis.",
   noSymptomsYet: "I-type kung unsa imong gibati, o i-tap ang sintomas sa taas.",
