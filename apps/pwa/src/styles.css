@@ -965,6 +965,12 @@ button.pill {
   right: auto;
 }
 
+/* A small action at the end of a Settings row ("Change barangay"). */
+.row-action {
+  width: auto;
+  flex: none;
+}
+
 /* ------------------------------------------------------------ microphone */
 
 /* The mic sits inside the symptom box (Figure 22). It does not record: it

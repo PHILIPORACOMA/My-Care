@@ -110,6 +110,7 @@ const en = {
   aboutMyCare: "About My Care",
   aboutBody:
     "My Care checks your symptoms on your own phone, without sending what you type anywhere. Only de-identified results are shared with your health office.",
+  changeBarangay: "Change barangay",
   startOver: "Start over (clear data)",
   startOverConfirm: "This clears your language, barangay and any checks waiting to send. Continue?",
   cancel: "Cancel",
@@ -209,6 +210,7 @@ const tl: Dictionary = {
   aboutMyCare: "Tungkol sa My Care",
   aboutBody:
     "Sinusuri ng My Care ang iyong mga sintomas sa loob mismo ng iyong telepono. Hindi ipinapadala kahit saan ang iyong isinulat. Ang de-identified na resulta lamang ang ibinabahagi sa inyong health office.",
+  changeBarangay: "Palitan ang barangay",
   startOver: "Magsimula muli (burahin ang datos)",
   startOverConfirm:
     "Buburahin nito ang iyong wika, barangay, at anumang pagsusuring naghihintay maipadala. Magpatuloy?",
@@ -306,6 +308,7 @@ const ceb: Dictionary = {
   aboutMyCare: "Mahitungod sa My Care",
   aboutBody:
     "Gisusi sa My Care ang imong mga sintomas sulod mismo sa imong telepono. Ang imong gisulat wala ipadala bisan asa. Ang de-identified nga resulta ra ang gipaambit sa inyong health office.",
+  changeBarangay: "Usba ang barangay",
   startOver: "Sugdi pag-usab (papasa ang datos)",
   startOverConfirm:
     "Mapapas niini ang imong pinulongan, barangay, ug bisan unsang pagsusi nga naghulat ipadala. Padayon?",

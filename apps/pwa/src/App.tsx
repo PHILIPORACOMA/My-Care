@@ -93,6 +93,8 @@ export function App() {
   const [choice, setChoice] = useState<ChosenBarangay>();
   // The server no longer has the barangay chosen from the shipped list.
   const [barangayGone, setBarangayGone] = useState(false);
+  // True while the barangay screen was opened from Settings, not onboarding.
+  const [changingBarangay, setChangingBarangay] = useState(false);
   const [check, setCheck] = useState<Check>(emptyCheck);
   const [sync, setSync] = useState<SyncState>({ pending: 0, syncing: false });
   const [busy, setBusy] = useState(false);
@@ -181,7 +183,9 @@ export function App() {
    */
   const completeSetup = useCallback(async (): Promise<boolean> => {
     const stored = await readPrefs();
-    if (!stored.barangay || stored.device) return true;
+    // A registered device can still hold an unresolved choice: a barangay
+    // changed in Settings with no signal, picked from the shipped list.
+    if (!stored.barangay || (stored.device && stored.barangay.id !== null)) return true;
 
     let id = stored.barangay.id;
     if (id === null) {
@@ -232,6 +236,7 @@ export function App() {
       setBlocker(blockerFor(e));
     } finally {
       setBusy(false);
+      setChangingBarangay(false);
       if (!rechoose) setScreen("home");
     }
   }
@@ -343,7 +348,15 @@ export function App() {
           notice={barangayGone ? t("barangayNotFound") : undefined}
           busy={busy}
           error={blocker && blockerBody(blocker)}
-          onBack={() => setScreen("age")}
+          onBack={() => {
+            if (changingBarangay) {
+              setChangingBarangay(false);
+              setChoice(undefined);
+              setScreen("settings");
+            } else {
+              setScreen("age");
+            }
+          }}
           onSelect={(barangay) => {
             setChoice(barangay);
             setBarangayGone(false);
@@ -446,8 +459,16 @@ export function App() {
           bundle={prefs.bundle}
           pending={sync.pending}
           lastSyncAt={prefs.lastSyncAt}
+          barangayName={prefs.barangay?.name ?? ""}
           onLanguage={(next) => void save({ language: next })}
           onBack={() => setScreen("home")}
+          onChangeBarangay={() => {
+            setChoice(prefs.barangay);
+            setBarangayGone(false);
+            setChangingBarangay(true);
+            void loadBarangays();
+            setScreen("barangay");
+          }}
           onStartOver={async () => {
             await clearEverything();
             setPrefs({});
