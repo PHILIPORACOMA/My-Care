@@ -30,10 +30,11 @@ major decision, or closes/opens a known gap — don't let it drift.
 Paste this into a new chat session to pick up where this one left off:
 
 > Read `CLAUDE.md`, `docs/STATUS.md` and `docs/BUILD-LOG.md` first (entries
-> 9a to 9h cover the recent work), then `docs/DEPLOYMENT.md` and ADRs
+> 9a to 9i cover the recent work), then `docs/DEPLOYMENT.md` and ADRs
 > 0004-0007 in `docs/adr/` (0004 was amended 2026-09-26). The long-form record
-> of the last session is `my-care-session-transcript-2026-09-26.txt` if you
-> need detail.
+> of the last session is `my-care-session-transcript-2026-09-29.txt` (it spans
+> 2026-09-27 to 09-29; the one before is `...-2026-09-26.txt`) if you need
+> detail.
 > Skim `docs/REPO.md` and `docs/ut-matrix.md` (its end-to-end section is new).
 >
 > `main` was force-pushed on 2026-09-26 to what was

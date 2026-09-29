@@ -1438,3 +1438,49 @@ saw it (UT-014 figures wrong for both). Fixed in 9h. #8 also added no tests;
 
 **Results:** Pest 189 passed / 760 assertions, PWA 58/58 (three runs in a
 row), E2E 12/12, all five CI checks green. Merged as `b89a53d`.
+
+---
+
+### 9i - End of session (2026-09-27 to 2026-09-29)
+
+**Merged:** PR #6 (free text with the invented TEST lexicon, 9e), PR #7 (line
+icons and the language pill, 9f), PR #8 (kizaru3214: wide screens, mic notice,
+change barangay, 9g; merged by Philipo, reviewed after), PR #9 (the device
+moves with the patient's barangay, 9h). Docs straight to `main`: the
+README's Playwright section (`e7ddb27`), BUILD-LOG 9f to 9h and STATUS
+(`84bd44b`), and the final docs pass (`426ee8e`: README, REPO.md,
+CONTRIBUTING). All branches kept. `main` green on all five CI checks.
+
+**What Philipo hit while testing by hand, and what it was:**
+
+- **"Not letting me choose a barangay, it already chose one":** his Chrome
+  had finished onboarding earlier (Valencia), so the app opened on Home. At
+  the time the only way back was Settings, Start over. PR #8 then added
+  "Change barangay"; PR #9 made the server follow.
+- **"Typed hilanat and it's not working":** v1 publishes no lexicon terms,
+  so free text matched nothing. That led to 9e. To try it by hand he needs
+  `npm run export:test-lexicon`, the import (it becomes the next draft, v2),
+  a publish in the console with his own attestation, and Start over (or
+  wait 6 hours) so the phone fetches the new version. Whether he did this in
+  the development database is not recorded here.
+
+**Decisions made this session:**
+
+- The invented draft lexicon may be used **for tests only**, fenced off
+  behind `@mycare/ruleset/testing` (Philipo, 2026-09-27). Recorded in memory.
+- The explained, non-recording mic stays (accepted by merging #8).
+- Docs follow-ups continue straight to `main`; code through PRs with merge
+  commits; branches kept.
+
+**Open, for next session** (STATUS has the full list): a server and domain;
+which word a chip shows once reviewed terms exist (the lexicon word makes a
+bare "fever" chip home); the reviewed terms themselves; native review of the
+tl/ceb copy including #8's three strings; the 6-hour rule refresh; the
+CODEOWNERS usernames; zero suppression; the two manuscript `.docx` edits.
+
+**His Chrome's development state** (localhost:5173): onboarded as Brgy.
+Calidngan, in Cebuano, left on the symptom input screen. Nothing was
+triaged or published from this session's browser checks.
+
+**Transcript:** `my-care-session-transcript-2026-09-29.txt` (untracked, like
+the others), generated from the session log with secrets redacted.
