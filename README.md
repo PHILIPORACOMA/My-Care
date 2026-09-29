@@ -9,8 +9,10 @@ entirely on a patient's own device — in Cebuano and Filipino, with no internet
 no account, and no personal data collected.
 
 [![api](https://github.com/PHILIPORACOMA/My-Care/actions/workflows/api.yml/badge.svg)](https://github.com/PHILIPORACOMA/My-Care/actions/workflows/api.yml)
+[![frontend](https://github.com/PHILIPORACOMA/My-Care/actions/workflows/frontend.yml/badge.svg)](https://github.com/PHILIPORACOMA/My-Care/actions/workflows/frontend.yml)
 [![e2e](https://github.com/PHILIPORACOMA/My-Care/actions/workflows/e2e.yml/badge.svg)](https://github.com/PHILIPORACOMA/My-Care/actions/workflows/e2e.yml)
 [![engine-purity](https://github.com/PHILIPORACOMA/My-Care/actions/workflows/engine-purity.yml/badge.svg)](https://github.com/PHILIPORACOMA/My-Care/actions/workflows/engine-purity.yml)
+[![deploy-smoke](https://github.com/PHILIPORACOMA/My-Care/actions/workflows/deploy-smoke.yml/badge.svg)](https://github.com/PHILIPORACOMA/My-Care/actions/workflows/deploy-smoke.yml)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![PHP](https://img.shields.io/badge/PHP-8.4-777BB4)
 ![Node](https://img.shields.io/badge/Node-20-339933)
@@ -47,7 +49,7 @@ enough bandwidth for a video call.
 | | |
 |---|---|
 | **Works fully offline** | Triage itself makes no network call. The device fetches rules and uploads records when it has signal — never to decide a tier. |
-| **Speaks the language** | Free-text symptom input in Cebuano and Filipino. |
+| **Speaks the language** | Free-text symptom input and the whole interface in Cebuano, Filipino and English, switchable on any screen. The clinician-reviewed vocabulary is still being entered; until then patients tap symptom chips. |
 | **Anonymous by design** | No account, no login, no personally identifying information. |
 | **Explainable** | Every result traces to the exact rule that produced it. |
 | **Runs on cheap phones** | 2 GB RAM, Snapdragon 400-series, Chrome 80+. |
@@ -123,6 +125,10 @@ Three client surfaces, one backend:
 - **`apps/console`** — development team. Rule authoring, lexicon, publishing, audit.
 - **`apps/api`** — Laravel 13 + MySQL 8.
 
+Around them: **`e2e/`** (Playwright, all three apps against the real API and
+database) and **`deploy/`** (nginx, PHP-FPM, cron, backups and `deploy.sh`; the
+guide is [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)).
+
 Shared packages: **`ruleset`** (the contract between API and device),
 **`triage-engine`**, **`lexicon-matcher`** (free text → symptom codes, never a tier),
 **`engine-replay`** (the server replays stored sessions through the real engine),
@@ -150,8 +156,8 @@ check guards `lexicon-matcher`.
 Requires **Node 20**, **PHP 8.4**, **Composer 2**, and **MySQL 8**.
 
 ```bash
-git clone https://github.com/OWNER/my-care.git
-cd my-care
+git clone https://github.com/PHILIPORACOMA/My-Care.git
+cd My-Care
 npm install
 ```
 
@@ -178,11 +184,15 @@ composer install
 cp .env.example .env
 php artisan key:generate
 php artisan migrate --seed          # includes the 15 Carcar barangays
-php artisan serve
+php -d variables_order=EGPCS artisan serve --no-reload --port=8000
 
 php artisan mycare:ruleset:import ../../packages/ruleset/dist/v1.json
 php artisan mycare:staff:create-super-admin you@example.org
 ```
+
+Pin the port: without `--port=8000`, `artisan serve` quietly moves to 8001
+when 8000 is taken, and the frontends' proxies answer 502 ("Cannot reach the
+health office"). `-d variables_order=EGPCS` is needed on Windows.
 
 An imported ruleset lands as a **draft**. It reaches no device until a super-admin
 publishes it in the console, which records who attested to the clinical review.
@@ -192,7 +202,7 @@ Frontends — each proxies `/api` to the backend on port 8000:
 ```bash
 npm run dev -w @mycare/pwa        # patient app        → :5173
 npm run dev -w @mycare/portal     # RHU / LGU dashboard → :5174/portal/
-npm run dev -w @mycare/console    # super-admin console → :5175
+npm run dev -w @mycare/console    # super-admin console → :5175/console/
 ```
 
 Everything at once, plus the Pest suite:
@@ -249,6 +259,7 @@ have been run. Nothing else needs starting by hand.
 |---|---|---|
 | `patient.offline.spec.ts` | Onboard with signal and cache the rules. Hard-reload with no network and triage all three tiers from the cache. Upload on reconnect, and a retried upload is not double-counted. No unexpected console errors. | UT-001, UT-006, UT-012, UT-013, UT-015 |
 | `patient.first-run-offline.spec.ts` | Choose a barangay with no signal ever; setup finishes by itself once signal returns. | UT-001 |
+| `patient.change-barangay.spec.ts` | Change barangay in Settings, with signal and then without: the device's registration moves with the patient (at once, or on reconnect), and it never registers twice. | UT-014 |
 | `portal.smoke.spec.ts` | A sub-admin sees only their barangay, the sync status is current, and the journey's sessions render as `<5`. | UT-014, UT-016, UT-020 |
 | `console.smoke.spec.ts` | A super-admin signs in and every screen renders. | — |
 | `lexicon.free-text.spec.ts` | A super-admin publishes a lexicon in the console; a phone downloads it and triages Cebuano, Tagalog and English free text offline, negation and spelling variation included; the sessions upload with the matched entry. Uses the **invented test lexicon**, never v1's. Runs last. | UT-002 – UT-005, UT-011, UT-013 |
@@ -278,18 +289,21 @@ Windows-specific gotchas are in [`docs/REPO.md`](docs/REPO.md) and
 
 | Phase | Scope | Status |
 |---|---|---|
-| 0 | Monorepo, CI, conventions | ✅ Done |
+| 0 | Monorepo, CI, conventions | ✅ Done — five CI workflows |
 | 1 | Triage engine + ruleset schema | ✅ Done — 12 tests, purity enforced |
-| 2 | Ruleset v1 (clinical appraisal) | ✅ Encoded and appraised |
-| 3 | Laravel API + 20 migrations | ✅ Done — Pest 176 passed, 716 assertions |
+| 2 | Ruleset v1 (clinical appraisal) | ✅ Encoded and appraised; reviewer paperwork owed |
+| 3 | Laravel API + 20 migrations | ✅ Done — Pest 189 passed, 760 assertions |
 | 4 | Super-admin console | ✅ Done |
-| 5 | Patient PWA | ✅ Done — 24 tests; not yet opened in a browser |
+| 5 | Patient PWA | ✅ Done — 58 tests, driven in Chrome and Playwright, offline included |
 | 6 | Offline sync layer | ✅ Done — both server and device halves |
 | 7 | Sub-admin dashboard | ✅ Done |
-| 8 | Integration + offline E2E | 🔨 Next — Playwright, and CI for the new workspaces |
-| 9 | Deployment | ⬜ Planned |
+| 8 | Integration + offline E2E | ✅ Done — Playwright, 12 tests |
+| 9 | Deployment | ✅ Done — `deploy/`, proven on a fresh server by CI; no real server yet |
 
-Phases 3–8 are on `feat/UT-020-laravel-api-schema` (PR #1), built under a standing
+Everything is on `main` (PRs #3–#9). What is left is human: a server and
+domain, the clinician-reviewed lexicon terms, the appraisal paperwork and
+native review of the Tagalog and Cebuano interface copy
+([`docs/STATUS.md`](docs/STATUS.md)). All of it was built under a standing
 rule of **no manuscript amendments**: where the schema and the code disagreed, the
 gap was closed in code and documented, never by editing the specification.
 [`docs/BUILD-LOG.md`](docs/BUILD-LOG.md) records every one of those decisions.

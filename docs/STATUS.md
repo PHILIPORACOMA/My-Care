@@ -301,7 +301,13 @@ intro sentence that claims only aggregates sync.
    fixture wholesale; point `lexicon.free-text.spec.ts` at them then.
 3. **Native review of the tl/ceb interface copy**, including PR #8's three
    new strings (`voiceInput`, `voiceNotSupported`, `changeBarangay`).
-4. **Final docs pass:** REPO.md (add `deploy/`, `e2e/`), README's status table.
+4. **Fill in `.github/CODEOWNERS`.** It still has placeholder usernames
+   (`@BINGHAY_USERNAME` and so on); only the team knows the real ones.
+
+The final docs pass is done (2026-09-29): README (status, badges, clone URL,
+pinned API port, specs), REPO.md (test lexicon, Laravel domain layout,
+`e2e/`, `deploy/` and CI) and CONTRIBUTING.md (the workflow actually used:
+branch from `main`, merge commits, branches kept).
 
 ## Commands to re-verify state
 

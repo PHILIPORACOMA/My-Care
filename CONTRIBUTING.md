@@ -8,38 +8,47 @@ and the Laravel domain structure.
 ## Branches
 
 ```
-main      tagged releases only, protected
-develop   integration branch (default)
-feat/UT-007-rule-authoring
-fix/UT-015-dedupe-race
-docs/chapter-4-results
+main                                   the integration branch; every PR targets it
+feat/UT-014-device-barangay-move       one branch per change, named for its test case
+feat/UT-003-test-lexicon
 ```
 
-Name feature branches after the manuscript test case they implement. It keeps
-the test matrix traceable and makes the commit history readable at defense.
+Branch from `main`. Name the branch after the manuscript test case it
+implements: it keeps the test matrix traceable and the history readable at
+defense. **Merged branches are kept, not deleted**, so the capstone record
+shows every one.
+
+Small documentation follow-ups (`docs/STATUS.md`, `docs/BUILD-LOG.md`) may go
+straight to `main`. Code always goes through a pull request.
 
 ## Commits
 
-Conventional commits: `feat:` `fix:` `test:` `docs:` `chore:` `ci:`
+Conventional commits: `feat:` `fix:` `test:` `docs:` `chore:` `ci:`, with
+the test case id in the body. A real one from the history:
 
 ```
-feat(engine): scoped negation detection for Cebuano
+fix: move the device's barangay when the patient changes barangay
 
-Implements a 3-token negation window that resets at clause
-boundaries, so "walay hilanat" excludes fever while
-"walay sipon pero hilanat" does not.
+PR #8 let a patient change barangay in Settings without starting over.
+Sessions carry their own barangay_id, so counts were right, but
+DEVICE.barangay_id stayed put, and Sync & status (Figure 33) groups
+devices by it.
 
-Closes #12. UT-004.
+UT-014
 ```
 
 ## Pull requests
 
-1. Branch from `develop`, never from `main`.
-2. Fill in the manuscript reference fields in the PR template. Not optional —
-   it is how Chapter 4 gets written.
-3. CI must be green.
-4. One approval required. CODEOWNERS routes the request automatically.
-5. Squash merge, then delete the branch.
+1. Branch from `main`.
+2. Say which test case and which manuscript figure or table the change
+   implements, and what was verified (tests, browser, screenshots). It is how
+   Chapter 4 gets written.
+3. CI must be green: `api`, `frontend`, `engine-purity`, `e2e`,
+   `deploy-smoke`.
+4. The project lead merges, with a **merge commit** (not squash), and the
+   branch stays.
+5. Record what was built and decided in `docs/BUILD-LOG.md`, and keep
+   `docs/STATUS.md` current.
 
 ## Non-negotiables
 
@@ -65,7 +74,8 @@ respondent-identifying information from the field study.
 ```bash
 npm test                              # all workspaces
 npm test -w @mycare/triage-engine     # engine only, no database needed
-cd apps/api && ./vendor/bin/pest      # backend
+cd apps/api && ./vendor/bin/pest      # backend, MySQL 8 (never SQLite)
+npm run e2e -w @mycare/e2e            # Playwright, all three apps
 ```
 
 New tests that correspond to a manuscript test case must be registered in
