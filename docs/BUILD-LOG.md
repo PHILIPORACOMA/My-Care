@@ -1347,3 +1347,94 @@ database only. Two things found along the way:
   terms should settle which word a chip shows. Not changed.
 
 **Results:** ruleset 4/4, PWA 50/50, E2E 11/11 locally, typecheck clean.
+
+---
+
+### 9f - Line icons and a language pill (PR #7, 2026-09-28)
+
+**Branch `feat/UT-006-pwa-icons-language-pill`.** The two ideas worth taking
+from kizaru3214's `feat/pwa-ui-polish` (STATUS, 2026-09-26), rebuilt on the
+current app rather than merged.
+
+- **`screens/Icon.tsx`:** inline SVG line icons. Ten paths are his, byte for
+  byte (checked against his file); alert, x, plus and circle are new. They
+  replace every emoji and text glyph: back, gear, map pin, search, the
+  offline badge (tick online, circle offline), chip tick and plus, the three
+  result marks (house, clinic, warning triangle), phone, and the tip mark.
+  Emoji render differently on every Android build; a stroked path does not.
+- **`LanguagePill`** (`screens/parts.tsx`) on Home, symptom input,
+  clarification, result and tips. It opens the three languages in place.
+  Typed text and taps are kept. An open clarification question is re-asked in
+  the new language by its key (`localizedQuestion` in `triage.ts`); answers
+  are still sent by position (ADR-0006), so a switch cannot change a tier.
+  The session is recorded in the language the check finished in.
+- **No new copy:** the pill's accessible name reuses the existing "Language"
+  string ("Language: English"), so no tl/ceb draft was needed.
+- **Left as text on purpose:** the ✓/✕ line under the free-text box, which
+  #6's Playwright spec reads.
+- **Found by the phone screenshots, fixed:** wrapped chip labels centred once
+  the chip became a flex row, and the result screen's menu opened off the
+  left edge. Playwright now checks the menu stays inside 360px on the symptom
+  and result screens (`22c`, `27c`).
+- **Two old test races surfaced under the extra load, fixed:**
+  `getByRole("Padayon")` straight after an async language save (now
+  `findByRole`), and a previous test's offline upload landing in the next
+  test's capture through the shared fake IndexedDB. The second first looked
+  like a session recorded in the wrong language; logging the batches showed
+  it was the earlier test's. The new test counts only its own session.
+  `main` itself had been stable.
+
+**Results:** PWA 35/35 (six runs in a row), E2E 7/7.
+
+---
+
+### 9g - kizaru3214's PR #8: wide screens, mic notice, change barangay (2026-09-29)
+
+**Written by kizaru3214, merged by Philipo.** Reviewed after the merge:
+
+- **Wide-screen layout** from 768px (two-column Home from 1024px). CSS only;
+  phones unchanged.
+- **Mic button in the symptom box** that records nothing and says voice input
+  is not supported yet. It reverses the "no microphone" decision (9a era),
+  as an explained non-feature: no audio is captured, so the privacy
+  reasoning still holds. Accepted by merging.
+- **"Change barangay" in Settings** without Start over. Sessions carry their
+  own `barangay_id`, so counts stay right, and unsent checks keep theirs.
+- **`completeSetup` fix:** a registered phone holding an offline-picked
+  barangay (no server id) now resolves it instead of returning early.
+- New gear icon; three new strings (`voiceInput`, `voiceNotSupported`,
+  `changeBarangay`), tl/ceb drafts like the rest.
+
+**Gap found in review:** DEVICE.barangay_id did not move with the patient.
+Sync & status (Figure 33) and the console's system health group devices by
+it, so the old barangay kept a phone reporting elsewhere and the new one never
+saw it (UT-014 figures wrong for both). Fixed in 9h. #8 also added no tests;
+9h covers change-barangay.
+
+---
+
+### 9h - The device moves with the patient (PR #9, 2026-09-29)
+
+**Branch `feat/UT-014-device-barangay-move`.**
+
+- **`PATCH /api/v1/devices/current`** (`CurrentDeviceController`,
+  `MoveDeviceRequest`), behind the device-token middleware. It changes only
+  `barangay_id`, which must exist; anything else sent is ignored. The model
+  observer audits it with no actor (a device is not an account). A replayed
+  move is a no-op, so no second audit entry. No schema change: the column is
+  Table 12's own.
+- **PWA:** `ensureRegistered()` moves an existing registration when the
+  chosen barangay differs from the one the credential was issued for.
+  `setupPending()` (`sync.ts`) counts that, an offline-picked barangay and
+  no registration as unfinished setup, and drives `completeSetup` at startup
+  and on reconnect. So an offline change finishes by itself, the same path
+  as an offline first run. The phone never registers twice.
+- **Tests:** Pest `DeviceMoveTest` (8, including the device moving between
+  the two barangays' Sync & status); PWA `sync.test` (4) and two
+  `app.test` journeys (with signal; offline, triaging under the new barangay,
+  then the move on reconnect); Playwright `patient.change-barangay.spec.ts`
+  (moves with signal, then offline, checking the database each time and that
+  the device count did not grow).
+
+**Results:** Pest 189 passed / 760 assertions, PWA 58/58 (three runs in a
+row), E2E 12/12, all five CI checks green. Merged as `b89a53d`.

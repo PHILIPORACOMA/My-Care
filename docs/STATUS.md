@@ -1,12 +1,15 @@
 # Development status checkpoint
 
-Last updated: **2026-09-26.** **All nine phases are built and merged to
+Last updated: **2026-09-29.** **All nine phases are built and merged to
 `main`** (Phase 8: PR #3; Phase 9, deployment: PR #4; the barangay list shipped
-in the app: PR #5). `deploy/` and `docs/DEPLOYMENT.md` take a fresh Ubuntu
+in the app: PR #5). Since then: free text tested end to end with an invented
+TEST lexicon (PR #6), line icons and a language pill (PR #7), kizaru3214's
+wide-screen layout, mic notice and change-barangay (PR #8), and the device
+moving with the patient's barangay (PR #9). `deploy/` and `docs/DEPLOYMENT.md` take a fresh Ubuntu
 24.04 server to a running system, and a CI job proves it by deploying with
 them on every PR. What remains is human: a real server, the first-run steps,
 the lexicon terms and the paperwork. `docs/BUILD-LOG.md` is the long-form
-record (9a, 9b, 9c).
+record (9a to 9h).
 
 **All three apps have now been opened in a real browser** (BUILD-LOG 9a). The
 Playwright suite runs the patient journey against the real API, MySQL 8 and
@@ -27,7 +30,7 @@ major decision, or closes/opens a known gap — don't let it drift.
 Paste this into a new chat session to pick up where this one left off:
 
 > Read `CLAUDE.md`, `docs/STATUS.md` and `docs/BUILD-LOG.md` first (entries
-> 9a to 9d cover the recent work), then `docs/DEPLOYMENT.md` and ADRs
+> 9a to 9h cover the recent work), then `docs/DEPLOYMENT.md` and ADRs
 > 0004-0007 in `docs/adr/` (0004 was amended 2026-09-26). The long-form record
 > of the last session is `my-care-session-transcript-2026-09-26.txt` if you
 > need detail.
@@ -37,8 +40,8 @@ Paste this into a new chat session to pick up where this one left off:
 > `feat/UT-020-laravel-api-schema`. PR #1 closed as merged. The old `main`
 > (PR #2's patient app) is kept locally as
 > `backup/main-before-force-2026-09-26`. Phases 8 and 9 and the shipped
-> barangay list are merged (PRs #3, #4, #5); `main` is green on all five CI
-> checks. Standing rule: **no manuscript amendments**.
+> barangay list are merged (PRs #3, #4, #5), then PRs #6 to #9 (BUILD-LOG
+> 9e to 9h); `main` is green on all five CI checks. Standing rule: **no manuscript amendments**.
 >
 > **Phase 9:** one host, split by path (`/`, `/portal/`, `/console/`, `/api`).
 > `deploy/` holds the nginx, PHP-FPM, cron, backup, env and `deploy.sh`
@@ -139,14 +142,14 @@ BS Information Technology capstone; the manuscript is the specification.
 
 ## What's built and verified
 
-- **Backend** (`apps/api`): Pest **181 passed, 731 assertions** against MySQL 8,
+- **Backend** (`apps/api`): Pest **189 passed, 760 assertions** against MySQL 8,
   locally and in CI.
 - **Packages:** `ruleset` 4/4 (test-lexicon guards), `triage-engine` 12/12 plus purity, `lexicon-matcher` 11/11
   plus purity, `engine-replay` 5/5, `api-client` 5/5, `ui` 9/9.
   `npm audit`: 0 vulnerabilities.
-- **Apps:** `pwa` 50/50, `portal` 5/5, `console` 4/4. All three build for
+- **Apps:** `pwa` 58/58, `portal` 5/5, `console` 4/4. All three build for
   production in CI.
-- **End to end** (`e2e/`): **11/11** locally (the 4 free-text tests are
+- **End to end** (`e2e/`): **12/12** locally (the 4 free-text tests are
   skipped on a deployed host), in CI, **and through nginx on a
   freshly deployed server** (`deploy-smoke`). What each spec proves is in
   BUILD-LOG 9a and the end-to-end section of `docs/ut-matrix.md`.
@@ -162,9 +165,10 @@ free text is proven only with the invented test lexicon.
 
 ## Git state
 
-- **`main` = `22012e0`** (PR #5). It was force-pushed 2026-09-26 from
+- **`main` = `b89a53d`** (PR #9). It was force-pushed 2026-09-26 from
   `feat/UT-020-laravel-api-schema` at Philipo's instruction, then PRs #3-#5
-  merged normally. `main` has no branch protection.
+  merged normally, then #6 to #9 (all branches kept). `main` has no branch
+  protection.
 - **The old `main` (`55abd3b`, PR #2) is kept locally only**, as
   `backup/main-before-force-2026-09-26`. To restore it:
   `git push --force origin backup/main-before-force-2026-09-26:main`.
@@ -180,7 +184,10 @@ free text is proven only with the invented test lexicon.
   as ideas: line icons, a language pill on every screen, the age-gate layout.
   Not worth porting as written: short chips (his "Fever" maps to
   `fever_mild` → home, an under-triage risk), unreviewed health tips, and a
-  microphone with no voice input. Needs a conversation with the team.
+  microphone with no voice input. **Since ported:** icons and the language
+  pill (PR #7, by us), and kizaru3214's own PR #8 (wide-screen layout, mic
+  notice, change barangay), merged by Philipo 2026-09-29. The age-gate layout
+  was not ported.
 - `origin/Gil` points at the very old `9358811`. Untouched.
 - `feat/UT-020-laravel-api-schema`, `feat/UT-012-offline-e2e`,
   `feat/UT-011-deployment` and `feat/UT-001-bundled-barangays` are fully
@@ -249,6 +256,14 @@ free text is proven only with the invented test lexicon.
 - **No reviewed lexicon terms, clarification questions or health tips
   exist.** In v1 free text matches nothing (the test lexicon is not v1), and chips show v1's clinician wording in English
   whatever the language. Philipo has the reviewed terms and will enter them.
+- **Chips take the lexicon word once terms are published** (`symptomLabel`):
+  "fever", not "Fever, mild, <3 days, no red flags". A bare "fever" chip is
+  home. Decide which wording a chip shows before the reviewed terms go in
+  (BUILD-LOG 9e).
+- **A phone re-downloads rules at most every 6 hours** (`sync.ts`), so a new
+  publish takes up to 6 hours to reach phones already set up.
+- **The mic in the symptom box records nothing** (PR #8): it says voice input
+  is not supported yet. Accepted by merging #8.
 - **Zero suppression** — `SuppressionRule` renders a true 0 as `<5`. It is now
   visible on real screens ("Sessions waiting on devices" when nothing is
   waiting). Philipo's call, still not made.
@@ -281,11 +296,12 @@ intro sentence that claims only aggregates sync.
 1. **Get a server and a domain**, then follow `docs/DEPLOYMENT.md`. The
    first-run steps in section 8 are yours: super-admin password, the v1
    publish attestation, facilities CSV, sub-admin accounts.
-2. **Talk to the team about `feat/pwa-ui-polish`.** It is built on the patient
-   app `main` no longer has.
-3. **Enter the reviewed lexicon terms** (Philipo). They replace the test
+2. **Decide the chip wording** (lexicon word or v1 display name), then
+   **enter the reviewed lexicon terms** (Philipo). They replace the test
    fixture wholesale; point `lexicon.free-text.spec.ts` at them then.
-4. **Final docs pass:** REPO.md (add `deploy/`, `e2e/`), README.
+3. **Native review of the tl/ceb interface copy**, including PR #8's three
+   new strings (`voiceInput`, `voiceNotSupported`, `changeBarangay`).
+4. **Final docs pass:** REPO.md (add `deploy/`, `e2e/`), README's status table.
 
 ## Commands to re-verify state
 
@@ -304,17 +320,17 @@ npm run purity -w @mycare/lexicon-matcher
 
 npm test -w @mycare/console              # 4/4
 npm test -w @mycare/portal               # 5/5
-npm test -w @mycare/pwa                  # 50/50
+npm test -w @mycare/pwa                  # 58/58
 
 cd apps/api
 php artisan migrate:fresh --seed --force
-./vendor/bin/pest                        # 181 passed, 731 assertions
+./vendor/bin/pest                        # 189 passed, 760 assertions
 cd ../..
 
 # End to end. MySQL80 must be up. Own ports (8100/4273/5274/5275) and own
 # schema (mycare_e2e), so the dev servers and dev database are untouched.
 npx playwright install chromium          # once
-npm run e2e -w @mycare/e2e               # 11/11
+npm run e2e -w @mycare/e2e               # 12/12
 npm run e2e:report -w @mycare/e2e        # open the HTML report
 
 # Run it locally (the flags matter on Windows — see Environment notes):
