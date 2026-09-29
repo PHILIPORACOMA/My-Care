@@ -52,10 +52,21 @@ function stubApi() {
   vi.stubGlobal("fetch", async (url: string, init: RequestInit = {}) => {
     const path = String(url);
     const body = init.body ? (JSON.parse(String(init.body)) as Record<string, unknown>) : {};
-    if (init.method === "POST") posted.push({ url: path, body });
+    if (init.method === "POST" || init.method === "PATCH") posted.push({ url: path, body });
 
     if (path.endsWith("/api/v1/barangays")) {
-      return new Response(JSON.stringify({ barangays: [{ id: 1, name: "Valladolid", city: "Carcar City" }] }), { status: 200 });
+      return new Response(
+        JSON.stringify({
+          barangays: [
+            { id: 1, name: "Valladolid", city: "Carcar City" },
+            { id: 2, name: "Bolinawan", city: "Carcar City" },
+          ],
+        }),
+        { status: 200 }
+      );
+    }
+    if (path.endsWith("/api/v1/devices/current")) {
+      return new Response(JSON.stringify({ device: { id: 3, barangayId: body.barangay_id } }), { status: 200 });
     }
     if (path.endsWith("/api/v1/devices")) {
       return new Response(JSON.stringify({ token: "prefix.secret", device: { id: 3 } }), { status: 201 });
@@ -346,5 +357,76 @@ describe("choosing a barangay before the phone has ever had signal", () => {
     // The server's own list is offered now.
     expect(screen.getByRole("button", { name: /Valladolid/ })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Tuyom/ })).not.toBeInTheDocument();
+  }, 20000);
+});
+
+/*
+ * "Change barangay" in Settings (Figure 29, PR #8). The device's registration
+ * moves with the patient, so Sync & status (UT-014) counts the phone where it
+ * now reports. Checks recorded before the move keep their own barangay.
+ */
+describe("changing barangay from Settings", () => {
+  async function onboardInValladolid(user: Awaited<ReturnType<typeof launch>>) {
+    await user.click(await screen.findByRole("button", { name: /Get started/ }));
+    await user.click(await screen.findByRole("button", { name: /English/ }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: /Yes, I'm 18/ }));
+    await user.click(await screen.findByRole("button", { name: /Valladolid/ }));
+    await user.click(screen.getByRole("button", { name: /Confirm barangay/ }));
+    expect(await screen.findByText(/Brgy. Valladolid/)).toBeInTheDocument();
+  }
+
+  async function changeTo(user: Awaited<ReturnType<typeof launch>>, barangay: RegExp) {
+    await user.click(screen.getByRole("button", { name: "Settings" }));
+    await user.click(await screen.findByRole("button", { name: "Change barangay" }));
+    await user.click(await screen.findByRole("button", { name: barangay }));
+    await user.click(screen.getByRole("button", { name: /Confirm barangay/ }));
+  }
+
+  const moves = () => posted.filter((p) => p.url.endsWith("/api/v1/devices/current"));
+
+  it("moves the device with the patient, without registering it again", async () => {
+    const user = await launch();
+    await onboardInValladolid(user);
+    const registrations = posted.filter((p) => p.url.endsWith("/api/v1/devices")).length;
+
+    await changeTo(user, /Bolinawan/);
+
+    expect(await screen.findByText(/Brgy. Bolinawan/)).toBeInTheDocument();
+    await waitFor(() => expect(moves()).toHaveLength(1));
+    expect(moves()[0]!.body).toEqual({ barangay_id: 2 });
+    expect(posted.filter((p) => p.url.endsWith("/api/v1/devices")).length).toBe(registrations);
+
+    const storage = await import("./storage");
+    expect((await storage.readPrefs()).device?.barangayId).toBe(2);
+  }, 20000);
+
+  it("with no signal, keeps triaging under the new barangay and moves the device on reconnect", async () => {
+    const user = await launch();
+    await onboardInValladolid(user);
+
+    vi.stubGlobal("fetch", async () => {
+      throw new TypeError("offline");
+    });
+    await changeTo(user, /Bolinawan/);
+    expect(await screen.findByText(/Brgy. Bolinawan/)).toBeInTheDocument();
+
+    const storage = await import("./storage");
+    expect((await storage.readPrefs()).device?.barangayId).toBe(1);
+
+    // A check done offline is recorded under the barangay the patient chose.
+    await user.click(screen.getByRole("button", { name: /Check symptoms/ }));
+    await user.click(await screen.findByRole("button", { name: /Fixture fever/ }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(await screen.findByRole("button", { name: "gamay" }));
+    expect(await screen.findByText(/Go to the nearest Rural Health Unit/, {}, { timeout: 4000 })).toBeInTheDocument();
+    await waitFor(async () => expect((await storage.queuedSessions())[0]?.barangay_id).toBe(2));
+
+    // Signal returns: the device moves, once.
+    stubApi();
+    window.dispatchEvent(new Event("online"));
+    await waitFor(() => expect(moves()).toHaveLength(1));
+    expect(moves()[0]!.body).toEqual({ barangay_id: 2 });
+    await waitFor(async () => expect((await storage.readPrefs()).device?.barangayId).toBe(2));
   }, 20000);
 });

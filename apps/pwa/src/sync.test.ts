@@ -172,6 +172,53 @@ describe("the cached ruleset", () => {
   });
 });
 
+/*
+ * Changing barangay in Settings (PR #8) moves the device's registration too,
+ * so Sync & status (UT-014) counts the phone where it now reports.
+ */
+describe("the device's barangay", () => {
+  it("moves the registration when the patient has changed barangay", async () => {
+    const { storage, sync } = await freshModules();
+    respond = () => new Response(JSON.stringify({ device: { id: 7, barangayId: 2 } }), { status: 200 });
+
+    const device = await sync.ensureRegistered(2);
+
+    const move = calls.find((c) => c.url.endsWith("/api/v1/devices/current"));
+    expect(move?.body).toEqual({ barangay_id: 2 });
+    expect(move?.headers.Authorization).toBe("Bearer prefix.secret");
+    expect(device).toEqual({ id: 7, token: "prefix.secret", barangayId: 2 });
+    expect((await storage.readPrefs()).device?.barangayId).toBe(2);
+  });
+
+  it("calls nothing when the device is already where the patient is", async () => {
+    const { sync } = await freshModules();
+    await sync.ensureRegistered(1);
+    expect(calls).toHaveLength(0);
+  });
+
+  it("keeps the old registration, to retry later, when there is no signal", async () => {
+    const { storage, sync } = await freshModules();
+    respond = () => {
+      throw new TypeError("offline");
+    };
+
+    await expect(sync.ensureRegistered(2)).rejects.toThrow();
+    expect((await storage.readPrefs()).device?.barangayId).toBe(1);
+  });
+
+  it("counts setup as unfinished until the server knows where the phone is", async () => {
+    const { sync } = await freshModules();
+    const device = { id: 7, token: "t", barangayId: 1 };
+    const at = (id: number | null) => ({ name: "X", city: "Carcar City", id });
+
+    expect(sync.setupPending({})).toBe(false);
+    expect(sync.setupPending({ barangay: at(1) })).toBe(true); // not registered
+    expect(sync.setupPending({ barangay: at(null), device })).toBe(true); // picked offline, no id yet
+    expect(sync.setupPending({ barangay: at(2), device })).toBe(true); // moved, server not told
+    expect(sync.setupPending({ barangay: at(1), device })).toBe(false);
+  });
+});
+
 describe("start over", () => {
   it("clears preferences and anything still queued (Figure 29)", async () => {
     const { storage, sync } = await freshModules();

@@ -25,6 +25,7 @@ import {
   recordSession,
   refreshBundle,
   refreshFacilities,
+  setupPending,
   startSync,
   type BundleBlocker,
   type SyncState,
@@ -122,8 +123,8 @@ export function App() {
       setBarangays(stored.barangays ?? []);
       setScreen(stored.barangay && stored.ageConfirmed ? "home" : "splash");
 
-      // Onboarded without signal last time: finish setting up now if we can.
-      if (stored.barangay && stored.ageConfirmed && !stored.device) {
+      // Onboarded, or changed barangay, without signal last time: finish now if we can.
+      if (stored.ageConfirmed && setupPending(stored)) {
         void completeSetup().catch((e: unknown) => setBlocker(blockerFor(e)));
       }
 
@@ -183,9 +184,9 @@ export function App() {
    */
   const completeSetup = useCallback(async (): Promise<boolean> => {
     const stored = await readPrefs();
-    // A registered device can still hold an unresolved choice: a barangay
-    // changed in Settings with no signal, picked from the shipped list.
-    if (!stored.barangay || (stored.device && stored.barangay.id !== null)) return true;
+    // Nothing to do unless the phone is unregistered, holds a barangay picked
+    // offline from the shipped list, or has moved barangay since registering.
+    if (!stored.barangay || !setupPending(stored)) return true;
 
     let id = stored.barangay.id;
     if (id === null) {
