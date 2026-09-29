@@ -964,3 +964,191 @@ button.pill {
   left: 0;
   right: auto;
 }
+
+/* A small action at the end of a Settings row ("Change barangay"). */
+.row-action {
+  width: auto;
+  flex: none;
+}
+
+/* ------------------------------------------------------------ microphone */
+
+/* The mic sits inside the symptom box (Figure 22). It does not record: it
+   explains that voice input is not supported yet (Check.tsx). */
+.textarea-wrap {
+  position: relative;
+}
+
+.textarea-wrap label,
+.textarea-wrap .textarea {
+  display: block;
+}
+
+.textarea-wrap .textarea {
+  padding-right: 68px;
+}
+
+.mic-btn {
+  position: absolute;
+  right: var(--s-3);
+  bottom: var(--s-3);
+  width: 46px;
+  height: 46px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--teal);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(13, 124, 108, 0.3);
+}
+
+.mic-btn:active {
+  background: var(--teal-dark);
+}
+
+.textarea-wrap + .note {
+  margin-top: var(--s-3);
+}
+
+/* ------------------------------------------------------ larger screens */
+
+/*
+ * Phones keep the single column above, unchanged. From tablet width up the
+ * app is laid out as a full-width web page instead of a phone-shaped column:
+ * the top row becomes a header bar across the page, content sits in a centred
+ * column, and Home and the results use the width for two columns. Font sizes
+ * and colours are the same as on the phone; only the layout changes.
+ */
+@media (min-width: 768px) {
+  :root {
+    /* The page's content width, and the inset that lines the header's
+       controls up with the content below it. */
+    --page: 720px;
+    --page-inset: max(var(--gutter), calc((100% - var(--page)) / 2));
+  }
+
+  .screen {
+    max-width: none;
+    margin: 0;
+    padding: 0 0 var(--s-7);
+  }
+
+  /* Everything in a screen sits in the centred content column... */
+  .screen > * {
+    width: 100%;
+    max-width: var(--page);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* ...except the header bar, which runs the full width of the page. */
+  .screen > .top-row {
+    max-width: none;
+    margin: 0 0 var(--s-5);
+    padding: var(--s-4) var(--page-inset);
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+
+  /* Screens without a header bar still need room at the top. */
+  .screen > :first-child:not(.top-row) {
+    margin-top: var(--s-7);
+  }
+
+  /* The splash and results fill the page rather than a phone column. */
+  .splash,
+  .result {
+    max-width: none;
+    margin: 0;
+  }
+
+  .splash {
+    justify-content: center;
+  }
+
+  .splash > * {
+    width: 100%;
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --page: 960px;
+  }
+
+  /* Single-column screens (symptoms, settings, onboarding) stay a readable
+     width even on a wide monitor. */
+  .screen:not(.screen-home) > :not(.top-row) {
+    max-width: 760px;
+  }
+
+  /* Home: greeting on the left, the call to action on the right. */
+  .screen-home {
+    display: grid;
+    grid-template-columns: 1fr minmax(0, 480px) minmax(0, 480px) 1fr;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      "top top top top"
+      ". intro main ."
+      ". foot foot .";
+    align-items: center;
+  }
+
+  .screen-home > .top-row {
+    grid-area: top;
+    align-self: start;
+  }
+
+  .home-intro {
+    grid-area: intro;
+    padding-right: 48px;
+  }
+
+  .home-main {
+    grid-area: main;
+  }
+
+  .screen-home > .disclaimer {
+    grid-area: foot;
+  }
+
+  /* Results: the coloured verdict fills the left of the page, the advice the
+     right. */
+  .result {
+    flex-direction: row;
+  }
+
+  .result-head {
+    position: relative;
+    flex: 0 0 44%;
+    justify-content: center;
+    padding: 96px 48px 48px;
+  }
+
+  .result-top {
+    position: absolute;
+    top: var(--s-6);
+    left: 48px;
+    right: 48px;
+    width: auto;
+  }
+
+  .result-sheet {
+    border-radius: 0;
+    padding: 48px 64px;
+    justify-content: center;
+  }
+
+  .result-sheet > * {
+    width: 100%;
+    max-width: 560px;
+  }
+}

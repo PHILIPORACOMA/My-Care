@@ -15,8 +15,10 @@ export function SettingsScreen(props: {
   bundle?: CachedBundle;
   pending: number;
   lastSyncAt?: string;
+  barangayName: string;
   onLanguage: (language: LanguageCode) => void;
   onBack: () => void;
+  onChangeBarangay: () => void;
   onStartOver: () => void;
 }) {
   const [confirming, setConfirming] = useState(false);
@@ -55,6 +57,17 @@ export function SettingsScreen(props: {
 
       <p className="row-label">{props.t("dataAndStorage")}</p>
       <div className="rows">
+        {/* Moving to another barangay keeps this device and its unsent checks;
+            only new checks are recorded under the new barangay. */}
+        <div className="row">
+          <span className="with-icon">
+            <Icon name="mapPin" size={16} />
+            {props.t("barangayLine", { barangay: props.barangayName })}
+          </span>
+          <button className="btn btn-outline btn-small row-action" onClick={props.onChangeBarangay}>
+            {props.t("changeBarangay")}
+          </button>
+        </div>
         <div className="row">
           <span>
             <span className="with-icon">
