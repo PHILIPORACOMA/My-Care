@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\Console\RulesetVersionController;
 use App\Http\Controllers\Api\V1\Console\SymptomCodeController;
 use App\Http\Controllers\Api\V1\Console\SystemHealthController;
 use App\Http\Controllers\Api\V1\Console\UserController;
+use App\Http\Controllers\Api\V1\CurrentDeviceController;
 use App\Http\Controllers\Api\V1\DeviceRegistrationController;
 use App\Http\Controllers\Api\V1\ReferenceDataController;
 use App\Http\Controllers\Api\V1\RulesetController;
@@ -156,5 +157,10 @@ Route::prefix('v1')->group(function (): void {
         // POST returns 200 with the original result, never 409.
         Route::post('/sync/batches', [SyncBatchController::class, 'store'])
             ->name('api.v1.sync.batches.store');
+
+        // A patient changed barangay in Settings: the device moves with them,
+        // so Sync & status (UT-014) counts it where it now reports.
+        Route::patch('/devices/current', [CurrentDeviceController::class, 'update'])
+            ->name('api.v1.devices.current.update');
     });
 });

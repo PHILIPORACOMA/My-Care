@@ -63,6 +63,17 @@ export const deviceApi = {
       body: JSON.stringify({ barangay_id: barangayId, type: "patient_phone" }),
     }).then((r): DeviceCredential => ({ id: r.device.id, token: r.token, barangayId })),
 
+  /**
+   * The patient changed barangay in Settings: move this device's registration
+   * with them, so Sync & status (UT-014) counts it where it now reports.
+   */
+  move: (token: string, barangayId: number) =>
+    request<{ device: { id: number; barangayId: number } }>(
+      "/api/v1/devices/current",
+      { method: "PATCH", body: JSON.stringify({ barangay_id: barangayId }) },
+      token
+    ),
+
   /** UT-013: the current published bundle, cached on the device. */
   ruleset: (token: string, pending: number) =>
     request<{ versionLabel: string; publishedAt: string | null; bundle: RulesetBundle }>(

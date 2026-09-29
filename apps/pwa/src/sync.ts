@@ -7,6 +7,7 @@ import {
   writePrefs,
   type CachedBundle,
   type DeviceCredential,
+  type Prefs,
   type QueuedSession,
 } from "./storage";
 
@@ -212,11 +213,32 @@ export async function refreshFacilities(): Promise<void> {
 /** Register this installation once, on the first connection (ADR-0005). */
 export async function ensureRegistered(barangayId: number): Promise<DeviceCredential | undefined> {
   const prefs = await readPrefs();
-  if (prefs.device) return prefs.device;
 
-  const device = await deviceApi.register(barangayId);
+  if (!prefs.device) {
+    const device = await deviceApi.register(barangayId);
+    await writePrefs({ device });
+    return device;
+  }
+
+  if (prefs.device.barangayId === barangayId) return prefs.device;
+
+  // The patient changed barangay in Settings. The device moves with them;
+  // sessions already recorded keep the barangay they were recorded under.
+  await deviceApi.move(prefs.device.token, barangayId);
+  const device = { ...prefs.device, barangayId };
   await writePrefs({ device });
   return device;
+}
+
+/**
+ * Setup is unfinished while the phone has no registration, holds a barangay
+ * chosen offline from the shipped list (no server id yet), or has changed
+ * barangay without the server hearing of it. Each finishes on the next
+ * contact with the server (App's completeSetup).
+ */
+export function setupPending(prefs: Prefs): boolean {
+  if (!prefs.barangay) return false;
+  return !prefs.device || prefs.barangay.id === null || prefs.device.barangayId !== prefs.barangay.id;
 }
 
 /**
