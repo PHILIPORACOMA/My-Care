@@ -154,7 +154,9 @@ export async function flush(): Promise<void> {
  * the health office to publish a ruleset. Reporting a 503 as "no internet"
  * sends someone up a hill for nothing.
  */
-export type BundleBlocker = "offline" | "unpublished" | "server";
+// `busy` is a 429: the server answered and refused, so "cannot reach" would be
+// wrong, and so would sending the patient to look for signal.
+export type BundleBlocker = "offline" | "unpublished" | "busy" | "server";
 
 export class BundleUnavailable extends Error {
   constructor(readonly reason: BundleBlocker) {
@@ -163,9 +165,12 @@ export class BundleUnavailable extends Error {
   }
 }
 
-function classify(error: unknown): BundleBlocker {
+export function classify(error: unknown): BundleBlocker {
   if (error instanceof OfflineError) return "offline";
-  return (error as { status?: number }).status === 503 ? "unpublished" : "server";
+  const status = (error as { status?: number }).status;
+  if (status === 503) return "unpublished";
+  if (status === 429) return "busy";
+  return "server";
 }
 
 export async function refreshBundle(force = false): Promise<CachedBundle | undefined> {

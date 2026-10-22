@@ -230,3 +230,17 @@ describe("start over", () => {
     expect(await storage.readPrefs()).toEqual({});
   });
 });
+
+describe("why a device has no rules", () => {
+  const withStatus = (status: number) => Object.assign(new Error(`Request failed (${status})`), { status });
+
+  it("tells a rate-limited setup (429) apart from an unreachable server", async () => {
+    const { classify } = await import("./sync");
+    const { OfflineError } = await import("./api");
+
+    expect(classify(new OfflineError())).toBe("offline");
+    expect(classify(withStatus(503))).toBe("unpublished");
+    expect(classify(withStatus(429))).toBe("busy");
+    expect(classify(withStatus(500))).toBe("server");
+  });
+});

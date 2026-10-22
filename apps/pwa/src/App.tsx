@@ -20,6 +20,7 @@ import {
 } from "./storage";
 import {
   BundleUnavailable,
+  classify,
   ensureRegistered,
   onSyncState,
   recordSession,
@@ -106,10 +107,15 @@ export function App() {
    * which sends someone looking for signal they do not need.
    */
   const [blocker, setBlocker] = useState<BundleBlocker>();
-  const blockerFor = (e: unknown): BundleBlocker =>
-    e instanceof BundleUnavailable ? e.reason : e instanceof OfflineError ? "offline" : "server";
+  const blockerFor = (e: unknown): BundleBlocker => (e instanceof BundleUnavailable ? e.reason : classify(e));
   const blockerBody = (reason: BundleBlocker) =>
-    reason === "offline" ? t("needConnectionBody") : reason === "unpublished" ? t("noRulesBody") : t("serverProblemBody");
+    reason === "offline"
+      ? t("needConnectionBody")
+      : reason === "unpublished"
+        ? t("noRulesBody")
+        : reason === "busy"
+          ? t("busyBody")
+          : t("serverProblemBody");
 
   const language: LanguageCode = prefs.language ?? "en";
   const t = useMemo(() => translatorFor(language), [language]);
@@ -134,7 +140,7 @@ export function App() {
             if (fresh) setPrefs((p) => ({ ...p, bundle: fresh }));
             setBlocker(undefined);
           })
-          .catch((e: unknown) => setBlocker(e instanceof BundleUnavailable ? e.reason : "server"));
+          .catch((e: unknown) => setBlocker(blockerFor(e)));
         void refreshFacilities();
       }
     })();
@@ -347,6 +353,7 @@ export function App() {
           barangays={barangays.length > 0 ? barangays : bundledBarangays()}
           selected={choice ?? prefs.barangay}
           notice={barangayGone ? t("barangayNotFound") : undefined}
+          changing={changingBarangay}
           busy={busy}
           error={blocker && blockerBody(blocker)}
           onBack={() => {

@@ -116,8 +116,10 @@ BS Information Technology capstone; the manuscript is the specification.
 - Patient UI text in Tagalog/Cebuano: Claude drafts, every string flagged for
   native + clinical review. **Done — `apps/pwa/src/i18n.ts` carries the review
   banner. English is the design's own copy, verbatim.**
-- **No microphone button** (Figure 22): no offline Tagalog/Cebuano speech
-  recogniser fits the device limits. Reasoning in BUILD-LOG.
+- **No voice input** (Figure 22): no offline Tagalog/Cebuano speech
+  recogniser fits the device limits. Reasoning in BUILD-LOG. *Amended
+  2026-09-29 (PR #8):* the microphone is shown in the symptom box but does not
+  record; tapping it says voice input is not supported yet.
 
 ## Decisions taken 2026-09-26
 
