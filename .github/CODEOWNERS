@@ -1,16 +1,18 @@
 # Auto-request review from the module owner.
 # Mapped to Manuscript Table 30 (List of Modules).
-# Replace the placeholders with real GitHub usernames.
+#
+# Still to fill in: Binghay's and Seaborg's GitHub usernames. Until then those
+# two placeholders resolve to nobody, so GitHub requests no review for them.
 
 *                          @BINGHAY_USERNAME
 
-/packages/triage-engine/   @RACOMA_USERNAME @SEABORG_USERNAME
-/packages/ruleset/         @RACOMA_USERNAME
+/packages/triage-engine/   @PHILIPORACOMA @SEABORG_USERNAME
+/packages/ruleset/         @PHILIPORACOMA
 
 /apps/api/                 @BINGHAY_USERNAME
 /apps/pwa/                 @SEABORG_USERNAME
-/apps/portal/              @TABANAG_USERNAME
-/apps/console/             @TABANAG_USERNAME
+/apps/portal/              @kizaru3214
+/apps/console/             @kizaru3214
 
 /docs/                     @BINGHAY_USERNAME
 /.github/                  @BINGHAY_USERNAME

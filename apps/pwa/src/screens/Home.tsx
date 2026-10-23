@@ -5,20 +5,23 @@ import { Icon } from "./Icon";
 import { CareMark, LanguagePill, OfflineBadge } from "./parts";
 
 /*
- * Three reasons a device can have no rules, and they are not interchangeable:
- * the patient can fix the first by finding signal, and cannot fix the other
+ * Four reasons a device can have no rules, and they are not interchangeable:
+ * the patient can fix the first by finding signal, can only wait out the
+ * third (too many setup attempts from one network), and cannot fix the other
  * two at all. Telling them apart is the difference between a useful screen
  * and one that sends someone up a hill for nothing.
  */
-const BLOCKER_TITLE: Record<BundleBlocker, "needConnectionTitle" | "noRulesTitle" | "serverProblemTitle"> = {
+const BLOCKER_TITLE: Record<BundleBlocker, "needConnectionTitle" | "noRulesTitle" | "busyTitle" | "serverProblemTitle"> = {
   offline: "needConnectionTitle",
   unpublished: "noRulesTitle",
+  busy: "busyTitle",
   server: "serverProblemTitle",
 };
 
-const BLOCKER_BODY: Record<BundleBlocker, "needConnectionBody" | "noRulesBody" | "serverProblemBody"> = {
+const BLOCKER_BODY: Record<BundleBlocker, "needConnectionBody" | "noRulesBody" | "busyBody" | "serverProblemBody"> = {
   offline: "needConnectionBody",
   unpublished: "noRulesBody",
+  busy: "busyBody",
   server: "serverProblemBody",
 };
 

@@ -125,6 +125,9 @@ const en = {
   serverProblemTitle: "Cannot reach the health office",
   serverProblemBody:
     "Your connection is working, but the health office system did not answer. Please try again in a little while.",
+  busyTitle: "Too many tries for now",
+  busyBody:
+    "The health office answered, but this network has tried to set up My Care too many times. Please wait about an hour and try again.",
   retry: "Try again",
   offlineNotice: "You are offline. Your check still works, and results are sent when you have signal again.",
 } as const;
@@ -225,6 +228,9 @@ const tl: Dictionary = {
   serverProblemTitle: "Hindi maabot ang health office",
   serverProblemBody:
     "Gumagana ang inyong koneksyon, pero hindi sumagot ang sistema ng health office. Pakisubukan muli maya-maya.",
+  busyTitle: "Masyadong maraming pagsubok",
+  busyBody:
+    "Sumagot ang health office, pero masyadong maraming beses nang sinubukang i-set up ang My Care mula sa network na ito. Maghintay ng mga isang oras at subukan muli.",
   retry: "Subukan muli",
   offlineNotice:
     "Offline ka ngayon. Gumagana pa rin ang pagsusuri, at ipapadala ang resulta kapag may signal ka na ulit.",
@@ -323,6 +329,9 @@ const ceb: Dictionary = {
   serverProblemTitle: "Dili maabot ang health office",
   serverProblemBody:
     "Naglihok ang inyong koneksyon, apan wala mitubag ang sistema sa health office. Palihug sulayi pag-usab sa makadiyot.",
+  busyTitle: "Daghan kaayong pagsulay",
+  busyBody:
+    "Mitubag ang health office, apan daghan na kaayong higayon nga gisulayan pag-set up ang My Care gikan niining network. Paghulat og mga usa ka oras ug sulayi pag-usab.",
   retry: "Sulayi pag-usab",
   offlineNotice:
     "Offline ka karon. Molihok gihapon ang pagsusi, ug ipadala ang resulta kung naa na kay signal.",

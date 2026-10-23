@@ -119,6 +119,8 @@ export function BarangayScreen(props: {
   busy?: boolean;
   error?: string;
   notice?: string;
+  /** Opened from Settings to change barangay, not as onboarding step 3. */
+  changing?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [why, setWhy] = useState(false);
@@ -136,7 +138,7 @@ export function BarangayScreen(props: {
         </button>
         <OfflineBadge t={props.t} />
       </div>
-      <Steps step={3} t={props.t} />
+      {!props.changing && <Steps step={3} t={props.t} />}
       <h1 className="title">{props.t("selectBarangay")}</h1>
 
       <div className="search">
