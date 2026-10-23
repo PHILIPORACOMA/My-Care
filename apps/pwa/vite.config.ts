@@ -27,7 +27,10 @@ export default defineConfig({
         // than an honest failure, and both have their own offline handling.
         globPatterns: ["**/*.{js,css,html,woff2,svg}"],
         navigateFallback: "index.html",
-        navigateFallbackDenylist: [/^\/api\//, /^\/sanctum\//],
+        // In production the portal, console and API share this host
+        // (docs/DEPLOYMENT.md), so their pages must reach the network, not
+        // this app's index.html.
+        navigateFallbackDenylist: [/^\/(api|sanctum|portal|console)(\/|$)/, /^\/up$/],
       },
       manifest: {
         name: "My Care",
