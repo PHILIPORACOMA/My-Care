@@ -446,6 +446,25 @@ button.pill {
   text-align: center;
 }
 
+.age-gate {
+  gap: var(--s-1);
+}
+
+.age-mark {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--r-pill);
+  background: var(--teal-tint);
+  color: var(--teal);
+  display: grid;
+  place-items: center;
+  margin-bottom: var(--s-3);
+}
+
+.age-actions {
+  margin-top: var(--s-6);
+}
+
 .home-card-mark {
   width: 56px;
   height: 56px;

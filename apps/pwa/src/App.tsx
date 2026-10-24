@@ -366,6 +366,8 @@ export function App() {
       return (
         <AgeScreen
           t={t}
+          language={language}
+          onLanguage={changeLanguage}
           onBack={() => setScreen("language")}
           onConfirm={() => {
             void save({ ageConfirmed: true });
