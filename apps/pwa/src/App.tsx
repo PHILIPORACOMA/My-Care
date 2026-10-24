@@ -473,7 +473,9 @@ export function App() {
           chips={bundle ? codes.map((code) => symptomLabel(bundle, code, language)) : codes}
           facilities={prefs.facilities ?? []}
           barangayId={prefs.barangay.id}
-          onTips={() => setScreen("tips")}
+          onTips={
+            bundle && tipsFor(bundle, check.result.tier, codes, language).length > 0 ? () => setScreen("tips") : undefined
+          }
           onAgain={newCheck}
         />
       ) : null;

@@ -134,6 +134,8 @@ describe("a patient checking their symptoms", () => {
     expect(await screen.findByText(/Gisusi ang imong mga sintomas/)).toBeInTheDocument();
     expect(await screen.findByText(/Adto sa pinakaduol nga Rural Health Unit/, {}, { timeout: 4000 })).toBeInTheDocument();
     expect(screen.getByText(/Ipakita kini nga screen sa health worker/)).toBeInTheDocument();
+    // No tips published for this result, so no button leading to an empty page.
+    expect(screen.queryByRole("button", { name: /Tan-awa ang mga tambag/ })).not.toBeInTheDocument();
 
     // What was queued: codes and the server's own vocabulary, never the words.
     await waitFor(() => expect(posted.some((p) => p.url.includes("/sync/batches"))).toBe(true));
