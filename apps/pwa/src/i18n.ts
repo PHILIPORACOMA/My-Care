@@ -115,6 +115,10 @@ const en = {
   startOver: "Start over (clear data)",
   startOverConfirm: "This clears your language, barangay and any checks waiting to send. Continue?",
   cancel: "Cancel",
+  tryAgain: "Try again",
+  storageErrorTitle: "My Care can't open its storage on this phone",
+  storageErrorBody:
+    "Close any other My Care tabs and try again. If it keeps happening, start over: this clears your settings and any checks still waiting to send.",
 
   // Connectivity and errors
   needConnectionTitle: "Connect once to get started",
@@ -220,6 +224,10 @@ const tl: Dictionary = {
   startOverConfirm:
     "Buburahin nito ang iyong wika, barangay, at anumang pagsusuring naghihintay maipadala. Magpatuloy?",
   cancel: "Kanselahin",
+  tryAgain: "Subukang muli",
+  storageErrorTitle: "Hindi mabuksan ng My Care ang storage nito sa teleponong ito",
+  storageErrorBody:
+    "Isara ang ibang tab ng My Care at subukang muli. Kung patuloy itong mangyari, magsimula muli: buburahin nito ang iyong settings at ang mga check na hindi pa naipapadala.",
 
   needConnectionTitle: "Kumonekta muna nang isang beses",
   needConnectionBody:
@@ -322,6 +330,10 @@ const ceb: Dictionary = {
   startOverConfirm:
     "Mapapas niini ang imong pinulongan, barangay, ug bisan unsang pagsusi nga naghulat ipadala. Padayon?",
   cancel: "Kanselahon",
+  tryAgain: "Sulayi pag-usab",
+  storageErrorTitle: "Dili maablihan sa My Care ang storage niini niining telepono",
+  storageErrorBody:
+    "Sirad-i ang ubang tab sa My Care ug sulayi pag-usab. Kung magpadayon kini, sugdi pag-usab: mapapas ang imong settings ug ang mga check nga wala pa napadala.",
 
   needConnectionTitle: "Kumonekta usa sa makausa",
   needConnectionBody:

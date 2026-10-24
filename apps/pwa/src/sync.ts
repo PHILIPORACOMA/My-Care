@@ -69,7 +69,7 @@ export async function recordSession(session: QueuedSession): Promise<void> {
   const { enqueueSession } = await import("./storage");
   await enqueueSession(session);
   await refreshPending();
-  void flush();
+  void flush().catch(() => undefined);
 }
 
 /**
@@ -253,7 +253,7 @@ export function setupPending(prefs: Prefs): boolean {
  */
 export function startSync(): () => void {
   const onOnline = () => {
-    void flush();
+    void flush().catch(() => undefined);
     // Background refresh: a device with no bundle yet will reject with
     // BundleUnavailable, which the onboarding screens report. Nothing to do
     // here but not crash on it.
@@ -261,7 +261,8 @@ export function startSync(): () => void {
   };
 
   window.addEventListener("online", onOnline);
-  void refreshPending().then(() => onOnline());
+  // Unreadable storage is reported by the app's first screen, not here.
+  void refreshPending().then(onOnline, () => undefined);
 
   return () => window.removeEventListener("online", onOnline);
 }

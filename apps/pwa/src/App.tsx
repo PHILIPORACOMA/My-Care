@@ -10,8 +10,10 @@ import { ClarifyScreen, InputScreen, ProcessingScreen } from "./screens/Check";
 import { HomeScreen } from "./screens/Home";
 import { ResultScreen, TipsScreen } from "./screens/Result";
 import { SettingsScreen } from "./screens/Settings";
+import { StorageErrorScreen } from "./screens/StorageError";
 import {
   clearEverything,
+  deleteStorage,
   readPrefs,
   writePrefs,
   type Barangay,
@@ -46,6 +48,7 @@ import {
 
 type Screen =
   | "loading"
+  | "storageError"
   | "splash"
   | "language"
   | "age"
@@ -133,7 +136,13 @@ export function App() {
   // First paint: read what the device already knows, then decide where to land.
   useEffect(() => {
     void (async () => {
-      const stored = await readPrefs();
+      let stored: Prefs;
+      try {
+        stored = await readPrefs();
+      } catch {
+        setScreen("storageError");
+        return;
+      }
       setPrefs(stored);
       setBarangays(stored.barangays ?? []);
       setScreen(stored.barangay && stored.ageConfirmed ? "home" : "splash");
@@ -321,6 +330,19 @@ export function App() {
           <div className="spinner" />
         </div>
       </div>
+    );
+  }
+
+  if (screen === "storageError") {
+    return (
+      <StorageErrorScreen
+        t={t}
+        onRetry={() => window.location.reload()}
+        onStartOver={async () => {
+          await deleteStorage().catch(() => undefined);
+          window.location.reload();
+        }}
+      />
     );
   }
 
