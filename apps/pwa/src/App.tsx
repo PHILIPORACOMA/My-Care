@@ -119,7 +119,16 @@ export function App() {
 
   const language: LanguageCode = prefs.language ?? "en";
   const t = useMemo(() => translatorFor(language), [language]);
-  const bundle = prefs.bundle?.bundle;
+  // `npm run dev:demo` only: draft vocabulary (./demo), loaded on demand so a
+  // normal build never contains it.
+  const [demo, setDemo] = useState<typeof import("./demo") | null>(null);
+  useEffect(() => {
+    if (import.meta.env.MODE === "demo") void import("./demo").then(setDemo);
+  }, []);
+  const bundle = useMemo(
+    () => (demo ? demo.withDemoLexicon(prefs.bundle?.bundle) : prefs.bundle?.bundle),
+    [demo, prefs.bundle]
+  );
 
   // First paint: read what the device already knows, then decide where to land.
   useEffect(() => {

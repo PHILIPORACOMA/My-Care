@@ -6,6 +6,7 @@
   "description": "Patient PWA (Figures 17-29): anonymous, offline-first, on-device triage in English, Tagalog and Cebuano.",
   "scripts": {
     "dev": "vite",
+    "dev:demo": "vite --mode demo",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
