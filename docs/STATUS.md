@@ -190,7 +190,7 @@ free text is proven only with the invented test lexicon.
   microphone with no voice input. **Since ported:** icons and the language
   pill (PR #7, by us), and kizaru3214's own PR #8 (wide-screen layout, mic
   notice, change barangay), merged by Philipo 2026-09-29. The age-gate layout
-  was not ported.
+  was ported on `fix/pwa-sw-other-apps` (2026-10-24).
 - `origin/Gil` points at the very old `9358811`. Untouched.
 - `feat/UT-020-laravel-api-schema`, `feat/UT-012-offline-e2e`,
   `feat/UT-011-deployment` and `feat/UT-001-bundled-barangays` are fully
@@ -259,6 +259,11 @@ free text is proven only with the invented test lexicon.
 - **No reviewed lexicon terms, clarification questions or health tips
   exist.** In v1 free text matches nothing (the test lexicon is not v1), and chips show v1's clinician wording in English
   whatever the language. Philipo has the reviewed terms and will enter them.
+  Until then the patient app says when typed words are not recognised, and
+  hides the health-tips button when no tip applies. For prototype demos only,
+  `npm run dev:demo -w @mycare/pwa` loads the test lexicon plus draft tl/ceb
+  chip names on the device (`apps/pwa/src/demo.ts`, unreviewed; a normal
+  build does not contain it).
 - **Chips take the lexicon word once terms are published** (`symptomLabel`):
   "fever", not "Fever, mild, <3 days, no red flags". A bare "fever" chip is
   home. Decide which wording a chip shows before the reviewed terms go in
