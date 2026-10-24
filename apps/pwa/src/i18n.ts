@@ -71,6 +71,7 @@ const en = {
   orSelectCommon: "Or select a common symptom:",
   notADiagnosis: "This is not a diagnosis.",
   noSymptomsYet: "Type how you feel, or tap a symptom above.",
+  noWordsMatched: "My Care doesn't recognise these words yet. Please tap the symptom below that fits best.",
   noChipsYet: "Your health office has not published symptom words yet. You can still type how you feel.",
 
   // Figure 23
@@ -175,6 +176,7 @@ const tl: Dictionary = {
   orSelectCommon: "O pumili ng karaniwang sintomas:",
   notADiagnosis: "Hindi ito diagnosis.",
   noSymptomsYet: "I-type ang nararamdaman mo, o pumindot ng sintomas sa itaas.",
+  noWordsMatched: "Hindi pa kilala ng My Care ang mga salitang ito. Pakipindot ang sintomas sa ibaba na pinakaangkop.",
   noChipsYet:
     "Wala pang nailathalang mga salita para sa sintomas ang inyong health office. Maaari ka pa ring mag-type ng nararamdaman mo.",
 
@@ -276,6 +278,7 @@ const ceb: Dictionary = {
   orSelectCommon: "O pagpili ug komon nga sintomas:",
   notADiagnosis: "Dili kini diagnosis.",
   noSymptomsYet: "I-type kung unsa imong gibati, o i-tap ang sintomas sa taas.",
+  noWordsMatched: "Wala pa mailhi sa My Care kini nga mga pulong. Palihug i-tap ang sintomas sa ubos nga labing haom.",
   noChipsYet:
     "Wala pa nakapatik ug mga pulong para sa sintomas ang inyong health office. Makasulat gihapon ka sa imong gibati.",
 
