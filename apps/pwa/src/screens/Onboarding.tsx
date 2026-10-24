@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { LANGUAGES, type Translator } from "../i18n";
 import type { ChosenBarangay } from "../storage";
 import { Icon } from "./Icon";
-import { CareMark, OfflineBadge, Steps } from "./parts";
+import { CareMark, LanguagePill, OfflineBadge, Steps } from "./parts";
 
 /** Figure 17, Welcome Page. No login, no registration — one button in. */
 export function SplashScreen({ t, onStart }: { t: Translator; onStart: () => void }) {
@@ -67,36 +67,51 @@ export function LanguageScreen(props: {
  * Figure 19, Select Age — "a mandatory legal checkpoint. My Care is designed
  * for adult users only." Declining records nothing and goes back to the start.
  */
-export function AgeScreen(props: { t: Translator; onBack: () => void; onConfirm: () => void; onDecline: () => void }) {
+export function AgeScreen(props: {
+  t: Translator;
+  language: LanguageCode;
+  onLanguage: (language: LanguageCode) => void;
+  onBack: () => void;
+  onConfirm: () => void;
+  onDecline: () => void;
+}) {
   const [declined, setDeclined] = useState(false);
 
+  // Layout from kizaru3214's age gate (feat/pwa-ui-polish): question and
+  // answers grouped mid-screen under a person mark.
   return (
     <div className="screen">
       <div className="top-row">
         <button className="icon-btn" onClick={props.onBack} aria-label={props.t("back")}>
           <Icon name="chevronLeft" size={18} />
         </button>
-        <OfflineBadge t={props.t} />
+        <div className="row-inline">
+          <LanguagePill t={props.t} language={props.language} onChange={props.onLanguage} />
+          <OfflineBadge t={props.t} />
+        </div>
       </div>
       <Steps step={2} t={props.t} />
-      <div className="grow">
+      <div className="grow age-gate">
+        <span className="age-mark" aria-hidden="true">
+          <Icon name="user" size={26} />
+        </span>
         <h1 className="title title-lg">{props.t("ageQuestion")}</h1>
         <p className="subtitle">{props.t("adultsOnly")}</p>
         {declined && <p className="banner banner-warn">{props.t("ageDeclined")}</p>}
-      </div>
-      <div className="stack">
-        <button className="btn" onClick={props.onConfirm}>
-          {props.t("yesAdult")}
-        </button>
-        <button
-          className="btn btn-outline"
-          onClick={() => {
-            setDeclined(true);
-            props.onDecline();
-          }}
-        >
-          {props.t("no")}
-        </button>
+        <div className="stack age-actions">
+          <button className="btn" onClick={props.onConfirm}>
+            {props.t("yesAdult")}
+          </button>
+          <button
+            className="btn btn-outline"
+            onClick={() => {
+              setDeclined(true);
+              props.onDecline();
+            }}
+          >
+            {props.t("no")}
+          </button>
+        </div>
       </div>
     </div>
   );

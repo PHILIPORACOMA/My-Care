@@ -134,6 +134,8 @@ describe("a patient checking their symptoms", () => {
     expect(await screen.findByText(/Gisusi ang imong mga sintomas/)).toBeInTheDocument();
     expect(await screen.findByText(/Adto sa pinakaduol nga Rural Health Unit/, {}, { timeout: 4000 })).toBeInTheDocument();
     expect(screen.getByText(/Ipakita kini nga screen sa health worker/)).toBeInTheDocument();
+    // No tips published for this result, so no button leading to an empty page.
+    expect(screen.queryByRole("button", { name: /Tan-awa ang mga tambag/ })).not.toBeInTheDocument();
 
     // What was queued: codes and the server's own vocabulary, never the words.
     await waitFor(() => expect(posted.some((p) => p.url.includes("/sync/batches"))).toBe(true));
@@ -428,5 +430,39 @@ describe("changing barangay from Settings", () => {
     await waitFor(() => expect(moves()).toHaveLength(1));
     expect(moves()[0]!.body).toEqual({ barangay_id: 2 });
     await waitFor(async () => expect((await storage.readPrefs()).device?.barangayId).toBe(2));
+  }, 20000);
+});
+
+/*
+ * Another app on the same origin (a developer's older build) left a "mycare"
+ * database at the same version with different stores. The app used to spin
+ * forever; it must say what is wrong and offer a way out.
+ */
+describe("a phone whose storage the app cannot use", () => {
+  async function foreignDatabase() {
+    await new Promise<void>((resolve, reject) => {
+      const remove = indexedDB.deleteDatabase("mycare");
+      remove.onsuccess = () => {
+        const create = indexedDB.open("mycare", 1);
+        create.onsuccess = () => {
+          create.result.close();
+          resolve();
+        };
+        create.onerror = () => reject(create.error);
+      };
+    });
+  }
+
+  it("explains instead of spinning, and starting over clears it", async () => {
+    await foreignDatabase();
+    const user = await launch();
+
+    expect(await screen.findByText(/can't open its storage/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Start over/ }));
+    await user.click(screen.getByRole("button", { name: /Start over/ }));
+
+    const storage = await import("./storage");
+    await waitFor(async () => expect(await storage.readPrefs()).toEqual({}));
   }, 20000);
 });

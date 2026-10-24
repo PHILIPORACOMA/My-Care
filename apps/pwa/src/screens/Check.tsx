@@ -77,6 +77,12 @@ export function InputScreen(props: {
           {props.matches.map((m) => `${m.negated ? "✕" : "✓"} ${m.matchedTerm.term}`).join(" · ")}
         </p>
       )}
+      {/* Free text the lexicon does not know yet must not fail silently. */}
+      {props.text.trim() !== "" && props.matches.length === 0 && (
+        <p className="note" role="status">
+          {props.t("noWordsMatched")}
+        </p>
+      )}
 
       <p className="section-label">{props.t("orSelectCommon")}</p>
       {props.chips.length === 0 ? (
