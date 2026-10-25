@@ -1,6 +1,6 @@
 import { v1Bundle } from "@mycare/ruleset";
 import { describe, expect, it } from "vitest";
-import { withDemoLexicon } from "./demo";
+import { demoPhraseTerms, withDemoLexicon } from "./demo";
 import { chipsFor, matchSymptoms, runTriage, symptomLabel } from "./triage";
 
 /*
@@ -31,5 +31,32 @@ describe("demo mode", () => {
     const matches = matchSymptoms("Chest Pain", demo.lexiconTerms);
     expect(matches.map((m) => m.symptomCode)).toEqual(["chest_pain_severe_radiating"]);
     expect(runTriage(demo, { picked: [], matches, answers: {} }).tier).toBe("emergency");
+  });
+
+  // Typo tolerance must never carry one phrase onto another symptom.
+  it("reads every demo phrase, typed alone, as its own symptom and nothing else", () => {
+    const wrong = demoPhraseTerms
+      .map((t) => ({ term: t.term, want: t.symptomCode, got: matchSymptoms(t.term, demo.lexiconTerms) }))
+      .filter(({ want, got }) => got.length !== 1 || got[0]!.symptomCode !== want || got[0]!.negated);
+    expect(wrong).toEqual([]);
+  });
+
+  it("finds the phrases inside whole sentences, and triages them", () => {
+    const tierOf = (text: string) => runTriage(demo, { picked: [], matches: matchSymptoms(text, demo.lexiconTerms), answers: {} }).tier;
+
+    expect(tierOf("Naa koy hilanat ug giubo ko sukad gahapon")).toBe("home");
+    expect(tierOf("labad akong ulo ug sakit akong lawas human sa trabaho")).toBe("home");
+    expect(tierOf("tulo ka adlaw nga hilanat na ko")).toBe("rhu");
+    expect(tierOf("gipaak sa iro akong tiil ganina")).toBe("rhu");
+    expect(tierOf("may lagnat ako at hindi makahinga")).toBe("emergency");
+    expect(tierOf("sakit kaayo akong tiyan karon")).toBe("emergency");
+    expect(tierOf("I have a fever for 3 days now")).toBe("rhu");
+  });
+
+  // v1 has no code for ordinary stomach pain; the only abdominal one is emergency.
+  it("leaves plain stomach pain unrecognised rather than calling it an emergency", () => {
+    for (const text of ["sakit sa tiyan", "sakit ng tiyan", "stomach pain", "abdominal pain"]) {
+      expect(matchSymptoms(text, demo.lexiconTerms)).toEqual([]);
+    }
   });
 });
