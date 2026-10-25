@@ -1585,3 +1585,24 @@ joined-string path compares "naayhilanat" with the negation "walayhilanat",
 reviewed lexicon has the same exposure, because the cause is the matcher, not
 the terms. A fix (negations never match through the fuzzy joined path) and a
 gap-tolerance proposal are with Philipo as a plan, awaiting approval.
+
+---
+
+### 9l - Matcher plan approved and built: PRs #15 and #16 (2026-10-25)
+
+Philipo approved the 9k plan with **one** extra word.
+
+- **PR #15** (`fix/UT-004-negation-exact`): a negation matches only word for
+  word or as an exact run-together join. "naay hilanat" is now fever
+  present; "wala hilanat", "walay hilnat" and "walayhilanat" still negate.
+- **PR #16** (`feat/UT-003-phrase-gap`, built on #15, merge #15 first): a
+  positive phrase of 2+ words may take one extra word that names no symptom
+  of its own, inside one clause. **ADR-0008** records the rules. A test
+  caught a flaw in the planned two-pass order (the plain "sakit sa tiyan"
+  beat the severe phrase), so each term now tries exact then gapped before
+  any shorter term. **Flagged for clinical review:** an intensifier as the
+  extra word ("sakit **kaayo** akong ulo") lands on the plain phrase's code;
+  the reviewed lexicon should list intensified forms.
+
+Open PRs, merge order: #13 (Start over hang), #14 (demo phrases), #15, then
+#16. All JS workspaces pass on each branch; typecheck clean.
