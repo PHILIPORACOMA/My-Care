@@ -1555,3 +1555,33 @@ verified free of demo vocabulary.
 `storageErrorBody`, `storageBlocked`, and demo.ts's chip names if they are
 ever shown to anyone outside a demo); Binghay's and Seaborg's GitHub
 usernames for CODEOWNERS.
+
+---
+
+### 9k - Sentences, more demo phrases (PR #14), and a negation bug found (2026-10-25)
+
+**What Philipo hit:** "abdominal pain" typed in demo mode was not recognised.
+Not a fault. The demo vocabulary only knows the *severe* presentation
+("severe stomach pain", "grabe nga sakit sa tiyan"), and v1 has no code for
+ordinary stomach pain, only `abdominal_pain_severe_rigidity` (emergency).
+
+**What the matcher does, measured:** it finds known phrases anywhere in a
+sentence, several at once, with typos, split words and negation. It does not
+skip an extra word inside a phrase ("grabe **kaayo** nga sakit sa tiyan"),
+read affixed forms ("hilanaton"), or paraphrase. That is by design: the
+device limits rule out a language model, and no probabilistic model may near
+the tier decision. Coverage comes from the lexicon.
+
+**PR #14** (`feat/UT-003-demo-phrases`, demo mode only): 286 more phrases
+across the 23 presentations, en/tl/ceb, Claude's draft at Philipo's request.
+Invented and unreviewed, like the rest of `demo.ts`. Each keeps its code's
+severity; plain "sakit sa tiyan" is deliberately absent; no negation phrases.
+A test types every phrase alone and requires exactly its own code.
+
+**Bug found, not yet fixed — under-triage risk:** with the test lexicon,
+**"naay hilanat" ("I have a fever") is read as NOT fever.** `matchAt`'s
+joined-string path compares "naayhilanat" with the negation "walayhilanat",
+12 letters long, so 2 edits are allowed; they are exactly 2 apart. Any
+reviewed lexicon has the same exposure, because the cause is the matcher, not
+the terms. A fix (negations never match through the fuzzy joined path) and a
+gap-tolerance proposal are with Philipo as a plan, awaiting approval.
