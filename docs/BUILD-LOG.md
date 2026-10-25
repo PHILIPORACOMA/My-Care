@@ -1606,3 +1606,30 @@ Philipo approved the 9k plan with **one** extra word.
 
 Open PRs, merge order: #13 (Start over hang), #14 (demo phrases), #15, then
 #16. All JS workspaces pass on each branch; typecheck clean.
+
+---
+
+### 9m - Demo stomach-pain question (PR #17), and #13 to #17 merged (2026-10-25)
+
+**PR #17** (`feat/UT-005-demo-clarification`, demo mode only): **invented
+clinical logic at Philipo's request**, not from the appraisal form, not
+reviewed. A demo symptom `demo_abdominal_pain` (needs clarification) for
+"stomach pain", "stomach ache", "sakit sa tiyan", "sakit ng tiyan" and so
+on, plus a chip. It asks "How bad is your stomach pain?" in en/tl/ceb: mild
+or strong gives RHU (`R-DEMO-1`), "severe, or my belly is hard and painful
+to touch" is the red flag, which gives emergency. No answer gives home. Checks that use it
+**never sync** (`isDemoOnly`): `BatchIngestor` rejects a whole batch naming
+an unknown symptom code or question, which would hold every real check
+queued behind it.
+
+**Merged by Claude at Philipo's instruction** (`gh pr merge --merge`, in
+order, branches kept): #13 (Start over hang), #14 (demo phrases), #15
+(negation fix), #16 (one extra word, ADR-0008), #17. `main` = `1dfa271`.
+On `main`: all JS workspaces pass (PWA 68, matcher 19), typecheck clean, and
+the production build contains no demo content. The e2e failure on `6e531f7`
+was a flake: the rerun passed with no change.
+
+**Still awaiting Philipo:** the option 2 plan (an unrecognised check
+continues to the RHU fail-safe instead of a dead end); a real ordinary
+abdominal pain presentation, its question and tiers from the clinical
+appraisal.

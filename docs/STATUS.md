@@ -9,7 +9,7 @@ moving with the patient's barangay (PR #9). `deploy/` and `docs/DEPLOYMENT.md` t
 24.04 server to a running system, and a CI job proves it by deploying with
 them on every PR. What remains is human: a real server, the first-run steps,
 the lexicon terms and the paperwork. `docs/BUILD-LOG.md` is the long-form
-record (9a to 9j).
+record (9a to 9m).
 
 **All three apps have now been opened in a real browser** (BUILD-LOG 9a). The
 Playwright suite runs the patient journey against the real API, MySQL 8 and
@@ -30,7 +30,7 @@ major decision, or closes/opens a known gap — don't let it drift.
 Paste this into a new chat session to pick up where this one left off:
 
 > Read `CLAUDE.md`, `docs/STATUS.md` and `docs/BUILD-LOG.md` first (entries
-> 9a to 9j cover the recent work), then `docs/DEPLOYMENT.md` and ADRs
+> 9a to 9m cover the recent work), then `docs/DEPLOYMENT.md` and ADRs
 > 0004-0007 in `docs/adr/` (0004 was amended 2026-09-26). The long-form record
 > of the last session is `my-care-session-transcript-2026-09-29.txt` (it spans
 > 2026-09-27 to 09-29; the one before is `...-2026-09-26.txt`) if you need
@@ -168,10 +168,11 @@ free text is proven only with the invented test lexicon.
 
 ## Git state
 
-- **`main` = `51c1bfe`** (PR #12). It was force-pushed 2026-09-26 from
+- **`main` = `1dfa271`** (PR #17). It was force-pushed 2026-09-26 from
   `feat/UT-020-laravel-api-schema` at Philipo's instruction, then PRs #3-#5
-  merged normally, then #6 to #12 (all branches kept; #10 to #12 are
-  kizaru3214's, BUILD-LOG 9j). **PR #13** (Start over hang) is open. `main` has no branch
+  merged normally, then #6 to #17 (all branches kept; #10 to #12 are
+  kizaru3214's, BUILD-LOG 9j; #13 to #17 merged by Claude at Philipo's
+  instruction, 9m). `main` has no branch
   protection.
 - **The old `main` (`55abd3b`, PR #2) is kept locally only**, as
   `backup/main-before-force-2026-09-26`. To restore it:
