@@ -1484,3 +1484,74 @@ triaged or published from this session's browser checks.
 
 **Transcript:** `my-care-session-transcript-2026-09-29.txt` (untracked, like
 the others), generated from the session log with secrets redacted.
+
+---
+
+### 9j - kizaru3214's PRs #10 to #12, and the Start over hang (PR #13, 2026-10-23 to 2026-10-25)
+
+All three are kizaru3214's. Philipo merged #10 (2026-10-23) and #12
+(2026-10-25); kizaru3214 merged #11 himself, with no review, the same evening.
+Reviewed afterwards in this session; nothing found that needed reverting.
+
+**PR #10, QA consistency pass** (`f72f657`):
+
+- `apps/api/.env.example`: `SANCTUM_STATEFUL_DOMAINS` gains `localhost:5174`
+  and `localhost:5175`, so a fresh setup can sign in to the portal and
+  console. BUILD-LOG documented it; the example never had it.
+- Patient app: a 429 on device setup is its own blocker, `busy` ("Too many
+  tries for now, wait about an hour"), instead of "Cannot reach the health
+  office". `classify()` in `sync.ts` is exported and tested (`sync.test`).
+- Change barangay from Settings no longer shows onboarding's "Step 3 of 3".
+- STATUS: the "no microphone" decision records PR #8's amendment.
+- CODEOWNERS: `@PHILIPORACOMA` and `@kizaru3214` filled in. Binghay's and
+  Seaborg's are still placeholders, so `/apps/api/`, `/apps/pwa/`, `/docs/`,
+  `/.github/` and the default owner request nobody.
+
+**PR #11, service worker off the other apps** (`1a357f6`): on one host
+(DEPLOYMENT.md) the installed patient app's `navigateFallback` answered
+`/portal/` and `/console/` with its own `index.html`. The denylist is now
+`/^\/(api|sanctum|portal|console)(\/|$)/` plus `/^\/up$/`. Would have broken
+both staff apps in production.
+
+**PR #12, patient app fixes** (pushed to the same branch after #11 merged):
+
+- Typed words the lexicon does not know now say so (`noWordsMatched`) and
+  point at the chips. With v1's empty lexicon, that is anything typed.
+- The health-tips button shows only when `tipsFor()` returns something.
+  None exist yet, so it is hidden everywhere for now. Tested.
+- A "mycare" database that is not ours (an older or foreign build at the
+  same version, other stores) used to leave the app spinning forever.
+  `open()` now rejects it and a new `StorageErrorScreen` offers Try again
+  or Start over (confirmed), which deletes the database. Tested.
+- Background sync swallows that rejection instead of an unhandled error.
+- The age gate takes kizaru3214's layout from `feat/pwa-ui-polish` (person
+  mark, question and answers mid-screen) and the language pill.
+- **Demo mode**, `npm run dev:demo -w @mycare/pwa` (`apps/pwa/src/demo.ts`):
+  loads the PR #2 invented lexicon from `@mycare/ruleset/testing` plus
+  draft tl/ceb names for all 23 chips, on the device only, and only when the
+  bundle has no lexicon of its own. **Not clinically reviewed.** Merging it
+  was Philipo's call; it widens 9e's tests-only exception to local demos.
+  Checked: a normal `vite build` contains none of the vocabulary (the import
+  is dead code outside `--mode demo`; only the property name survives). The
+  draft chip names translate clinical wording and are never a source for
+  the reviewed terms.
+
+**PR #13, Start over no longer looks dead** (this session, branch
+`fix/UT-001-storage-start-over-hang`): `deleteStorage()` had no `onblocked`
+handler, so while another tab held the database the delete waited and the
+button appeared to do nothing. It now takes an `onBlocked` callback; the
+screen says "Another My Care tab is still open. Close it, and starting over
+finishes by itself", and the queued delete reloads the app once that tab
+closes. My Care's own connections close on `versionchange`, so one My Care
+tab never blocks another. New `app.test` case holds a foreign connection
+open; it fails on `main` and passes on the branch. tl/ceb strings are drafts.
+
+**Results:** PWA 64/64 on the branch (63 on `main` after #12), typecheck
+clean; #12 green on all five CI checks before merge. Production build
+verified free of demo vocabulary.
+
+**Still open, added to STATUS:** native review of the new tl/ceb strings
+(`busyTitle`/`busyBody`, `noWordsMatched`, `tryAgain`, `storageErrorTitle`/
+`storageErrorBody`, `storageBlocked`, and demo.ts's chip names if they are
+ever shown to anyone outside a demo); Binghay's and Seaborg's GitHub
+usernames for CODEOWNERS.

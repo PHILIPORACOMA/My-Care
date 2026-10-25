@@ -9,7 +9,7 @@ moving with the patient's barangay (PR #9). `deploy/` and `docs/DEPLOYMENT.md` t
 24.04 server to a running system, and a CI job proves it by deploying with
 them on every PR. What remains is human: a real server, the first-run steps,
 the lexicon terms and the paperwork. `docs/BUILD-LOG.md` is the long-form
-record (9a to 9h).
+record (9a to 9j).
 
 **All three apps have now been opened in a real browser** (BUILD-LOG 9a). The
 Playwright suite runs the patient journey against the real API, MySQL 8 and
@@ -30,7 +30,7 @@ major decision, or closes/opens a known gap — don't let it drift.
 Paste this into a new chat session to pick up where this one left off:
 
 > Read `CLAUDE.md`, `docs/STATUS.md` and `docs/BUILD-LOG.md` first (entries
-> 9a to 9i cover the recent work), then `docs/DEPLOYMENT.md` and ADRs
+> 9a to 9j cover the recent work), then `docs/DEPLOYMENT.md` and ADRs
 > 0004-0007 in `docs/adr/` (0004 was amended 2026-09-26). The long-form record
 > of the last session is `my-care-session-transcript-2026-09-29.txt` (it spans
 > 2026-09-27 to 09-29; the one before is `...-2026-09-26.txt`) if you need
@@ -168,9 +168,10 @@ free text is proven only with the invented test lexicon.
 
 ## Git state
 
-- **`main` = `b89a53d`** (PR #9). It was force-pushed 2026-09-26 from
+- **`main` = `51c1bfe`** (PR #12). It was force-pushed 2026-09-26 from
   `feat/UT-020-laravel-api-schema` at Philipo's instruction, then PRs #3-#5
-  merged normally, then #6 to #9 (all branches kept). `main` has no branch
+  merged normally, then #6 to #12 (all branches kept; #10 to #12 are
+  kizaru3214's, BUILD-LOG 9j). **PR #13** (Start over hang) is open. `main` has no branch
   protection.
 - **The old `main` (`55abd3b`, PR #2) is kept locally only**, as
   `backup/main-before-force-2026-09-26`. To restore it:
@@ -308,9 +309,11 @@ intro sentence that claims only aggregates sync.
    **enter the reviewed lexicon terms** (Philipo). They replace the test
    fixture wholesale; point `lexicon.free-text.spec.ts` at them then.
 3. **Native review of the tl/ceb interface copy**, including PR #8's three
-   new strings (`voiceInput`, `voiceNotSupported`, `changeBarangay`).
-4. **Fill in `.github/CODEOWNERS`.** It still has placeholder usernames
-   (`@BINGHAY_USERNAME` and so on); only the team knows the real ones.
+   new strings (`voiceInput`, `voiceNotSupported`, `changeBarangay`) and
+   9j's (`busyTitle`, `busyBody`, `noWordsMatched`, `tryAgain`,
+   `storageErrorTitle`, `storageErrorBody`, `storageBlocked`).
+4. **Finish `.github/CODEOWNERS`.** Racoma and Tabañag are filled in (PR
+   #10); `@BINGHAY_USERNAME` and `@SEABORG_USERNAME` are still placeholders.
 
 The final docs pass is done (2026-09-29): README (status, badges, clone URL,
 pinned API port, specs), REPO.md (test lexicon, Laravel domain layout,
