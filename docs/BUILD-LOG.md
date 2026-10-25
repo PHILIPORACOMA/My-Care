@@ -1633,3 +1633,29 @@ was a flake: the rerun passed with no change.
 continues to the RHU fail-safe instead of a dead end); a real ordinary
 abdominal pain presentation, its question and tiers from the clinical
 appraisal.
+
+---
+
+### 9n - Unrecognised words reach the RHU fail-safe (PR #18); demo follow-ups (PR #19) (2026-10-25)
+
+**PR #18** (`feat/UT-002-unrecognised-continue`, option 2, approved): text
+the lexicon recognises none of can continue. With no symptom the engine
+gives RHU, never home (ADR-0001). The result adds "My Care could not
+recognise your symptoms… If they are severe or getting worse fast, go to
+the nearest hospital now." **That line is medical advice and needs clinical
+review**; tl/ceb are drafts. A negation alone ("walay hilanat") still
+disables Continue (UT-004's e2e step). The session syncs with
+`symptoms: []`; `replay.test.ts` already proves it replays to rhu. PWA
+70/70, Playwright 12/12 locally. A new app test was flaky under full-suite
+load: an earlier test's queued check retried into its fetch stub. It now
+looks for its own session instead of the first batch.
+
+**PR #19** (`feat/UT-005-demo-followups`, demo mode only, **invented
+clinical logic at Philipo's request**): eleven follow-up questions on
+fever, cough, diarrhea (number of days/weeks, moving the check to RHU past
+v1's own cut-offs via R-DEMO-2 to R-DEMO-4) and on headache, minor wound,
+high blood pressure, spotting, thirst (yes/no red flags giving emergency).
+They can only raise a tier. Number buttons because the engine compares
+answers as numbers. Checks that answered a demo question never sync.
+
+Merge order: #18 and #19 are independent of each other.
