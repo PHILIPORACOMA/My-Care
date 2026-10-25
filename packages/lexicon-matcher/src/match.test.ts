@@ -59,6 +59,25 @@ test("negation inside a longer sentence still excludes, and other symptoms still
   );
 });
 
+/*
+ * "naay hilanat" (I have a fever) is two edits from "walay hilanat" once the
+ * words are joined, which a 12-letter join allows. Reading a symptom as absent
+ * can under-triage, so a negation must match word for word (BUILD-LOG 9k).
+ */
+test("a positive mention one or two letters from a negation is never read as the negation", () => {
+  const [match] = matchSymptoms("naay hilanat", lexicon);
+  assert.equal(match?.symptomCode, "fixture_fever");
+  assert.equal(match?.negated, false);
+  assert.equal(matchSymptoms("naa koy hilanat", lexicon)[0]?.negated, false);
+});
+
+test("a negation still absorbs a typo inside one of its own words, or exact run-together words", () => {
+  for (const text of ["wala hilanat", "walay hilnat", "walayhilanat", "Walay-hilanat"]) {
+    const [match] = matchSymptoms(text, lexicon);
+    assert.equal(match?.negated, true, text);
+  }
+});
+
 test("a symptom mentioned both negated and plainly is reported present (fail toward escalation)", () => {
   const [match] = matchSymptoms("walay hilanat gahapon, karon hilanat", lexicon);
   assert.equal(match?.negated, false);
