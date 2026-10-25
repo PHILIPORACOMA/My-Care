@@ -92,7 +92,26 @@ function open(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(PREFS)) db.createObjectStore(PREFS);
       if (!db.objectStoreNames.contains(QUEUE)) db.createObjectStore(QUEUE, { keyPath: "client_session_uuid" });
     };
-    request.onsuccess = () => resolve(request.result);
+    request.onsuccess = () => {
+      const db = request.result;
+      // Another app on this origin can own a "mycare" database at the same
+      // version with other stores; fail clearly instead of mid-transaction.
+      if (!db.objectStoreNames.contains(PREFS) || !db.objectStoreNames.contains(QUEUE)) {
+        db.close();
+        reject(new Error("The on-device database is not My Care's."));
+        return;
+      }
+      resolve(db);
+    };
+    request.onerror = () => reject(request.error);
+  });
+}
+
+/** Last resort when the database cannot be opened at all: delete it. */
+export function deleteStorage(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.deleteDatabase(DB_NAME);
+    request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error);
   });
 }

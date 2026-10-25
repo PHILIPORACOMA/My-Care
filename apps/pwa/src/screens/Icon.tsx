@@ -24,6 +24,7 @@ export type IconName =
   | "phone"
   | "plus"
   | "search"
+  | "user"
   | "x";
 
 const PATHS: Record<IconName, string> = {
@@ -41,6 +42,7 @@ const PATHS: Record<IconName, string> = {
   phone: "M6.5 3h3l1.5 5-2.5 1.5a12 12 0 0 0 5 5L15 12l5 1.5v3a2 2 0 0 1-2 2C10.5 18.5 5.5 13.5 4.5 6a2 2 0 0 1 2-2z",
   plus: "M12 5v14M5 12h14",
   search: "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM21 21l-4.35-4.35",
+  user: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20a7.5 7.5 0 0 1 15 0",
   x: "M6 6l12 12M18 6 6 18",
 };
 

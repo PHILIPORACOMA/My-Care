@@ -71,6 +71,7 @@ const en = {
   orSelectCommon: "Or select a common symptom:",
   notADiagnosis: "This is not a diagnosis.",
   noSymptomsYet: "Type how you feel, or tap a symptom above.",
+  noWordsMatched: "My Care doesn't recognise these words yet. Please tap the symptom below that fits best.",
   noChipsYet: "Your health office has not published symptom words yet. You can still type how you feel.",
 
   // Figure 23
@@ -114,6 +115,10 @@ const en = {
   startOver: "Start over (clear data)",
   startOverConfirm: "This clears your language, barangay and any checks waiting to send. Continue?",
   cancel: "Cancel",
+  tryAgain: "Try again",
+  storageErrorTitle: "My Care can't open its storage on this phone",
+  storageErrorBody:
+    "Close any other My Care tabs and try again. If it keeps happening, start over: this clears your settings and any checks still waiting to send.",
 
   // Connectivity and errors
   needConnectionTitle: "Connect once to get started",
@@ -175,6 +180,7 @@ const tl: Dictionary = {
   orSelectCommon: "O pumili ng karaniwang sintomas:",
   notADiagnosis: "Hindi ito diagnosis.",
   noSymptomsYet: "I-type ang nararamdaman mo, o pumindot ng sintomas sa itaas.",
+  noWordsMatched: "Hindi pa kilala ng My Care ang mga salitang ito. Pakipindot ang sintomas sa ibaba na pinakaangkop.",
   noChipsYet:
     "Wala pang nailathalang mga salita para sa sintomas ang inyong health office. Maaari ka pa ring mag-type ng nararamdaman mo.",
 
@@ -218,6 +224,10 @@ const tl: Dictionary = {
   startOverConfirm:
     "Buburahin nito ang iyong wika, barangay, at anumang pagsusuring naghihintay maipadala. Magpatuloy?",
   cancel: "Kanselahin",
+  tryAgain: "Subukang muli",
+  storageErrorTitle: "Hindi mabuksan ng My Care ang storage nito sa teleponong ito",
+  storageErrorBody:
+    "Isara ang ibang tab ng My Care at subukang muli. Kung patuloy itong mangyari, magsimula muli: buburahin nito ang iyong settings at ang mga check na hindi pa naipapadala.",
 
   needConnectionTitle: "Kumonekta muna nang isang beses",
   needConnectionBody:
@@ -276,6 +286,7 @@ const ceb: Dictionary = {
   orSelectCommon: "O pagpili ug komon nga sintomas:",
   notADiagnosis: "Dili kini diagnosis.",
   noSymptomsYet: "I-type kung unsa imong gibati, o i-tap ang sintomas sa taas.",
+  noWordsMatched: "Wala pa mailhi sa My Care kini nga mga pulong. Palihug i-tap ang sintomas sa ubos nga labing haom.",
   noChipsYet:
     "Wala pa nakapatik ug mga pulong para sa sintomas ang inyong health office. Makasulat gihapon ka sa imong gibati.",
 
@@ -319,6 +330,10 @@ const ceb: Dictionary = {
   startOverConfirm:
     "Mapapas niini ang imong pinulongan, barangay, ug bisan unsang pagsusi nga naghulat ipadala. Padayon?",
   cancel: "Kanselahon",
+  tryAgain: "Sulayi pag-usab",
+  storageErrorTitle: "Dili maablihan sa My Care ang storage niini niining telepono",
+  storageErrorBody:
+    "Sirad-i ang ubang tab sa My Care ug sulayi pag-usab. Kung magpadayon kini, sugdi pag-usab: mapapas ang imong settings ug ang mga check nga wala pa napadala.",
 
   needConnectionTitle: "Kumonekta usa sa makausa",
   needConnectionBody:

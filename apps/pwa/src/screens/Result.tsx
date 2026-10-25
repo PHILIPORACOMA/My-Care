@@ -59,7 +59,8 @@ export function ResultScreen(props: {
   chips: string[];
   facilities: Facility[];
   barangayId: number | null;
-  onTips: () => void;
+  /** Absent when no tip applies, so the button never leads to an empty page. */
+  onTips?: () => void;
   onAgain: () => void;
 }) {
   const tier = props.result.tier;
@@ -106,9 +107,11 @@ export function ResultScreen(props: {
               {props.t("callForHelp")} · {number}
             </a>
           )}
-          <button className="btn" onClick={props.onTips}>
-            {props.t("viewHealthTips")}
-          </button>
+          {props.onTips && (
+            <button className="btn" onClick={props.onTips}>
+              {props.t("viewHealthTips")}
+            </button>
+          )}
           <button className="btn btn-outline" onClick={props.onAgain}>
             {props.t("checkAgain")}
           </button>
