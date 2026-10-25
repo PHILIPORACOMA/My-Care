@@ -3,7 +3,7 @@ import { test } from "node:test";
 import type { LexiconTerm } from "@mycare/ruleset";
 import { editDistance } from "./distance.js";
 import { matchSymptoms } from "./match.js";
-import { normalize } from "./normalize.js";
+import { normalize, tokenize, tokenizeClauses } from "./normalize.js";
 
 /*
  * Fixture lexicon. The words "sipon", "hilanat" and "walay hilanat" are the
@@ -118,4 +118,59 @@ test("edit distance counts an adjacent swap as one edit and stops early past the
 test("is deterministic", () => {
   const text = "naa koy sipon pero walay hilanat";
   assert.deepEqual(matchSymptoms(text, lexicon), matchSymptoms(text, lexicon));
+});
+
+/*
+ * One extra word inside a phrase (ADR-0008). The words below are fixtures
+ * for the matcher's mechanics, not clinical vocabulary.
+ */
+const phrases: LexiconTerm[] = [
+  term("fixture_belly", "grabe nga sakit sa tiyan"),
+  term("fixture_belly_plain", "sakit sa tiyan"),
+  term("fixture_head", "sakit akong ulo"),
+  term("fixture_head_word", "ulo"),
+  ...lexicon,
+  term("fixture_cough", "ubo"),
+  term("fixture_cough", "walay ubo", true),
+];
+
+test("a phrase still matches with one extra word inside it", () => {
+  assert.deepEqual(matchSymptoms("grabe kaayo nga sakit sa tiyan", phrases).map((m) => m.symptomCode), ["fixture_belly"]);
+  assert.deepEqual(matchSymptoms("sakit kaayo akong ulo karon", phrases).map((m) => m.symptomCode), ["fixture_head"]);
+});
+
+test("never with two extra words, and never in place of an exact match", () => {
+  assert.deepEqual(matchSymptoms("sakit kaayo gyud akong ulo", phrases).map((m) => m.symptomCode), ["fixture_head_word"]);
+  // The exact phrase wins over a looser reading of a longer one.
+  assert.deepEqual(matchSymptoms("grabe nga sakit sa tiyan", phrases).map((m) => m.symptomCode), ["fixture_belly"]);
+});
+
+test("the extra word is never one that already named a symptom", () => {
+  // "ulo" is claimed first, so "sakit sa ulo tiyan" is not stretched into "sakit sa tiyan".
+  assert.deepEqual(matchSymptoms("sakit sa ulo tiyan", phrases).map((m) => m.symptomCode), ["fixture_head_word"]);
+});
+
+test("the extra word never bridges two clauses", () => {
+  const onlyBelly = [term("fixture_belly_plain", "sakit sa tiyan")];
+  assert.deepEqual(matchSymptoms("sakit sa ilong, tiyan", onlyBelly), []);
+  assert.deepEqual(matchSymptoms("sakit sa ilong. Tiyan", onlyBelly), []);
+  assert.deepEqual(matchSymptoms("sakit sa ilong tiyan", onlyBelly).map((m) => m.symptomCode), ["fixture_belly_plain"]);
+});
+
+test("a negation never takes an extra word, so a later symptom is not erased", () => {
+  const matches = matchSymptoms("walay ubo pero hilanat ko", phrases);
+  assert.deepEqual(
+    matches.map((m) => [m.symptomCode, m.negated]),
+    [
+      ["fixture_cough", true],
+      ["fixture_fever", false],
+    ]
+  );
+  assert.equal(matchSymptoms("walay kaayo hilanat", phrases)[0]?.negated, false);
+});
+
+test("clauses hold the same tokens as tokenize, grouped at punctuation", () => {
+  const text = "Sakit akong ulo, ug hilanat! Walay-ubo… karon\nmao ra";
+  assert.deepEqual(tokenizeClauses(text).flat(), tokenize(text));
+  assert.deepEqual(tokenizeClauses(text), [["sakit", "akong", "ulo"], ["ug", "hilanat"], ["walayubo"], ["karon"], ["mao", "ra"]]);
 });

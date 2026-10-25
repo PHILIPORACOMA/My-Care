@@ -1,6 +1,6 @@
 import type { LanguageCode, LexiconTerm } from "@mycare/ruleset";
 import { allowedEdits, editDistance } from "./distance.js";
-import { tokenize } from "./normalize.js";
+import { tokenize, tokenizeClauses } from "./normalize.js";
 
 /**
  * The on-device NLP layer (Table 30 module 3, UT-003, UT-004).
@@ -40,22 +40,51 @@ interface Hit {
 }
 
 export function matchSymptoms(text: string, lexicon: readonly LexiconTerm[]): SymptomMatch[] {
-  const tokens = tokenize(text);
+  const clauses = tokenizeClauses(text);
+  const tokens = clauses.flat();
   if (tokens.length === 0) {
     return [];
   }
+  const clauseOf = clauses.flatMap((clause, index) => clause.map(() => index));
 
   const consumed = new Array<boolean>(tokens.length).fill(false);
   const hits: Hit[] = [];
+  const terms = prepare(lexicon);
 
-  for (const term of prepare(lexicon)) {
+  const claim = (term: PreparedTerm, start: number, width: number) => {
+    for (let i = start; i < start + width; i++) {
+      consumed[i] = true;
+    }
+    hits.push({ entry: term.entry, start });
+  };
+
+  // Words some term matches as written. An extra word inside a phrase may
+  // never be one of these, so it cannot swallow a symptom of its own.
+  const named = new Array<boolean>(tokens.length).fill(false);
+  const untouched = new Array<boolean>(tokens.length).fill(false);
+  for (const term of terms) {
+    for (let start = 0; start < tokens.length; start++) {
+      const width = matchAt(tokens, untouched, start, term);
+      for (let i = start; i < start + width; i++) {
+        named[i] = true;
+      }
+    }
+  }
+
+  // Each term as written, then with one extra word, before any shorter term.
+  // So "grabe kaayo nga sakit sa tiyan" is the longer, more severe phrase,
+  // not the plain "sakit sa tiyan" inside it.
+  for (const term of terms) {
     for (let start = 0; start < tokens.length; start++) {
       const width = matchAt(tokens, consumed, start, term);
       if (width > 0) {
-        for (let i = start; i < start + width; i++) {
-          consumed[i] = true;
-        }
-        hits.push({ entry: term.entry, start });
+        claim(term, start, width);
+      }
+    }
+    for (let start = 0; start < tokens.length; start++) {
+      const width = matchWithGap(tokens, clauseOf, consumed, named, start, term);
+      if (width > 0) {
+        claim(term, start, width);
       }
     }
   }
@@ -127,6 +156,47 @@ function matchAt(tokens: string[], consumed: boolean[], start: number, term: Pre
     }
   }
 
+  return 0;
+}
+
+/**
+ * A phrase of two or more words with exactly one extra word inside it, so
+ * "grabe kaayo nga sakit sa tiyan" meets "grabe nga sakit sa tiyan"
+ * (ADR-0008). The extra word is never one that `named` marks, a word some
+ * term matches by itself. Never for a negation: "walay ubo pero hilanat" must
+ * not read as "walay hilanat". The span stays inside one clause, and each
+ * word keeps its own allowance; no joined comparison.
+ */
+function matchWithGap(
+  tokens: string[],
+  clauseOf: number[],
+  consumed: boolean[],
+  named: boolean[],
+  start: number,
+  term: PreparedTerm
+): number {
+  const n = term.tokens.length;
+  const width = n + 1;
+  if (term.entry.isNegation || n < 2 || start + width > tokens.length) {
+    return 0;
+  }
+  if (clauseOf[start + width - 1] !== clauseOf[start]) {
+    return 0;
+  }
+  if (consumed.slice(start, start + width).some(Boolean)) {
+    return 0;
+  }
+
+  const span = tokens.slice(start, start + width);
+  for (let gap = 1; gap < n; gap++) {
+    if (named[start + gap]) {
+      continue;
+    }
+    const words = span.filter((_, i) => i !== gap);
+    if (words.every((token, i) => withinAllowance(token, term.tokens[i]!))) {
+      return width;
+    }
+  }
   return 0;
 }
 
