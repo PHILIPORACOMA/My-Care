@@ -16,16 +16,36 @@
  * Pure and deterministic: no locale-dependent behaviour.
  */
 export function normalize(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    // Apostrophe, right single quote, hyphen variants, ASCII hyphen (last, so
-    // it is literal rather than a range).
-    .replace(/(\p{L})['’‐‑-](?=\p{L})/gu, "$1")
+  return joinWords(text)
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim()
     .replace(/\s+/g, " ");
+}
+
+/** Every step of `normalize` before punctuation becomes a word break. */
+function joinWords(text: string): string {
+  return (
+    text
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      // Apostrophe, right single quote, hyphen variants, ASCII hyphen (last, so
+      // it is literal rather than a range).
+      .replace(/(\p{L})['’‐‑-](?=\p{L})/gu, "$1")
+  );
+}
+
+/**
+ * The same tokens as `tokenize`, grouped by clause: sentence and clause
+ * punctuation (. , ; : ! ? … and line breaks) starts a new group. Lets the
+ * matcher keep a skipped word from bridging two clauses, without knowing a
+ * single word of any language.
+ */
+export function tokenizeClauses(text: string): string[][] {
+  return joinWords(text)
+    .split(/[.,;:!?…\n\r]+/u)
+    .map((clause) => tokenize(clause))
+    .filter((clause) => clause.length > 0);
 }
 
 export function tokenize(text: string): string[] {
