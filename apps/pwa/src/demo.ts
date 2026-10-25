@@ -1,4 +1,12 @@
-import type { ClarificationQuestion, LanguageCode, LexiconTerm, RulesetBundle, SymptomCode, TriageRule } from "@mycare/ruleset";
+import type {
+  ClarificationQuestion,
+  LanguageCode,
+  LexiconTerm,
+  RulesetBundle,
+  SeverityThreshold,
+  SymptomCode,
+  TriageRule,
+} from "@mycare/ruleset";
 import { testLexiconTerms } from "@mycare/ruleset/testing";
 
 /**
@@ -13,7 +21,10 @@ import { testLexiconTerms } from "@mycare/ruleset/testing";
  *  - chips and the result screen get draft Tagalog and Cebuano names below;
  *  - DEMO_PHRASES adds more ways of saying each presentation;
  *  - one invented presentation, ordinary abdominal pain, shows a follow-up
- *    question deciding the tier. Checks that use it never sync.
+ *    question deciding the tier;
+ *  - invented follow-up questions on v1's milder presentations (fever, cough,
+ *    headache and others), which can only raise the tier.
+ * Checks that use any invented content never sync.
  *
  * Nothing here reaches the server's ruleset. App.tsx imports this module only
  * in demo mode, so a normal build does not contain it, and a bundle that
@@ -326,6 +337,200 @@ const DEMO_RULE: TriageRule = {
   isActive: true,
 };
 
+/*
+ * INVENTED FOLLOW-UP QUESTIONS, FOR DEMOS ONLY. Claude's draft at Philipo's
+ * request (2026-10-25). Not from the Clinical Appraisal Form, not reviewed.
+ *
+ * Where one of v1's plain presentations ("fever", "ubo", "sakit sa ulo")
+ * could be milder or worse than its tier assumes, the demo asks. Two kinds:
+ *
+ *  - "How many days?" The engine compares an answer as a number (ADR-0001's
+ *    question_key-as-attribute wiring), so the buttons are numbers and a
+ *    demo rule moves the check up to RHU past v1's own cut-off.
+ *  - A yes/no red-flag question. "Yes" is emergency at once (ADR-0001 step 1).
+ *
+ * Every question can only move a check UP from its v1 tier, never down.
+ * Emergency presentations ask nothing: they are already the top tier.
+ */
+interface FollowUp {
+  key: string;
+  symptomCode: string;
+  prompt: Record<LanguageCode, string>;
+  answers: Record<LanguageCode, string[]>;
+  /** Position of the red-flag answer, for a yes/no red-flag question. */
+  redFlag?: number;
+}
+
+const YES_NO: Record<LanguageCode, string[]> = { en: ["No", "Yes"], tl: ["Hindi", "Oo"], ceb: ["Dili", "Oo"] };
+const DAYS = ["1", "2", "3", "4", "5", "6", "7"];
+const WEEKS = ["1", "2", "3", "4"];
+const same = (answers: string[]): Record<LanguageCode, string[]> => ({ en: answers, tl: answers, ceb: answers });
+
+const DEMO_FOLLOW_UPS: FollowUp[] = [
+  {
+    key: "demo_fever_days",
+    symptomCode: "fever_mild",
+    prompt: {
+      en: "How many days have you had the fever? (7 means a week or more)",
+      tl: "Ilang araw ka nang nilalagnat? (7 kung isang linggo o higit pa)",
+      ceb: "Pila na ka adlaw ang imong hilanat? (7 kung usa ka semana o labaw pa)",
+    },
+    answers: same(DAYS),
+  },
+  {
+    key: "demo_fever_red_flags",
+    symptomCode: "fever_mild",
+    prompt: {
+      en: "Do you also have a stiff neck, confusion, or are you very hard to wake up?",
+      tl: "May paninigas ba ng leeg, pagkalito, o napakahirap mong gisingin?",
+      ceb: "Naa ba kay gahi nga liog, naglibog, o lisod kaayo ka pukawon?",
+    },
+    answers: YES_NO,
+    redFlag: 1,
+  },
+  {
+    key: "demo_cough_weeks",
+    symptomCode: "cold_cough_no_sob",
+    prompt: {
+      en: "How many weeks have you been coughing? (4 means a month or more)",
+      tl: "Ilang linggo ka nang inuubo? (4 kung isang buwan o higit pa)",
+      ceb: "Pila na ka semana ang imong ubo? (4 kung usa ka bulan o labaw pa)",
+    },
+    answers: same(WEEKS),
+  },
+  {
+    key: "demo_cough_red_flags",
+    symptomCode: "cold_cough_no_sob",
+    prompt: {
+      en: "Are you struggling to breathe, or coughing up a lot of blood?",
+      tl: "Nahihirapan ka bang huminga, o umuubo ng maraming dugo?",
+      ceb: "Lisod ba ka moginhawa, o nag-ubo og daghang dugo?",
+    },
+    answers: YES_NO,
+    redFlag: 1,
+  },
+  {
+    key: "demo_headache_red_flags",
+    symptomCode: "headache_mild_moderate",
+    prompt: {
+      en: "Is it sudden and the worst headache of your life, or do you also have weakness, slurred speech or a stiff neck?",
+      tl: "Bigla ba at ito ang pinakamatinding sakit ng ulo sa buhay mo, o may panghihina, utal na pananalita, o paninigas ng leeg?",
+      ceb: "Kalit ba ug mao ang pinakagrabe nga sakit sa ulo sa imong kinabuhi, o naa kay kahuyang, dili klaro nga pagsulti, o gahi nga liog?",
+    },
+    answers: YES_NO,
+    redFlag: 1,
+  },
+  {
+    key: "demo_diarrhea_days",
+    symptomCode: "diarrhea_mild_no_dehydration",
+    prompt: {
+      en: "How many days have you had diarrhea? (7 means a week or more)",
+      tl: "Ilang araw ka nang nagtatae? (7 kung isang linggo o higit pa)",
+      ceb: "Pila na ka adlaw ang imong kalibanga? (7 kung usa ka semana o labaw pa)",
+    },
+    answers: same(DAYS),
+  },
+  {
+    key: "demo_diarrhea_red_flags",
+    symptomCode: "diarrhea_mild_no_dehydration",
+    prompt: {
+      en: "Are you confused, fainting, or unable to keep any fluids down?",
+      tl: "Nalilito ka ba, nahihimatay, o hindi makainom nang hindi nagsusuka?",
+      ceb: "Naglibog ka ba, nakuyapan, o dili makainom nga dili mosuka?",
+    },
+    answers: YES_NO,
+    redFlag: 1,
+  },
+  {
+    key: "demo_wound_red_flags",
+    symptomCode: "minor_wound_no_infection",
+    prompt: {
+      en: "Is it bleeding heavily and not stopping when you press on it?",
+      tl: "Malakas ba ang pagdurugo at hindi tumitigil kahit diinan?",
+      ceb: "Grabe ba ang pagdugo ug dili mohunong bisan pug-on?",
+    },
+    answers: YES_NO,
+    redFlag: 1,
+  },
+  {
+    key: "demo_bp_red_flags",
+    symptomCode: "elevated_bp_mild_stable",
+    prompt: {
+      en: "Do you also have chest pain, a sudden severe headache, blurred vision, or weakness on one side?",
+      tl: "May sakit ba ng dibdib, biglaang matinding sakit ng ulo, malabong paningin, o panghihina ng isang bahagi ng katawan?",
+      ceb: "Naa ba kay sakit sa dughan, kalit nga grabe nga sakit sa ulo, lubog nga panan-aw, o kahuyang sa usa ka kilid sa lawas?",
+    },
+    answers: YES_NO,
+    redFlag: 1,
+  },
+  {
+    key: "demo_spotting_red_flags",
+    symptomCode: "spotting_first_trimester_mild",
+    prompt: {
+      en: "Is the bleeding heavy, or do you have severe pain in your belly?",
+      tl: "Malakas ba ang pagdurugo, o may matinding sakit sa tiyan?",
+      ceb: "Grabe ba ang pagdugo, o naa kay grabe nga sakit sa tiyan?",
+    },
+    answers: YES_NO,
+    redFlag: 1,
+  },
+  {
+    key: "demo_thirst_red_flags",
+    symptomCode: "excessive_thirst_urination",
+    prompt: {
+      en: "Are you confused, very drowsy, or breathing fast?",
+      tl: "Nalilito ka ba, sobrang antok, o mabilis ang paghinga?",
+      ceb: "Naglibog ka ba, katulgon kaayo, o paspas ang pagginhawa?",
+    },
+    answers: YES_NO,
+    redFlag: 1,
+  },
+];
+
+// English first in each group: the engine checks an answer against the first
+// variant (canonicalAnswer in ./triage).
+const DEMO_FOLLOW_UP_QUESTIONS: ClarificationQuestion[] = DEMO_FOLLOW_UPS.flatMap((followUp) =>
+  (["en", "tl", "ceb"] as const).map((language) => ({
+    questionKey: followUp.key,
+    symptomCode: followUp.symptomCode,
+    language,
+    prompt: followUp.prompt[language],
+    answerType: "single_select" as const,
+    allowedAnswers: followUp.answers[language],
+    ...(followUp.redFlag === undefined ? {} : { redFlagAnswer: followUp.answers[language][followUp.redFlag]! }),
+  }))
+);
+
+/** "More than N" past v1's own cut-off: fever over 3 days, cough over 2 weeks, diarrhea 2 days or more. */
+const DEMO_DURATION_RULES: { key: string; symptomCode: string; atLeast: string; name: string }[] = [
+  { key: "demo_fever_days", symptomCode: "fever_mild", atLeast: "3", name: "Fever 3 days or more (demo)" },
+  { key: "demo_cough_weeks", symptomCode: "cold_cough_no_sob", atLeast: "3", name: "Cough 3 weeks or more (demo)" },
+  { key: "demo_diarrhea_days", symptomCode: "diarrhea_mild_no_dehydration", atLeast: "2", name: "Diarrhea 2 days or more (demo)" },
+];
+
+const DEMO_THRESHOLDS: SeverityThreshold[] = DEMO_DURATION_RULES.map((rule) => ({
+  key: `${rule.key}_rhu`,
+  label: rule.name,
+  value: rule.atLeast,
+  tier: "rhu",
+  isOverride: false,
+}));
+
+const DEMO_DURATION_TRIAGE_RULES: TriageRule[] = DEMO_DURATION_RULES.map((rule, index) => ({
+  code: `R-DEMO-${index + 2}`,
+  name: rule.name,
+  expression: `IF ${rule.symptomCode} AND ${rule.key} >= ${rule.atLeast} THEN rhu`,
+  conditions: [
+    { symptomCode: rule.symptomCode, operator: "AND" },
+    { attribute: rule.key, comparator: ">=", severityThresholdKey: `${rule.key}_rhu`, operator: "AND" },
+  ],
+  outcomeTier: "rhu",
+  priority: 1000 + index,
+  isActive: true,
+}));
+
+const ASKS = new Set(DEMO_FOLLOW_UPS.map((followUp) => followUp.symptomCode));
+
 /** DEMO_PHRASES as lexicon terms, for the demo and its tests. */
 export const demoPhraseTerms: LexiconTerm[] = Object.entries(DEMO_PHRASES).flatMap(([symptomCode, byLanguage]) =>
   (Object.entries(byLanguage) as [LanguageCode, string[]][]).flatMap(([language, terms]) =>
@@ -343,7 +548,10 @@ export const demoPhraseTerms: LexiconTerm[] = Object.entries(DEMO_PHRASES).flatM
 export function withDemoLexicon(bundle: RulesetBundle | undefined): RulesetBundle | undefined {
   if (!bundle || bundle.lexiconTerms.length > 0) return bundle;
 
-  const symptomCodes = [...bundle.symptomCodes, DEMO_SYMPTOM];
+  const symptomCodes = [
+    ...bundle.symptomCodes.map((code) => (ASKS.has(code.code) ? { ...code, needsClarification: true } : code)),
+    DEMO_SYMPTOM,
+  ];
   const known = new Set(symptomCodes.map((c) => c.code));
   const labels: LexiconTerm[] = symptomCodes.flatMap((code) => [
     { symptomCode: code.code, language: "en" as const, term: code.displayName, isNegation: false },
@@ -357,16 +565,18 @@ export function withDemoLexicon(bundle: RulesetBundle | undefined): RulesetBundl
     ...bundle,
     symptomCodes,
     lexiconTerms: [...labels, ...[...testLexiconTerms, ...demoPhraseTerms].filter((t) => known.has(t.symptomCode))],
-    clarificationQuestions: [...bundle.clarificationQuestions, ...DEMO_QUESTIONS],
-    rules: [...bundle.rules, DEMO_RULE],
+    severityThresholds: [...bundle.severityThresholds, ...DEMO_THRESHOLDS],
+    clarificationQuestions: [...bundle.clarificationQuestions, ...DEMO_QUESTIONS, ...DEMO_FOLLOW_UP_QUESTIONS],
+    rules: [...bundle.rules, DEMO_RULE, ...DEMO_DURATION_TRIAGE_RULES],
   };
 }
 
 /**
- * Whether a check used the invented presentation. Such a check must stay on
- * the phone: the server rejects a batch naming a symptom code or question it
- * does not know, which would hold every real check queued behind it.
+ * Whether a check used anything invented: the demo presentation or a demo
+ * follow-up question. Such a check must stay on the phone: the server rejects
+ * a batch naming a symptom code or question it does not know, which would
+ * hold every real check queued behind it.
  */
-export function isDemoOnly(codes: readonly string[]): boolean {
-  return codes.includes(DEMO_SYMPTOM.code);
+export function isDemoOnly(codes: readonly string[], answeredKeys: readonly string[] = []): boolean {
+  return codes.includes(DEMO_SYMPTOM.code) || answeredKeys.some((key) => key.startsWith("demo_"));
 }
