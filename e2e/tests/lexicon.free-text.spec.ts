@@ -13,7 +13,8 @@ import { collectConsoleErrors, settled, shot } from "../support/page";
  *   UT-002  free text in Tagalog or Cebuano is accepted and matched
  *   UT-003  "sip-on" matches despite the spelling variation
  *   UT-004  "walay hilanat" excludes fever instead of flagging it
- *   UT-005  the matched symptoms reach the rule engine and give v1's tier
+ *   UT-005  the matched symptoms reach the rule engine and give v1's tier,
+ *           and words it cannot recognise get the RHU fail-safe, never home
  *
  * THE LEXICON IS THE INVENTED TEST FIXTURE (packages/ruleset/src/testing/
  * lexicon-fixture.ts), not reviewed vocabulary, and it is published only
@@ -152,6 +153,15 @@ test("a phone downloads it and triages free text with no signal (UT-013, UT-002 
   await expect(page.getByText("Seek emergency help immediately.")).toBeVisible();
   await shot(page, "27b-result-emergency-free-text");
   await checkAgain();
+
+  // Words the lexicon does not know: no dead end, the RHU fail-safe.
+  await type("nagkurog akong tuhod");
+  await expect(matched()).toHaveCount(0);
+  await cont().click();
+  await expect(page.getByText("Go to the nearest Rural Health Unit.")).toBeVisible();
+  await expect(page.getByText(/could not recognise your symptoms/)).toBeVisible();
+  await shot(page, "26b-result-rhu-unrecognised");
+  await checkAgain();
 });
 
 test("the free-text sessions upload with the lexicon entry that matched", async () => {
@@ -160,10 +170,17 @@ test("the free-text sessions upload with the lexicon entry that matched", async 
 
   await patient.setOffline(false);
 
-  await expect.poll(() => count("triage_sessions"), { timeout: 30_000 }).toBe(sessionsBefore + 3);
+  await expect.poll(() => count("triage_sessions"), { timeout: 30_000 }).toBe(sessionsBefore + 4);
   // Recorded against the version that was published, and each symptom points
-  // at the server's own lexicon entry - never the patient's words.
-  expect(scalar(`DB::table('triage_sessions')->where('ruleset_version_id', ${version})->count()`)).toBe(3);
+  // at the server's own lexicon entry - never the patient's words. The
+  // unrecognised check stores no symptom at all, and replays to rhu.
+  expect(scalar(`DB::table('triage_sessions')->where('ruleset_version_id', ${version})->count()`)).toBe(4);
+  expect(
+    scalar(
+      `DB::table('triage_sessions')->where('ruleset_version_id', ${version})` +
+        `->whereNotExists(fn ($q) => $q->select(DB::raw(1))->from('session_symptoms')->whereColumn('session_symptoms.triage_session_id', 'triage_sessions.id'))->count()`
+    )
+  ).toBe(1);
   expect(
     scalar(
       `DB::table('session_symptoms')->join('triage_sessions', 'triage_sessions.id', '=', 'session_symptoms.triage_session_id')` +

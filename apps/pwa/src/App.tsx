@@ -441,7 +441,11 @@ export function App() {
             setCheck((c) => ({ ...c, picked: c.picked.includes(code) ? c.picked.filter((x) => x !== code) : [...c.picked, code] }))
           }
           matches={matches}
-          canContinue={codes.length > 0}
+          // Typed words the lexicon does not know at all still go on: with no
+          // symptom the engine falls back to RHU, never home (ADR-0001). A
+          // negation alone ("walay hilanat") was understood and leaves nothing
+          // to check, so it does not.
+          canContinue={codes.length > 0 || (check.text.trim() !== "" && matches.length === 0)}
           onBack={() => setScreen("home")}
           onContinue={startCheck}
         />
@@ -477,6 +481,7 @@ export function App() {
           language={language}
           onLanguage={changeLanguage}
           result={check.result}
+          unrecognised={codes.length === 0}
           chips={bundle ? codes.map((code) => symptomLabel(bundle, code, language)) : codes}
           facilities={prefs.facilities ?? []}
           barangayId={prefs.barangay.id}
