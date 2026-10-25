@@ -466,3 +466,31 @@ describe("a phone whose storage the app cannot use", () => {
     await waitFor(async () => expect(await storage.readPrefs()).toEqual({}));
   }, 20000);
 });
+
+// Before: the delete waited silently on the other tab, so Start over looked dead.
+describe("starting over while another tab holds the storage", () => {
+  it("says to close that tab, then finishes by itself", async () => {
+    // The foreign database, held open by another tab that ignores the request.
+    await new Promise<void>((resolve) => {
+      const remove = indexedDB.deleteDatabase("mycare");
+      remove.onsuccess = () => resolve();
+    });
+    const otherTab = await new Promise<IDBDatabase>((resolve, reject) => {
+      const create = indexedDB.open("mycare", 1);
+      create.onsuccess = () => resolve(create.result);
+      create.onerror = () => reject(create.error);
+    });
+    otherTab.onversionchange = () => undefined;
+
+    const user = await launch();
+    expect(await screen.findByText(/can't open its storage/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Start over/ }));
+    await user.click(screen.getByRole("button", { name: /Start over/ }));
+
+    expect(await screen.findByText(/Another My Care tab is still open/)).toBeInTheDocument();
+
+    otherTab.close();
+    const storage = await import("./storage");
+    await waitFor(async () => expect(await storage.readPrefs()).toEqual({}));
+  }, 20000);
+});

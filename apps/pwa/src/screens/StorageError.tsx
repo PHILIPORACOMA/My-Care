@@ -5,8 +5,14 @@ import type { Translator } from "../i18n";
  * Shown when the app cannot read its own storage on the phone, instead of a
  * spinner that never ends. Try again first; starting over deletes the
  * database, so it asks before doing it, like Settings does (Figure 29).
+ * `blocked`: another tab still holds the database, so the delete is waiting.
  */
-export function StorageErrorScreen(props: { t: Translator; onRetry: () => void; onStartOver: () => void }) {
+export function StorageErrorScreen(props: {
+  t: Translator;
+  blocked?: boolean;
+  onRetry: () => void;
+  onStartOver: () => void;
+}) {
   const [confirming, setConfirming] = useState(false);
 
   return (
@@ -19,7 +25,11 @@ export function StorageErrorScreen(props: { t: Translator; onRetry: () => void; 
         </div>
       </div>
       <div className="push stack">
-        {confirming ? (
+        {props.blocked ? (
+          <p className="banner banner-warn" role="status">
+            {props.t("storageBlocked")}
+          </p>
+        ) : confirming ? (
           <>
             <p className="banner banner-warn">{props.t("startOverConfirm")}</p>
             <button className="btn btn-danger" onClick={props.onStartOver}>

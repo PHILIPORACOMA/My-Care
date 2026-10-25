@@ -110,6 +110,8 @@ export function App() {
    * which sends someone looking for signal they do not need.
    */
   const [blocker, setBlocker] = useState<BundleBlocker>();
+  // Start over is waiting for another tab to let go of the database.
+  const [storageBlocked, setStorageBlocked] = useState(false);
   const blockerFor = (e: unknown): BundleBlocker => (e instanceof BundleUnavailable ? e.reason : classify(e));
   const blockerBody = (reason: BundleBlocker) =>
     reason === "offline"
@@ -337,9 +339,10 @@ export function App() {
     return (
       <StorageErrorScreen
         t={t}
+        blocked={storageBlocked}
         onRetry={() => window.location.reload()}
         onStartOver={async () => {
-          await deleteStorage().catch(() => undefined);
+          await deleteStorage(() => setStorageBlocked(true)).catch(() => undefined);
           window.location.reload();
         }}
       />
