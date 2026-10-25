@@ -1,4 +1,4 @@
-import type { LanguageCode, LexiconTerm, RulesetBundle } from "@mycare/ruleset";
+import type { ClarificationQuestion, LanguageCode, LexiconTerm, RulesetBundle, SymptomCode, TriageRule } from "@mycare/ruleset";
 import { testLexiconTerms } from "@mycare/ruleset/testing";
 
 /**
@@ -11,7 +11,9 @@ import { testLexiconTerms } from "@mycare/ruleset/testing";
  *  - typed words come from the invented test lexicon (@mycare/ruleset/testing,
  *    kizaru3214's PR #2 draft, with its known under-triage problems);
  *  - chips and the result screen get draft Tagalog and Cebuano names below;
- *  - DEMO_PHRASES adds more ways of saying each presentation.
+ *  - DEMO_PHRASES adds more ways of saying each presentation;
+ *  - one invented presentation, ordinary abdominal pain, shows a follow-up
+ *    question deciding the tier. Checks that use it never sync.
  *
  * Nothing here reaches the server's ruleset. App.tsx imports this module only
  * in demo mode, so a normal build does not contain it, and a bundle that
@@ -255,6 +257,75 @@ const DEMO_PHRASES: Record<string, Partial<Record<LanguageCode, string[]>>> = {
   },
 };
 
+/*
+ * INVENTED CLINICAL LOGIC, FOR DEMOS ONLY. Claude's draft at Philipo's
+ * request (2026-10-25). Not from the Clinical Appraisal Form, not reviewed.
+ *
+ * v1 has no presentation for ordinary abdominal pain (its only abdominal
+ * code is the emergency one), so "stomach pain" had nowhere to go. This shows
+ * how the follow-up-question flow (Figure 23, ADR-0001 step 1) closes such a
+ * gap: two words are enough, and severity is asked for rather than guessed.
+ *
+ *  - "Severe, or my belly is hard and painful to touch" is the red-flag
+ *    answer: emergency at once.
+ *  - Any other answer: RHU, by the rule below. Never home; choosing a home
+ *    tier for abdominal pain is a clinician's call, not a demo's.
+ *
+ * The longer severe phrases (demo and test lexicon) still outrank these and
+ * go straight to abdominal_pain_severe_rigidity.
+ */
+const DEMO_SYMPTOM: SymptomCode = {
+  code: "demo_abdominal_pain",
+  displayName: "Abdominal pain (demo)",
+  needsClarification: true,
+};
+
+DEMO_LABELS[DEMO_SYMPTOM.code] = { tl: "Sakit ng tiyan (demo)", ceb: "Sakit sa tiyan (demo)" };
+
+DEMO_PHRASES[DEMO_SYMPTOM.code] = {
+  en: ["stomach pain", "stomach ache", "stomachache", "abdominal pain", "belly pain", "tummy ache", "stomach hurts", "my stomach hurts"],
+  tl: ["sakit ng tiyan", "masakit ang tiyan", "sumasakit ang tiyan", "masakit ang sikmura", "masakit ang tiyan ko"],
+  ceb: ["sakit sa tiyan", "sakit akong tiyan", "nagsakit akong tiyan", "sakit ang tiyan", "nagsakit ang tiyan"],
+};
+
+const DEMO_QUESTION_VARIANTS: { language: LanguageCode; prompt: string; allowedAnswers: string[] }[] = [
+  // English first: the engine checks answers against the first variant
+  // (canonicalAnswer in ./triage), so the others list theirs in the same order.
+  {
+    language: "en",
+    prompt: "How bad is your stomach pain?",
+    allowedAnswers: ["Mild, I can do my usual activities", "Strong, but I can still move around", "Severe, or my belly is hard and painful to touch"],
+  },
+  {
+    language: "tl",
+    prompt: "Gaano kasakit ang iyong tiyan?",
+    allowedAnswers: ["Banayad, nagagawa ko pa ang karaniwang gawain", "Malakas, pero nakakagalaw pa ako", "Matindi, o matigas at masakit hawakan ang tiyan"],
+  },
+  {
+    language: "ceb",
+    prompt: "Unsa ka grabe ang sakit sa imong tiyan?",
+    allowedAnswers: ["Hinay ra, makabuhat pa ko sa akong naandan", "Kusog, pero makalihok pa ko", "Grabe kaayo, o gahi ug sakit hikapon ang tiyan"],
+  },
+];
+
+const DEMO_QUESTIONS: ClarificationQuestion[] = DEMO_QUESTION_VARIANTS.map((variant) => ({
+  ...variant,
+  questionKey: "demo_abdominal_pain_severity",
+  symptomCode: DEMO_SYMPTOM.code,
+  answerType: "single_select",
+  redFlagAnswer: variant.allowedAnswers[2]!,
+}));
+
+const DEMO_RULE: TriageRule = {
+  code: "R-DEMO-1",
+  name: "Abdominal pain (demo), no red-flag answer",
+  expression: `IF ${DEMO_SYMPTOM.code} THEN rhu`,
+  conditions: [{ symptomCode: DEMO_SYMPTOM.code, operator: "AND" }],
+  outcomeTier: "rhu",
+  priority: 999,
+  isActive: true,
+};
+
 /** DEMO_PHRASES as lexicon terms, for the demo and its tests. */
 export const demoPhraseTerms: LexiconTerm[] = Object.entries(DEMO_PHRASES).flatMap(([symptomCode, byLanguage]) =>
   (Object.entries(byLanguage) as [LanguageCode, string[]][]).flatMap(([language, terms]) =>
@@ -272,8 +343,9 @@ export const demoPhraseTerms: LexiconTerm[] = Object.entries(DEMO_PHRASES).flatM
 export function withDemoLexicon(bundle: RulesetBundle | undefined): RulesetBundle | undefined {
   if (!bundle || bundle.lexiconTerms.length > 0) return bundle;
 
-  const known = new Set(bundle.symptomCodes.map((c) => c.code));
-  const labels: LexiconTerm[] = bundle.symptomCodes.flatMap((code) => [
+  const symptomCodes = [...bundle.symptomCodes, DEMO_SYMPTOM];
+  const known = new Set(symptomCodes.map((c) => c.code));
+  const labels: LexiconTerm[] = symptomCodes.flatMap((code) => [
     { symptomCode: code.code, language: "en" as const, term: code.displayName, isNegation: false },
     ...(["tl", "ceb"] as const).flatMap((language) => {
       const term = DEMO_LABELS[code.code]?.[language];
@@ -283,6 +355,18 @@ export function withDemoLexicon(bundle: RulesetBundle | undefined): RulesetBundl
 
   return {
     ...bundle,
+    symptomCodes,
     lexiconTerms: [...labels, ...[...testLexiconTerms, ...demoPhraseTerms].filter((t) => known.has(t.symptomCode))],
+    clarificationQuestions: [...bundle.clarificationQuestions, ...DEMO_QUESTIONS],
+    rules: [...bundle.rules, DEMO_RULE],
   };
+}
+
+/**
+ * Whether a check used the invented presentation. Such a check must stay on
+ * the phone: the server rejects a batch naming a symptom code or question it
+ * does not know, which would hold every real check queued behind it.
+ */
+export function isDemoOnly(codes: readonly string[]): boolean {
+  return codes.includes(DEMO_SYMPTOM.code);
 }

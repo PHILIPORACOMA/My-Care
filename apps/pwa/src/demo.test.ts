@@ -1,7 +1,7 @@
 import { v1Bundle } from "@mycare/ruleset";
 import { describe, expect, it } from "vitest";
-import { demoPhraseTerms, withDemoLexicon } from "./demo";
-import { chipsFor, matchSymptoms, runTriage, symptomLabel } from "./triage";
+import { demoPhraseTerms, isDemoOnly, withDemoLexicon } from "./demo";
+import { canonicalAnswer, chipsFor, matchSymptoms, questionsFor, runTriage, symptomLabel } from "./triage";
 
 /*
  * Demo mode (`npm run dev:demo`): draft, unreviewed vocabulary on the device
@@ -20,10 +20,10 @@ describe("demo mode", () => {
   it("names every chip in Tagalog and Cebuano, and keeps English as v1 wrote it", () => {
     for (const language of ["tl", "ceb"] as const) {
       for (const chip of chipsFor(demo, language)) {
-        expect(chip.label).not.toBe(v1Bundle.symptomCodes.find((c) => c.code === chip.code)!.displayName);
+        expect(chip.label).not.toBe(demo.symptomCodes.find((c) => c.code === chip.code)!.displayName);
       }
     }
-    expect(chipsFor(demo, "en")).toEqual(chipsFor(v1Bundle, "en"));
+    expect(chipsFor(demo, "en").slice(0, v1Bundle.symptomCodes.length)).toEqual(chipsFor(v1Bundle, "en"));
     expect(symptomLabel(demo, "chest_pain_severe_radiating", "tl")).toBe("Matinding sakit ng dibdib na umaabot sa braso o panga");
   });
 
@@ -53,10 +53,28 @@ describe("demo mode", () => {
     expect(tierOf("I have a fever for 3 days now")).toBe("rhu");
   });
 
-  // v1 has no code for ordinary stomach pain; the only abdominal one is emergency.
-  it("leaves plain stomach pain unrecognised rather than calling it an emergency", () => {
-    for (const text of ["sakit sa tiyan", "sakit ng tiyan", "stomach pain", "abdominal pain"]) {
-      expect(matchSymptoms(text, demo.lexiconTerms)).toEqual([]);
+  // Invented for demos: ordinary stomach pain asks how bad it is.
+  it("asks how bad plain stomach pain is, and lets the answer decide", () => {
+    const tierFor = (text: string, answerIndex = 0) => {
+      const matches = matchSymptoms(text, demo.lexiconTerms);
+      const codes = matches.map((m) => m.symptomCode);
+      const questions = questionsFor(demo, codes, "ceb");
+      const answers = Object.fromEntries(questions.map((q) => [q.questionKey, canonicalAnswer(demo, q.questionKey, answerIndex)]));
+      return { codes, asked: questions.length, tier: runTriage(demo, { picked: [], matches, answers }).tier };
+    };
+
+    for (const text of ["sakit sa tiyan", "sakit ng tiyan", "stomach pain", "stomach ache", "my stomach hurts so bad"]) {
+      expect(tierFor(text, 0)).toEqual({ codes: ["demo_abdominal_pain"], asked: 1, tier: "rhu" });
+      expect(tierFor(text, 1).tier).toBe("rhu");
+      expect(tierFor(text, 2).tier).toBe("emergency");
     }
+    // The severe phrases still skip the question and go straight to emergency.
+    expect(tierFor("grabe nga sakit sa tiyan")).toEqual({ codes: ["abdominal_pain_severe_rigidity"], asked: 0, tier: "emergency" });
+  });
+
+  it("keeps checks that used the invented presentation off the sync queue", () => {
+    expect(isDemoOnly(["demo_abdominal_pain"])).toBe(true);
+    expect(isDemoOnly(["fever_mild", "demo_abdominal_pain"])).toBe(true);
+    expect(isDemoOnly(["fever_mild"])).toBe(false);
   });
 });
