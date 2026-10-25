@@ -101,16 +101,25 @@ function open(): Promise<IDBDatabase> {
         reject(new Error("The on-device database is not My Care's."));
         return;
       }
+      // Let Start over on another tab delete the database instead of waiting.
+      db.onversionchange = () => db.close();
       resolve(db);
     };
     request.onerror = () => reject(request.error);
   });
 }
 
-/** Last resort when the database cannot be opened at all: delete it. */
-export function deleteStorage(): Promise<void> {
+/**
+ * Last resort when the database cannot be opened at all: delete it.
+ *
+ * Deleting waits while any other tab holds the database open, and without
+ * `onBlocked` nothing says so: the button just appears to do nothing. The
+ * delete stays queued and finishes as soon as that tab closes.
+ */
+export function deleteStorage(onBlocked?: () => void): Promise<void> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.deleteDatabase(DB_NAME);
+    request.onblocked = () => onBlocked?.();
     request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error);
   });

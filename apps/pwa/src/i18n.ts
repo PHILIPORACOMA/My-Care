@@ -119,6 +119,7 @@ const en = {
   storageErrorTitle: "My Care can't open its storage on this phone",
   storageErrorBody:
     "Close any other My Care tabs and try again. If it keeps happening, start over: this clears your settings and any checks still waiting to send.",
+  storageBlocked: "Another My Care tab is still open. Close it, and starting over finishes by itself.",
 
   // Connectivity and errors
   needConnectionTitle: "Connect once to get started",
@@ -228,6 +229,7 @@ const tl: Dictionary = {
   storageErrorTitle: "Hindi mabuksan ng My Care ang storage nito sa teleponong ito",
   storageErrorBody:
     "Isara ang ibang tab ng My Care at subukang muli. Kung patuloy itong mangyari, magsimula muli: buburahin nito ang iyong settings at ang mga check na hindi pa naipapadala.",
+  storageBlocked: "May nakabukas pang ibang tab ng My Care. Isara ito, at kusang matatapos ang pagsisimula muli.",
 
   needConnectionTitle: "Kumonekta muna nang isang beses",
   needConnectionBody:
@@ -334,6 +336,7 @@ const ceb: Dictionary = {
   storageErrorTitle: "Dili maablihan sa My Care ang storage niini niining telepono",
   storageErrorBody:
     "Sirad-i ang ubang tab sa My Care ug sulayi pag-usab. Kung magpadayon kini, sugdi pag-usab: mapapas ang imong settings ug ang mga check nga wala pa napadala.",
+  storageBlocked: "Naa pay laing tab sa My Care nga abli. Sirad-i kini, ug kusang mahuman ang pagsugod pag-usab.",
 
   needConnectionTitle: "Kumonekta usa sa makausa",
   needConnectionBody:
