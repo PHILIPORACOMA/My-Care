@@ -111,6 +111,17 @@ function matchAt(tokens: string[], consumed: boolean[], start: number, term: Pre
 
     // Then as joined strings, for split or run-together words. Only for
     // targets long enough to have an edit allowance, or an exact join.
+    //
+    // A negation takes only the exact join. A joined allowance can spend all
+    // its edits on one short word, and "naay hilanat" (I have a fever) sits
+    // two edits from "walay hilanat". Reading a symptom as absent can
+    // under-triage; missing a negation can only escalate.
+    if (term.entry.isNegation) {
+      if (window.join("") === term.joined) {
+        return width;
+      }
+      continue;
+    }
     if (withinAllowance(window.join(""), term.joined)) {
       return width;
     }
