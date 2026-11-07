@@ -1,6 +1,6 @@
 # Development status checkpoint
 
-Last updated: **2026-09-29.** **All nine phases are built and merged to
+Last updated: **2026-11-07.** **All nine phases are built and merged to
 `main`** (Phase 8: PR #3; Phase 9, deployment: PR #4; the barangay list shipped
 in the app: PR #5). Since then: free text tested end to end with an invented
 TEST lexicon (PR #6), line icons and a language pill (PR #7), kizaru3214's
@@ -9,7 +9,7 @@ moving with the patient's barangay (PR #9). `deploy/` and `docs/DEPLOYMENT.md` t
 24.04 server to a running system, and a CI job proves it by deploying with
 them on every PR. What remains is human: a real server, the first-run steps,
 the lexicon terms and the paperwork. `docs/BUILD-LOG.md` is the long-form
-record (9a to 9m).
+record (9a to 9o).
 
 **All three apps have now been opened in a real browser** (BUILD-LOG 9a). The
 Playwright suite runs the patient journey against the real API, MySQL 8 and
@@ -30,7 +30,8 @@ major decision, or closes/opens a known gap — don't let it drift.
 Paste this into a new chat session to pick up where this one left off:
 
 > Read `CLAUDE.md`, `docs/STATUS.md` and `docs/BUILD-LOG.md` first (entries
-> 9a to 9m cover the recent work), then `docs/DEPLOYMENT.md` and ADRs
+> 9j to 9o cover the recent work; 9o is the latest: the Batch 2 lexicon
+> appraisal form, account recovery, MySQL80 vs XAMPP), then `docs/DEPLOYMENT.md` and ADRs
 > 0004-0007 in `docs/adr/` (0004 was amended 2026-09-26). The long-form record
 > of the last session is `my-care-session-transcript-2026-09-29.txt` (it spans
 > 2026-09-27 to 09-29; the one before is `...-2026-09-26.txt`) if you need
@@ -56,6 +57,14 @@ Paste this into a new chat session to pick up where this one left off:
 > `npm run e2e -w @mycare/e2e`. It needs MySQL80 up, and it uses its own
 > ports and schema, so it never touches the dev database. Screenshots named
 > for the manuscript figures land in `e2e/screenshots/`.
+>
+> **Open right now:** PRs #18 (unrecognised words go to the RHU fail-safe)
+> and #19 (demo-only follow-up questions), CI green, independent, waiting for
+> Philipo. He is printing the Batch 2 lexicon appraisal form
+> (`Downloads\My_Care_Lexicon_Appraisal_Form_Batch2_2026-11-05_final.docx`)
+> for a second health professional, and will type the vocabulary himself.
+> He may still need to reset his super-admin password (BUILD-LOG 9o) before
+> creating an RHU portal account in the console.
 >
 > **All nine phases are built.** What is left is human: a server and domain,
 > DEPLOYMENT.md section 8's first-run steps, the lexicon terms, the appraisal
@@ -168,7 +177,9 @@ free text is proven only with the invented test lexicon.
 
 ## Git state
 
-- **`main` = `1dfa271`** (PR #17). It was force-pushed 2026-09-26 from
+- **`main` = `1dfa271`** (PR #17) plus docs. **PRs #18 and #19 are open**
+  (CI green). `docs/DEPLOYMENT.md` has a one-line whitespace edit in the
+  working tree that is not Claude's: leave it. It was force-pushed 2026-09-26 from
   `feat/UT-020-laravel-api-schema` at Philipo's instruction, then PRs #3-#5
   merged normally, then #6 to #17 (all branches kept; #10 to #12 are
   kizaru3214's, BUILD-LOG 9j; #13 to #17 merged by Claude at Philipo's

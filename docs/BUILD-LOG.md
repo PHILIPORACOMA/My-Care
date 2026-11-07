@@ -1659,3 +1659,63 @@ They can only raise a tier. Number buttons because the engine compares
 answers as numbers. Checks that answered a demo question never sync.
 
 Merge order: #18 and #19 are independent of each other.
+
+---
+
+### 9o - Lexicon appraisal form (Batch 2), run commands, account recovery (2026-10-25 to 11-07)
+
+No code changed. PRs **#18 and #19 are still open**, CI green on both,
+waiting for Philipo to merge.
+
+**`RUN-COMMANDS.txt`** at the repo root: every terminal command to set up,
+run, test and troubleshoot the system. Untracked; Philipo has not said
+whether to commit it.
+
+**Lexicon Appraisal Form, Batch 2** (for a second health professional).
+Final file: `C:\Users\epica\Downloads\My_Care_Lexicon_Appraisal_Form_Batch2_2026-11-05_final.docx`
+(+ `.pdf`), built inside the v1.1 form's own .docx package so fonts, page,
+margins and table style match exactly; 5 pages. Two older copies sit beside
+it (`..._2026-11-05.docx`, `..._v1style.docx`), kept until Philipo says.
+Decisions, in order (Philipo's):
+- **Philipo translates the vocabulary himself** (allowed: CLAUDE.md says the
+  terms come from him or the appraisal). The appraiser has little time.
+- **Only the 9 emergency presentations** ask the appraiser for words (Part B:
+  commonly described? Y/N/Unsure, words residents use, comments), because a
+  missing word there sends an emergency to the RHU fail-safe. The 14
+  home/RHU presentations' words go unreviewed: an accepted trade-off.
+- Part C: 7 follow-up candidates (fever days, cough weeks, diarrhea
+  dehydration, wound infection, headache red flags, spotting, animal bite):
+  needed? Y/N, question, **answer choices**, emergency answer.
+- Part D: 25 common adult complaints v1 lacks (ordinary stomach pain first)
+  + 2 Other: include? Y/N, tier H/RHU/E, follow-up? Y/N. The complaint list
+  is Claude's suggestion; the tiers are the appraiser's recommendation.
+- Part E: three 1-4 statements, "dangerously misread words" (write NONE),
+  comments. Part A and the attestation copy v1.1's.
+
+**When the completed form comes back,** mapping to the schema:
+- `LexiconTerm` needs `language` and `isNegation` per term: Philipo tags them
+  and writes the negations ("walay ...") when entering terms.
+- `ClarificationQuestion` needs en/tl/ceb variants with the same
+  `allowedAnswers` order (English first, ADR-0001 / `canonicalAnswer`):
+  Philipo translates. A duration question's answers must compare as numbers.
+- Part D complaints become **new symptom codes and rules**: plan first per
+  CLAUDE.md, and log the appraiser as the clinical source.
+
+An earlier, superseded draft also exists as a Claude doc
+(https://claude.ai/artifact/MBxLU7dGmAG149oSWTbc6P). Philipo has not said to
+delete it.
+
+**Accounts.** RHU/LGU portal accounts are made in the console: Users, then Add
+account (email, 12+ character password with letters and numbers, one
+barangay each). The local dev database has two super-admins:
+`super@mycare.test` (demo seeder; its seeded password no longer matches) and
+`system1@mycare.test` (Philipo's own). Philipo forgot the password; recovery,
+run by him so the password stays out of the chat:
+`php artisan tinker --execute="app(App\Domain\Accounts\AccountManager::class)->setPassword(App\Models\User::where('email','...')->firstOrFail(), '...');"`
+Not yet confirmed done.
+
+**MySQL.** My Care uses the Windows service **`MySQL80`** (MySQL 8,
+`root`, schema `mycare`). XAMPP's "MySQL" is MariaDB 10.4, not ours: it
+crashed on a corrupt phpMyAdmin table and would fight for port 3306. Keep it
+stopped. Starting `MySQL80` needs admin (`services.msc`, or `net start
+MySQL80` in an admin shell); Claude cannot.
