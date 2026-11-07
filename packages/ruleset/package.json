@@ -8,7 +8,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "tsx --test src/testing/testing.test.ts",
-    "export:v1": "tsx scripts/export-bundle.ts dist/v1.json",
+    "export:v1": "tsx scripts/export-bundle.ts dist/v1.json v1",
+    "export:v2": "tsx scripts/export-bundle.ts dist/v2.json v2",
     "export:test-lexicon": "tsx scripts/export-test-lexicon.ts dist/v1-test-lexicon.json"
   },
   "exports": {

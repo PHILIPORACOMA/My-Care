@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { RulesetBundle } from "@mycare/ruleset";
-import { v1Bundle, v1SymptomCodes } from "@mycare/ruleset";
+import { v1Bundle, v1SymptomCodes, v2Bundle, v2SymptomCodes } from "@mycare/ruleset";
 import { evaluate } from "./evaluate.js";
 
 // UT-005: matched symptoms satisfy a rule's conditions -> correct tier + rule id returned.
@@ -14,6 +14,59 @@ test("v1 bundle: every one of the 23 presentations resolves to its assigned tier
     assert.equal(result.reason, "rule_match");
     assert.equal(result.matchedRuleCode, rule.code);
   }
+});
+
+// The tiers as ticked on the Batch 2 Lexicon Appraisal Form, Part D, typed out
+// here rather than read from v2.ts so a slip in the bundle cannot pass itself.
+// Insect sting / snake bite split and back pain = home per Philipo, 2026-11-07.
+const BATCH2_TIERS: Record<string, "home" | "rhu" | "emergency"> = {
+  abdominal_pain_ordinary: "home",
+  nausea_vomiting: "rhu",
+  heartburn_acid_reflux: "emergency",
+  constipation: "home",
+  blood_in_stool: "emergency",
+  sore_throat: "home",
+  runny_blocked_nose: "home",
+  ear_pain_discharge: "rhu",
+  toothache_swollen_gums: "home",
+  red_itchy_eyes: "home",
+  skin_rash_itching: "rhu",
+  boil_abscess: "rhu",
+  burns: "emergency",
+  sprain_joint_injury: "rhu",
+  back_pain: "home",
+  joint_pain_swelling: "rhu",
+  painful_urination: "rhu",
+  dizziness_fainting: "emergency",
+  palpitations: "rhu",
+  numbness_tingling: "rhu",
+  swollen_feet_legs: "rhu",
+  tiredness_weakness: "rhu",
+  fever_with_rash_or_bleeding: "emergency",
+  insect_sting: "rhu",
+  snake_bite: "emergency",
+  vaginal_discharge_itching: "rhu",
+};
+
+test("v2 bundle: all 49 presentations resolve to their assigned tier, the 26 Batch 2 ones as appraised", () => {
+  assert.equal(v2SymptomCodes.length, 49);
+  for (const symptom of v2SymptomCodes) {
+    const rule = v2Bundle.rules.find((r) => r.conditions[0]?.symptomCode === symptom.code);
+    assert.ok(rule, `no rule found for ${symptom.code}`);
+    const result = evaluate({ symptomCodes: [symptom.code] }, v2Bundle);
+    assert.equal(result.tier, rule.outcomeTier, `${symptom.code} should resolve to ${rule.outcomeTier}`);
+    assert.equal(result.reason, "rule_match");
+    assert.equal(result.matchedRuleCode, rule.code);
+  }
+  for (const [code, tier] of Object.entries(BATCH2_TIERS)) {
+    assert.equal(evaluate({ symptomCodes: [code] }, v2Bundle).tier, tier, `${code} should resolve to ${tier}`);
+  }
+  assert.equal(Object.keys(BATCH2_TIERS).length, 26);
+});
+
+test("v2 bundle: a home complaint alongside an emergency one still resolves to emergency", () => {
+  const result = evaluate({ symptomCodes: ["sore_throat", "snake_bite"] }, v2Bundle);
+  assert.equal(result.tier, "emergency");
 });
 
 test("fail-safe default: unrecognized symptom codes resolve to rhu, never home", () => {
