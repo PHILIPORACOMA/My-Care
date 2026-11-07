@@ -1704,3 +1704,48 @@ Decisions, in order (Philipo's):
 An earlier, superseded draft also exists as a Claude doc
 (https://claude.ai/artifact/MBxLU7dGmAG149oSWTbc6P). Philipo has not said to
 delete it.
+
+---
+
+### 9p - Batch 2 form back; ruleset v2 draft from Part D (2026-11-07)
+
+**The completed Lexicon Appraisal Form (Batch 2) came back** (4 photos, so one
+page is likely missing). Appraiser: a nurse with under 3 years' experience; the
+attestation is ticked, **"agree to be named" is not**, so neither the
+manuscript nor the repo names them. Dated 11/04/26, a day before the form's
+own date of 5 Nov.
+- **Part B:** all 9 emergency presentations "commonly described: Y", but
+  **no words were written for any of them**. The emergency vocabulary is
+  still owed.
+- **Part C:** all 7 follow-ups ticked "needed". The handwriting is mostly
+  unreadable, so **Philipo will type the wording out**. The legible points:
+  spotting should ask how many pads are soaked, not the amount; for an animal
+  bite, "Do not wait for danger signs. Consult immediately".
+- **Part D:** all 25 complaints marked "include", each with a tier and
+  "follow-up: Y".
+- **Part E:** coverage 4, follow-ups acceptable 4. **"Residents can describe
+  these in a few typed words well enough to tell them apart": 2 (Disagree).**
+  The answer belongs in the manuscript's Discussion or Limitations. The
+  "dangerously misread words" line is blank.
+
+**Ruleset v2 draft** (`feat/UT-005-ruleset-v2-batch2`, approved plan):
+`packages/ruleset/src/bundle/v2.ts` = v1 unchanged + 26 new atomic symptom
+codes and rules R-024 to R-049, labelled `v2-draft`. It has the appraiser's
+Part D tiers, with two of Philipo's readings: "insect sting or snake bite" (RHU
+and E both ticked) is split into insect sting → rhu and snake bite →
+emergency; back pain (faint tick) → home. Totals: 13 home, 21 rhu,
+15 emergency. **Burns and heartburn go to emergency as ticked**, a cautious
+call by the appraiser.
+- No follow-up questions yet: the escalation comments (pain over 24 hours,
+  abdominal distention, tinnitus or hearing loss, rule out cardiac) wait for
+  Part C. No lexicon terms (none came back) and no health tips. The new
+  presentations show as English chips until terms are entered; typed text that
+  matches nothing still goes to RHU.
+- `npm run export:v2 -w @mycare/ruleset` → `dist/v2.json`, then
+  `mycare:ruleset:import` as a draft and publish from the console. CI and
+  `deploy.sh` now export v2 too. Nothing imports it automatically.
+- Tests: engine (every v2 tier, the 26 checked against a list typed from the
+  form), ruleset (v1 untouched, unique codes, column widths), Pest (import
+  gives 49 rules: 13/21/15). The check screen now shows 49 chips.
+- **One appraiser, unreviewed:** a draft for clinical review, not validated.
+  The manuscript's "23 presentations" describes v1 only.
