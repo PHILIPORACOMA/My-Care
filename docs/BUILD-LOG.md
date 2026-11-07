@@ -1728,7 +1728,7 @@ own date of 5 Nov.
   The answer belongs in the manuscript's Discussion or Limitations. The
   "dangerously misread words" line is blank.
 
-**Ruleset v2 draft** (`feat/UT-005-ruleset-v2-batch2`, approved plan):
+**Ruleset v2 draft** (PR #20, `feat/UT-005-ruleset-v2-batch2`, approved plan):
 `packages/ruleset/src/bundle/v2.ts` = v1 unchanged + 26 new atomic symptom
 codes and rules R-024 to R-049, labelled `v2-draft`. It has the appraiser's
 Part D tiers, with two of Philipo's readings: "insect sting or snake bite" (RHU

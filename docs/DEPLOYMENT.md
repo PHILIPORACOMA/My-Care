@@ -3,7 +3,6 @@
 This guide takes a fresh Ubuntu 24.04 server to a running My Care: the patient
 app, the sub-admin portal, the super-admin console and the API, on one host
 over HTTPS.
-
 **Every step here is exercised by CI.** The `deploy-smoke` workflow
 (`.github/workflows/deploy-smoke.yml`) sets up a fresh Ubuntu 24.04 machine
 with these same commands and the committed files in `deploy/`, deploys with
