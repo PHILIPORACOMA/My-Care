@@ -31,7 +31,7 @@ Paste this into a new chat session to pick up where this one left off:
 
 > Read `CLAUDE.md`, `docs/STATUS.md` and `docs/BUILD-LOG.md` first (entries
 > 9j to 9o cover the recent work; 9o is the latest: the Batch 2 lexicon
-> appraisal form, account recovery, MySQL80 vs XAMPP), then `docs/DEPLOYMENT.md` and ADRs
+> appraisal form), then `docs/DEPLOYMENT.md` and ADRs
 > 0004-0007 in `docs/adr/` (0004 was amended 2026-09-26). The long-form record
 > of the last session is `my-care-session-transcript-2026-09-29.txt` (it spans
 > 2026-09-27 to 09-29; the one before is `...-2026-09-26.txt`) if you need
@@ -63,8 +63,6 @@ Paste this into a new chat session to pick up where this one left off:
 > Philipo. He is printing the Batch 2 lexicon appraisal form
 > (`Downloads\My_Care_Lexicon_Appraisal_Form_Batch2_2026-11-05_final.docx`)
 > for a second health professional, and will type the vocabulary himself.
-> He may still need to reset his super-admin password (BUILD-LOG 9o) before
-> creating an RHU portal account in the console.
 >
 > **All nine phases are built.** What is left is human: a server and domain,
 > DEPLOYMENT.md section 8's first-run steps, the lexicon terms, the appraisal

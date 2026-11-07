@@ -1662,7 +1662,7 @@ Merge order: #18 and #19 are independent of each other.
 
 ---
 
-### 9o - Lexicon appraisal form (Batch 2), run commands, account recovery (2026-10-25 to 11-07)
+### 9o - Lexicon appraisal form (Batch 2), run commands (2026-10-25 to 11-07)
 
 No code changed. PRs **#18 and #19 are still open**, CI green on both,
 waiting for Philipo to merge.
@@ -1704,18 +1704,3 @@ Decisions, in order (Philipo's):
 An earlier, superseded draft also exists as a Claude doc
 (https://claude.ai/artifact/MBxLU7dGmAG149oSWTbc6P). Philipo has not said to
 delete it.
-
-**Accounts.** RHU/LGU portal accounts are made in the console: Users, then Add
-account (email, 12+ character password with letters and numbers, one
-barangay each). The local dev database has two super-admins:
-`super@mycare.test` (demo seeder; its seeded password no longer matches) and
-`system1@mycare.test` (Philipo's own). Philipo forgot the password; recovery,
-run by him so the password stays out of the chat:
-`php artisan tinker --execute="app(App\Domain\Accounts\AccountManager::class)->setPassword(App\Models\User::where('email','...')->firstOrFail(), '...');"`
-Not yet confirmed done.
-
-**MySQL.** My Care uses the Windows service **`MySQL80`** (MySQL 8,
-`root`, schema `mycare`). XAMPP's "MySQL" is MariaDB 10.4, not ours: it
-crashed on a corrupt phpMyAdmin table and would fight for port 3306. Keep it
-stopped. Starting `MySQL80` needs admin (`services.msc`, or `net start
-MySQL80` in an admin shell); Claude cannot.
