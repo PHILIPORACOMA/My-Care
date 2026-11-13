@@ -25,6 +25,8 @@ import type { SymptomChoice } from "./triage";
 export interface ChipGroupDefinition {
   id: string;
   label: CopyKey;
+  /** The tile name in the body-area shortcuts. */
+  short: CopyKey;
   icon: IconName;
   codes: readonly string[];
 }
@@ -32,6 +34,7 @@ export interface ChipGroupDefinition {
 export const CHIP_GROUPS: readonly ChipGroupDefinition[] = [
   {
     id: "fever",
+    short: "shortFever",
     label: "groupFever",
     icon: "thermometer",
     codes: [
@@ -45,18 +48,21 @@ export const CHIP_GROUPS: readonly ChipGroupDefinition[] = [
   },
   {
     id: "breathing",
+    short: "shortBreathing",
     label: "groupBreathing",
     icon: "wind",
     codes: ["cold_cough_no_sob", "cough_persistent", "difficulty_breathing", "sore_throat", "runny_blocked_nose"],
   },
   {
     id: "heart",
+    short: "shortHeart",
     label: "groupHeart",
     icon: "heart",
     codes: ["chest_pain_severe_radiating", "palpitations", "elevated_bp_mild_stable", "swollen_feet_legs"],
   },
   {
     id: "stomach",
+    short: "shortStomach",
     label: "groupStomach",
     icon: "stomach",
     codes: [
@@ -73,18 +79,21 @@ export const CHIP_GROUPS: readonly ChipGroupDefinition[] = [
   },
   {
     id: "head",
+    short: "shortHead",
     label: "groupHead",
     icon: "head",
     codes: ["headache_mild_moderate", "dizziness_fainting", "numbness_tingling", "stroke_signs", "seizure_loss_of_consciousness"],
   },
   {
     id: "senses",
+    short: "shortSenses",
     label: "groupSenses",
     icon: "eye",
     codes: ["red_itchy_eyes", "ear_pain_discharge", "toothache_swollen_gums"],
   },
   {
     id: "skin",
+    short: "shortSkin",
     label: "groupSkin",
     icon: "bandage",
     codes: [
@@ -102,12 +111,14 @@ export const CHIP_GROUPS: readonly ChipGroupDefinition[] = [
   },
   {
     id: "muscles",
+    short: "shortMuscles",
     label: "groupMuscles",
     icon: "bone",
     codes: ["muscle_pain_post_exertion", "back_pain", "joint_pain_swelling", "sprain_joint_injury"],
   },
   {
     id: "women",
+    short: "shortWomen",
     label: "groupWomen",
     icon: "female",
     codes: [
@@ -119,11 +130,12 @@ export const CHIP_GROUPS: readonly ChipGroupDefinition[] = [
   },
 ];
 
-export const OTHER_GROUP: Omit<ChipGroupDefinition, "codes"> = { id: "other", label: "groupOther", icon: "more" };
+export const OTHER_GROUP: Omit<ChipGroupDefinition, "codes"> = { id: "other", label: "groupOther", short: "shortOther", icon: "more" };
 
 export interface ChipGroup {
   id: string;
   label: CopyKey;
+  short: CopyKey;
   icon: IconName;
   chips: SymptomChoice[];
 }
@@ -143,7 +155,7 @@ export function groupChips(chips: SymptomChoice[]): ChipGroup[] {
       .filter((chip): chip is SymptomChoice => chip !== undefined && !placed.has(chip.code));
     inGroup.forEach((chip) => placed.add(chip.code));
     if (inGroup.length > 0) {
-      groups.push({ id: definition.id, label: definition.label, icon: definition.icon, chips: inGroup });
+      groups.push({ id: definition.id, label: definition.label, short: definition.short, icon: definition.icon, chips: inGroup });
     }
   }
 

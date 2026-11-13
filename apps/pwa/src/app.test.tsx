@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -164,9 +164,16 @@ describe("a patient checking their symptoms", () => {
     await user.click(await screen.findByRole("button", { name: /Susiha ang sintomas/ }));
     // This fixture's codes are not in chip-groups.ts, so its chips still show,
     // under "Other" in the patient's language, rather than vanishing.
-    expect(await screen.findByRole("heading", { name: "Uban pa" })).toBeInTheDocument();
+    const other = await screen.findByRole("heading", { name: "Uban pa" });
+    // A body-area shortcut moves focus to its group, so a keyboard or
+    // screen-reader user lands where the page scrolled to.
+    const shortcuts = screen.getByRole("navigation", { name: "Adto sa bahin sa lawas" });
+    await user.click(within(shortcuts).getByRole("button", { name: "Uban pa" }));
+    expect(other).toHaveFocus();
     // Tapping the chip rather than typing: the same structured output.
     await user.click(await screen.findByRole("button", { name: /hilanat/ }));
+    // The footer says what is picked while the patient scrolls on.
+    expect(screen.getByRole("status")).toHaveTextContent(/^1 ang napili · .*hilanat/);
     await user.click(screen.getByRole("button", { name: "Padayon" }));
 
     await user.click(await screen.findByRole("button", { name: "grabe" }));
