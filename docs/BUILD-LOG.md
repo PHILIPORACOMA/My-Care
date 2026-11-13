@@ -1749,3 +1749,26 @@ call by the appraiser.
   gives 49 rules: 13/21/15). The check screen now shows 49 chips.
 - **One appraiser, unreviewed:** a draft for clinical review, not validated.
   The manuscript's "23 presentations" describes v1 only.
+
+---
+
+### 9q - Symptom chips grouped by body area (PR #21) (2026-11-13)
+
+Philipo found Figure 22's chips unorganised: one flat list in code order,
+severe and mild presentations mixed together. **PR #21**
+(`feat/UT-002-chip-groups`, approved plan) puts them under body-area
+headings, each with a line icon: fever and general, breathing, heart, stomach,
+head and nerves, eyes/ears/mouth, skin and bites, muscles and joints, women's
+health and urination, and a catch-all "Other". Checked in the demo PWA in
+English and Cebuano: 24 chips, 8 groups, none under Other.
+- **Layout only.** No tier, rule, lexicon or synced field changes. The map is
+  `apps/pwa/src/chip-groups.ts`, because SYMPTOM_CODE (Table 7) has no
+  category column (no amendment).
+- Ordered by body area, **never by urgency**. All groups open, so no
+  emergency chip is behind an extra tap. An unmapped code goes to "Other";
+  empty groups are hidden. The map already covers PR #20's v2 codes.
+- Icons are inline SVG in Lucide's stroke style (ISC); stomach, head and
+  female are drawn by hand. No dependency added.
+- **Owed:** native review of the tl/ceb headings, and clinical review of
+  which group each presentation sits in (e.g. allergic reaction under skin,
+  swollen legs under heart, excessive thirst under fever and general).
