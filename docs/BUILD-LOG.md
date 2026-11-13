@@ -1772,3 +1772,27 @@ English and Cebuano: 24 chips, 8 groups, none under Other.
 - **Owed:** native review of the tl/ceb headings, and clinical review of
   which group each presentation sits in (e.g. allergic reaction under skin,
   swollen legs under heart, excessive thirst under fever and general).
+
+---
+
+### 9r - Symptom input redesign A (PR #21) (2026-11-13)
+
+Philipo found Figure 22 plain. Three directions were mocked up on a private
+design canvas (https://claude.ai/artifact/42KrTf35NFngEhiEGyCPjD): A, a teal
+header with body-area shortcuts; B, calm cards with "we recognised" words;
+C, checklist rows. **He chose A**, built into PR #21 on top of the grouping:
+- **Teal header band** with the title and "Nothing you write leaves this
+  phone" (true: raw text never syncs, non-negotiable #8). The text box is a
+  card overlapping it, with a "Cebuano, Tagalog or English" hint by the mic.
+- **Shortcut tiles**, one per body-area group: buttons that scroll to the
+  group and focus its heading (no `#` links, so the URL never changes). Every
+  group stays open below.
+- **A footer that stays in view**: "{n} selected" with the picked labels,
+  Continue, the disclaimer.
+- Same textbox, chips, codes and Continue; existing English copy kept; 14
+  new strings (tl/ceb drafts). CSS and markup only. Build: 65.9 kB gzipped
+  JS, 4.1 kB CSS. 74/74 PWA tests.
+- Philipo accepted that **Figure 22's screenshot will no longer match** the
+  app's look; its described function still holds, so no amendment.
+- Not used from the mockups: B's hint lines and "we recognised" panel,
+  C's checklist rows. Either could be added later.
