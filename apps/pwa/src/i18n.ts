@@ -17,6 +17,8 @@ import type { LanguageCode } from "@mycare/ruleset";
  * Nothing here is clinical *content* — no symptom names, no lexicon terms, no
  * health tips. Those live in the published ruleset and are authored by the
  * team (CLAUDE.md: never invent Cebuano or Tagalog symptom vocabulary).
+ * The chip group headings (`group*`) name body areas, not symptoms, and are
+ * never matched against typed text; their tl/ceb are drafts like the rest.
  *
  * The keys below are identical across the three dictionaries; a test enforces
  * that, so a missing translation can never silently fall back mid-screen.
@@ -73,6 +75,32 @@ const en = {
   noSymptomsYet: "Type how you feel, or tap a symptom above.",
   noWordsMatched: "My Care doesn't recognise these words yet. Please tap the symptom below that fits best.",
   noChipsYet: "Your health office has not published symptom words yet. You can still type how you feel.",
+  // Chip groups (chip-groups.ts): body areas, never ordered by urgency.
+  groupFever: "Fever and general",
+  groupBreathing: "Breathing, nose and throat",
+  groupHeart: "Heart and circulation",
+  groupStomach: "Stomach and digestion",
+  groupHead: "Head and nerves",
+  groupSenses: "Eyes, ears and mouth",
+  groupSkin: "Skin, wounds and bites",
+  groupMuscles: "Muscles and joints",
+  groupWomen: "Women's health and urination",
+  groupOther: "Other",
+  // Design A: the header line, the hint under the box, the shortcut tiles.
+  inputLead: "Type in your own words, or tap what fits below. Nothing you write leaves this phone.",
+  languageHint: "Cebuano, Tagalog or English",
+  jumpToArea: "Jump to a body area",
+  chipsSelected: "{n} selected",
+  shortFever: "Fever",
+  shortBreathing: "Breathing",
+  shortHeart: "Heart",
+  shortStomach: "Stomach",
+  shortHead: "Head",
+  shortSenses: "Eyes, ears",
+  shortSkin: "Skin, bites",
+  shortMuscles: "Muscles",
+  shortWomen: "Women",
+  shortOther: "Other",
 
   // Figure 23
   clarifyIntro: "A few more questions to ensure the right guidance.",
@@ -184,6 +212,30 @@ const tl: Dictionary = {
   noWordsMatched: "Hindi pa kilala ng My Care ang mga salitang ito. Pakipindot ang sintomas sa ibaba na pinakaangkop.",
   noChipsYet:
     "Wala pang nailathalang mga salita para sa sintomas ang inyong health office. Maaari ka pa ring mag-type ng nararamdaman mo.",
+  groupFever: "Lagnat at pangkalahatan",
+  groupBreathing: "Paghinga, ilong at lalamunan",
+  groupHeart: "Puso at sirkulasyon",
+  groupStomach: "Tiyan at pagtunaw",
+  groupHead: "Ulo at nerbiyos",
+  groupSenses: "Mata, tainga at bibig",
+  groupSkin: "Balat, sugat at kagat",
+  groupMuscles: "Kalamnan at kasukasuan",
+  groupWomen: "Kalusugan ng babae at pag-ihi",
+  groupOther: "Iba pa",
+  inputLead: "I-type sa sarili mong salita, o pumindot ng angkop sa ibaba. Hindi umaalis sa teleponong ito ang anumang isinulat mo.",
+  languageHint: "Cebuano, Tagalog o Ingles",
+  jumpToArea: "Pumunta sa bahagi ng katawan",
+  chipsSelected: "{n} ang napili",
+  shortFever: "Lagnat",
+  shortBreathing: "Paghinga",
+  shortHeart: "Puso",
+  shortStomach: "Tiyan",
+  shortHead: "Ulo",
+  shortSenses: "Mata, tainga",
+  shortSkin: "Balat, kagat",
+  shortMuscles: "Kalamnan",
+  shortWomen: "Babae",
+  shortOther: "Iba pa",
 
   clarifyIntro: "Ilang tanong pa para masiguro ang tamang gabay.",
   questionCounter: "Tanong {n} ng {total} · pindutin ang iyong sagot",
@@ -291,6 +343,30 @@ const ceb: Dictionary = {
   noWordsMatched: "Wala pa mailhi sa My Care kini nga mga pulong. Palihug i-tap ang sintomas sa ubos nga labing haom.",
   noChipsYet:
     "Wala pa nakapatik ug mga pulong para sa sintomas ang inyong health office. Makasulat gihapon ka sa imong gibati.",
+  groupFever: "Hilanat ug kinatibuk-an",
+  groupBreathing: "Pagginhawa, ilong ug tutunlan",
+  groupHeart: "Kasingkasing ug sirkulasyon",
+  groupStomach: "Tiyan ug paghilis",
+  groupHead: "Ulo ug nerbiyos",
+  groupSenses: "Mata, dalunggan ug baba",
+  groupSkin: "Panit, samad ug pinaak",
+  groupMuscles: "Kaunuran ug lutahan",
+  groupWomen: "Panglawas sa babaye ug pag-ihi",
+  groupOther: "Uban pa",
+  inputLead: "I-type sa imong kaugalingong pulong, o i-tap ang haom sa ubos. Dili mobiya niining telepono ang bisan unsa nga imong gisulat.",
+  languageHint: "Cebuano, Tagalog o Iningles",
+  jumpToArea: "Adto sa bahin sa lawas",
+  chipsSelected: "{n} ang napili",
+  shortFever: "Hilanat",
+  shortBreathing: "Pagginhawa",
+  shortHeart: "Kasingkasing",
+  shortStomach: "Tiyan",
+  shortHead: "Ulo",
+  shortSenses: "Mata, dalunggan",
+  shortSkin: "Panit, pinaak",
+  shortMuscles: "Kaunuran",
+  shortWomen: "Babaye",
+  shortOther: "Uban pa",
 
   clarifyIntro: "Pipila pa ka pangutana aron masiguro ang husto nga giya.",
   questionCounter: "Pangutana {n} sa {total} · i-tap ang imong tubag",

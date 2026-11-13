@@ -517,6 +517,35 @@ button.pill {
   color: var(--ink-placeholder);
 }
 
+/* Body-area groups (chip-groups.ts). All open: nothing behind an extra tap. */
+.chip-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+.chip-group-title {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0 0 var(--s-2);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.chip-group-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--teal-tint);
+  color: var(--teal-dark);
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;
@@ -1169,5 +1198,216 @@ button.pill {
   .result-sheet > * {
     width: 100%;
     max-width: 560px;
+  }
+}
+
+/* ------------------------------------------- symptom input, design A (9q) */
+
+/*
+ * Figure 22 as design A: a teal header band, the text box as a card
+ * overlapping it, body-area shortcut tiles, and a footer that stays in view.
+ * Kept last so it wins over the general larger-screen rules above.
+ */
+.screen-input {
+  padding-bottom: 0;
+}
+
+.input-hero {
+  margin: calc(-1 * max(var(--s-5), env(safe-area-inset-top))) calc(-1 * var(--gutter)) 0;
+  padding: max(var(--s-5), env(safe-area-inset-top)) var(--gutter) 64px;
+  background: var(--teal);
+  color: #fff;
+}
+
+.input-hero-inner,
+.input-footer-inner {
+  max-width: min(var(--page, 760px), 760px);
+  margin: 0 auto;
+}
+
+/* The shared controls, restyled for the teal band: the darker teal keeps
+   white 12px text above 4.5:1. */
+.input-hero .top-row .icon-btn,
+.input-hero .top-row .pill {
+  background: var(--teal-dark);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+
+.input-hero .title {
+  color: #fff;
+  margin: var(--s-6) 0 var(--s-2);
+}
+
+.input-hero-lead {
+  margin: 0;
+  font-size: var(--fs-body);
+  line-height: 1.5;
+}
+
+.input-card {
+  position: relative;
+  margin-top: -44px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  box-shadow: 0 10px 30px rgba(13, 60, 52, 0.12);
+  padding: var(--s-4);
+}
+
+.input-card label {
+  display: block;
+}
+
+.input-card .textarea {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  min-height: 110px;
+  background: transparent;
+  font-size: var(--fs-lead);
+  line-height: 1.5;
+}
+
+.input-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.input-card-hint {
+  font-size: var(--fs-caption);
+  color: var(--ink-soft);
+}
+
+.input-card .mic-btn {
+  position: static;
+}
+
+.input-card + .note {
+  margin-top: var(--s-3);
+}
+
+.screen-input .section-label {
+  /* Top and bottom only: the sides are the desktop column's auto margins. */
+  margin-top: var(--s-6);
+  margin-bottom: var(--s-3);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.area-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-2);
+  margin-bottom: var(--s-6);
+}
+
+.area-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-height: 80px;
+  padding: var(--s-3) var(--s-1) 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  line-height: 1.25;
+  text-align: center;
+  cursor: pointer;
+}
+
+.area-tile:active {
+  background: var(--teal-tint);
+}
+
+.area-tile-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--teal-tint);
+  color: var(--teal-dark);
+}
+
+.screen-input .chip-groups {
+  margin-bottom: var(--s-6);
+}
+
+/* The heading a shortcut focuses: clear of the top edge, no focus box on a
+   mouse tap (keyboard focus still shows the global ring). */
+.chip-group-title {
+  scroll-margin-top: var(--s-4);
+}
+
+.chip-group-title:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.input-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  margin: auto calc(-1 * var(--gutter)) 0;
+  padding: var(--s-3) var(--gutter) max(var(--s-4), env(safe-area-inset-bottom));
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.input-footer-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.input-summary {
+  margin: 0;
+  font-size: var(--fs-small);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.input-summary strong {
+  font-weight: 600;
+}
+
+.input-footer .disclaimer {
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .screen.screen-input {
+    padding-bottom: 0;
+  }
+
+  .screen.screen-input > .input-hero,
+  .screen.screen-input > .input-footer {
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .screen.screen-input > .input-hero {
+    margin-top: 0;
+    padding: var(--s-4) var(--gutter) 72px;
+  }
+
+  .area-tiles {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   }
 }

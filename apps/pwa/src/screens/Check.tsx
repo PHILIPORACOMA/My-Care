@@ -1,6 +1,7 @@
 import type { ClarificationQuestion, LanguageCode } from "@mycare/ruleset";
 import type { SymptomMatch } from "@mycare/lexicon-matcher";
 import { useEffect, useState } from "react";
+import { groupChips } from "../chip-groups";
 import type { Translator } from "../i18n";
 import type { SymptomChoice } from "../triage";
 import { Icon } from "./Icon";
@@ -31,24 +32,29 @@ export function InputScreen(props: {
   onContinue: () => void;
 }) {
   const [voiceNote, setVoiceNote] = useState(false);
+  const groups = groupChips(props.chips);
+  const pickedLabels = props.chips.filter((chip) => props.picked.includes(chip.code)).map((chip) => chip.label);
 
   return (
     <div className="screen screen-input">
-      <div className="top-row">
-        <button className="icon-btn" onClick={props.onBack} aria-label={props.t("back")}>
-          <Icon name="chevronLeft" size={18} />
-        </button>
-        <div className="row-inline">
-          <LanguagePill t={props.t} language={props.language} onChange={props.onLanguage} />
-          <OfflineBadge t={props.t} />
+      {/* Design A (BUILD-LOG 9q): a teal header band, the text box overlapping it. */}
+      <header className="input-hero">
+        <div className="input-hero-inner">
+          <div className="top-row">
+            <button className="icon-btn icon-btn-round" onClick={props.onBack} aria-label={props.t("back")}>
+              <Icon name="chevronLeft" size={18} />
+            </button>
+            <div className="row-inline">
+              <LanguagePill t={props.t} language={props.language} onChange={props.onLanguage} />
+              <OfflineBadge t={props.t} />
+            </div>
+          </div>
+          <h1 className="title">{props.t("whatAreYourSymptoms")}</h1>
+          <p className="input-hero-lead">{props.t("inputLead")}</p>
         </div>
-      </div>
+      </header>
 
-      <h1 className="title">
-        {props.t("whatAreYourSymptoms")}
-      </h1>
-
-      <div className="textarea-wrap">
+      <div className="input-card">
         <label>
           <span className="sr-only">{props.t("whatAreYourSymptoms")}</span>
           <textarea
@@ -59,12 +65,15 @@ export function InputScreen(props: {
               setVoiceNote(false);
             }}
             placeholder={props.t("symptomPlaceholder")}
-            rows={5}
+            rows={4}
           />
         </label>
-        <button type="button" className="mic-btn" aria-label={props.t("voiceInput")} onClick={() => setVoiceNote(true)}>
-          <Icon name="mic" size={20} />
-        </button>
+        <div className="input-card-foot">
+          <span className="input-card-hint">{props.t("languageHint")}</span>
+          <button type="button" className="mic-btn" aria-label={props.t("voiceInput")} onClick={() => setVoiceNote(true)}>
+            <Icon name="mic" size={20} />
+          </button>
+        </div>
       </div>
       {voiceNote && (
         <p className="note" role="status">
@@ -88,30 +97,77 @@ export function InputScreen(props: {
       {props.chips.length === 0 ? (
         <p className="banner">{props.t("noChipsYet")}</p>
       ) : (
-        <div className="chips">
-          {props.chips.map((chip) => (
-            <button
-              key={chip.code}
-              className="chip"
-              aria-pressed={props.picked.includes(chip.code)}
-              onClick={() => props.onToggleChip(chip.code)}
-            >
-              <Icon name={props.picked.includes(chip.code) ? "check" : "plus"} size={16} />
-              {chip.label}
-            </button>
+        <>
+          {/* Shortcuts only: every group below stays open, so no chip is ever
+              behind an extra tap. Buttons, not #links, so the URL never changes. */}
+          <nav className="area-tiles" aria-label={props.t("jumpToArea")}>
+            {groups.map((group) => (
+              <button key={group.id} type="button" className="area-tile" onClick={() => jumpTo(group.id)}>
+                <span className="area-tile-icon">
+                  <Icon name={group.icon} size={19} />
+                </span>
+                {props.t(group.short)}
+              </button>
+            ))}
+          </nav>
+          <div className="chip-groups">
+          {groups.map((group) => (
+            <section key={group.id} className="chip-group" aria-labelledby={`chip-group-${group.id}`}>
+              <h2 className="chip-group-title" id={`chip-group-${group.id}`} tabIndex={-1}>
+                <span className="chip-group-icon">
+                  <Icon name={group.icon} size={18} />
+                </span>
+                {props.t(group.label)}
+              </h2>
+              <div className="chips">
+                {group.chips.map((chip) => (
+                  <button
+                    key={chip.code}
+                    className="chip"
+                    aria-pressed={props.picked.includes(chip.code)}
+                    onClick={() => props.onToggleChip(chip.code)}
+                  >
+                    <Icon name={props.picked.includes(chip.code) ? "check" : "plus"} size={16} />
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+            </section>
           ))}
-        </div>
+          </div>
+        </>
       )}
 
-      <div className="push stack">
-        {!props.canContinue && <p className="disclaimer">{props.t("noSymptomsYet")}</p>}
-        <button className="btn" disabled={!props.canContinue} onClick={props.onContinue}>
-          {props.t("continue")}
-        </button>
-        <p className="disclaimer">{props.t("notADiagnosis")}</p>
+      {/* Stays in view while the patient scrolls the groups. */}
+      <div className="input-footer">
+        <div className="input-footer-inner">
+          {pickedLabels.length > 0 && (
+            <p className="input-summary" role="status">
+              <strong>{props.t("chipsSelected", { n: pickedLabels.length })}</strong> · {pickedLabels.join(" · ")}
+            </p>
+          )}
+          {!props.canContinue && <p className="disclaimer">{props.t("noSymptomsYet")}</p>}
+          <button className="btn" disabled={!props.canContinue} onClick={props.onContinue}>
+            {props.t("continue")}
+          </button>
+          <p className="disclaimer">{props.t("notADiagnosis")}</p>
+        </div>
       </div>
     </div>
   );
+}
+
+/**
+ * Scrolls to a body-area group and moves focus to its heading, so keyboard and
+ * screen-reader users land where sighted users see the page jump to. Smooth
+ * only when the patient has not asked for reduced motion.
+ */
+function jumpTo(groupId: string) {
+  const heading = document.getElementById(`chip-group-${groupId}`);
+  if (!heading) return;
+  const reduce = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  heading.scrollIntoView?.({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  heading.focus({ preventScroll: true });
 }
 
 /**
