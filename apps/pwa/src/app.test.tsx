@@ -162,6 +162,9 @@ describe("a patient checking their symptoms", () => {
     await user.click(screen.getByRole("button", { name: /Kumpirmaha ang barangay/ }));
 
     await user.click(await screen.findByRole("button", { name: /Susiha ang sintomas/ }));
+    // This fixture's codes are not in chip-groups.ts, so its chips still show,
+    // under "Other" in the patient's language, rather than vanishing.
+    expect(await screen.findByRole("heading", { name: "Uban pa" })).toBeInTheDocument();
     // Tapping the chip rather than typing: the same structured output.
     await user.click(await screen.findByRole("button", { name: /hilanat/ }));
     await user.click(screen.getByRole("button", { name: "Padayon" }));

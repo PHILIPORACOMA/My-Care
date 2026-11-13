@@ -517,6 +517,35 @@ button.pill {
   color: var(--ink-placeholder);
 }
 
+/* Body-area groups (chip-groups.ts). All open: nothing behind an extra tap. */
+.chip-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+.chip-group-title {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0 0 var(--s-2);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.chip-group-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--teal-tint);
+  color: var(--teal-dark);
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;

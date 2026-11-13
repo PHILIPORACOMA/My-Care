@@ -1,6 +1,7 @@
 import type { ClarificationQuestion, LanguageCode } from "@mycare/ruleset";
 import type { SymptomMatch } from "@mycare/lexicon-matcher";
 import { useEffect, useState } from "react";
+import { groupChips } from "../chip-groups";
 import type { Translator } from "../i18n";
 import type { SymptomChoice } from "../triage";
 import { Icon } from "./Icon";
@@ -88,17 +89,29 @@ export function InputScreen(props: {
       {props.chips.length === 0 ? (
         <p className="banner">{props.t("noChipsYet")}</p>
       ) : (
-        <div className="chips">
-          {props.chips.map((chip) => (
-            <button
-              key={chip.code}
-              className="chip"
-              aria-pressed={props.picked.includes(chip.code)}
-              onClick={() => props.onToggleChip(chip.code)}
-            >
-              <Icon name={props.picked.includes(chip.code) ? "check" : "plus"} size={16} />
-              {chip.label}
-            </button>
+        <div className="chip-groups">
+          {groupChips(props.chips).map((group) => (
+            <section key={group.id} className="chip-group" aria-labelledby={`chip-group-${group.id}`}>
+              <h2 className="chip-group-title" id={`chip-group-${group.id}`}>
+                <span className="chip-group-icon">
+                  <Icon name={group.icon} size={18} />
+                </span>
+                {props.t(group.label)}
+              </h2>
+              <div className="chips">
+                {group.chips.map((chip) => (
+                  <button
+                    key={chip.code}
+                    className="chip"
+                    aria-pressed={props.picked.includes(chip.code)}
+                    onClick={() => props.onToggleChip(chip.code)}
+                  >
+                    <Icon name={props.picked.includes(chip.code) ? "check" : "plus"} size={16} />
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       )}
