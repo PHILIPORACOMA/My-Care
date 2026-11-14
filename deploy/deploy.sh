@@ -79,6 +79,7 @@ log "Node dependencies and builds"
 npm ci --no-audit --no-fund
 npm run build -w @mycare/engine-replay
 npm run export:v1 -w @mycare/ruleset
+npm run export:v2 -w @mycare/ruleset
 npm run build -w @mycare/pwa
 npm run build -w @mycare/portal
 npm run build -w @mycare/console

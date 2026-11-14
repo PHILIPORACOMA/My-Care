@@ -351,3 +351,21 @@ it('imports the exported v1 bundle file through the artisan command', function (
         ->and($version->rules()->count())->toBe(23)
         ->and($version->rules()->where('outcome_tier', 'emergency')->count())->toBe(9);
 });
+
+it('imports the exported v2 bundle (v1 + Lexicon Appraisal Batch 2) as a draft', function () {
+    $path = base_path('../../packages/ruleset/dist/v2.json');
+
+    if (! is_readable($path)) {
+        $this->markTestSkipped('Run `npm run export:v2 -w @mycare/ruleset` first.');
+    }
+
+    $this->artisan('mycare:ruleset:import', ['file' => $path])->assertSuccessful();
+
+    $version = RulesetVersion::latest('id')->firstOrFail();
+
+    expect($version->status)->toBe(RulesetStatus::DRAFT)
+        ->and($version->rules()->count())->toBe(49)
+        ->and($version->rules()->where('outcome_tier', 'home')->count())->toBe(13)
+        ->and($version->rules()->where('outcome_tier', 'rhu')->count())->toBe(21)
+        ->and($version->rules()->where('outcome_tier', 'emergency')->count())->toBe(15);
+});
