@@ -115,3 +115,24 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* Emergency numbers: the number being saved, large enough to check digit by
+   digit against what the RHU sent (FacilitiesPage). */
+.number-check {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: var(--s-2) var(--s-4);
+  margin: 0;
+}
+
+.number-check dd {
+  margin: 0;
+  font-size: var(--fs-2xl);
+  font-variant-numeric: tabular-nums;
+}
+
+.number-check .is-old {
+  font-size: var(--fs-xl);
+  color: var(--text-soft);
+}

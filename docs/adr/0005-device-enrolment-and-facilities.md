@@ -78,6 +78,30 @@ through the model so each change is audited. The PWA prefers a facility of type
 `emergency_hotline`, then `rhu`, and falls back to the national emergency number
 911 when nothing is configured.
 
+**Amended 2026-11-14: numbers are editable in the console.** When an RHU
+reports a new number, it reaches the super-admin outside the app (a call or a
+message), and the super-admin changes it on the console's "Emergency numbers"
+page (`Console\FacilityController`: list, add, edit, deactivate; never
+delete). RHU staff see the numbers their patients may be given on a read-only
+portal page (`GET /api/v1/staff/facilities`), scoped through `BarangayScope`
+to their own barangay plus the city-wide facilities.
+
+- **No schema change, no new table.** An in-app "request a change" flow was
+  considered and rejected by Philipo: it needs a table for pending requests,
+  beyond the manuscript's 20 entities.
+- **Every number must be dialable** (`Domain/Facility/FacilityRules`: digits,
+  spaces, hyphens, brackets, a leading `+`, at least 3 digits, at most 30
+  characters). The CSV importer uses the same rule. A number can be changed
+  but not cleared; to stop using a facility, deactivate it.
+- **The console confirms before saving**, showing the old and new number in
+  large type, and warns before the last active number is deactivated (phones
+  then fall back to 911). The audit observer records every change with the
+  value it replaced.
+- **Phones update on their next connection.** A phone that stays offline keeps
+  the number it last downloaded. Stated on both pages.
+- The console page and portal page are not in the manuscript's figures. They
+  add screens, not entities, so no amendment.
+
 ### 5. The barangay list is public and seeded
 
 `GET /api/v1/barangays` is unauthenticated (a device must choose a barangay
@@ -92,4 +116,4 @@ cites. **Verify against the City Health Office's list before deployment.**
 - UT-012, UT-013 device side → Phase 6 PWA
 - UT-014 pending queue → `PendingQueueReport`
 - Figure 27 "Call for help" → `ReferenceDataController::facilities`,
-  `FacilityImportTest`
+  `FacilityImportTest`, `Console/FacilityManagementTest`
