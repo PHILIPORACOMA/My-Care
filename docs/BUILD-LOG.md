@@ -1796,3 +1796,31 @@ C, checklist rows. **He chose A**, built into PR #21 on top of the grouping:
   app's look; its described function still holds, so no amendment.
 - Not used from the mockups: B's hint lines and "we recognised" panel,
   C's checklist rows. Either could be added later.
+
+---
+
+### 9s - Emergency numbers editable in the console (PR #22) (2026-11-14)
+
+Philipo asked that the system admin can change an emergency number when an
+RHU sends an updated one. **He chose option 1**: the RHU tells the admin
+outside the app, and the super-admin edits the number in the console. An
+in-app request table was rejected, because it would be a schema change and
+so a manuscript amendment. He also asked for a read-only portal panel.
+- **Console, "Emergency numbers"**: list, add, edit, deactivate/reactivate.
+  There is no delete. Saving shows the old number struck through and the new
+  one in large type, with "check it digit by digit". Deactivating the last
+  active number warns that "Call for help" falls back to 911.
+- **Portal, "Emergency numbers"**: read-only, scoped by `BarangayScope`
+  (own barangay plus city-wide, active only; UT-016). It tells RHU staff to
+  send corrections to the system administrator.
+- **API**: `GET/POST/PATCH /api/v1/console/facilities` (super-admin) and
+  `GET /api/v1/staff/facilities`. Audit goes through the existing `Facility`
+  observer, with the old number kept in `old_value`.
+- **`Domain/Facility/FacilityRules`**: one dialable-number rule (digits,
+  spaces, hyphens, brackets, a leading +, at least 3 digits, at most 30
+  characters). `mycare:facilities:import` now refuses rows that fail it.
+- No schema change. ADR-0005 amended; ut-matrix UT-016 row updated. 204/204
+  Pest, console 7/7, portal 6/6.
+- Phones get a change only on their next connection; both pages say so.
+- **Owed:** the City Health Office CSV (still no real numbers). These pages
+  are not among the manuscript's figures; they extend Figure 27's data path.
