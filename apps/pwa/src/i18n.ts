@@ -71,7 +71,10 @@ const en = {
   orSelectCommon: "Or select a common symptom:",
   notADiagnosis: "This is not a diagnosis.",
   noSymptomsYet: "Type how you feel, or tap a symptom above.",
-  noWordsMatched: "My Care doesn't recognise these words yet. Please tap the symptom below that fits best.",
+  noWordsMatched:
+    "My Care doesn't recognise these words yet. Tap a symptom below if one fits, or continue and you'll be told where to go.",
+  failSafeUnrecognised:
+    "My Care could not recognise your symptoms, so to be safe, please have them checked at the Rural Health Unit. If they are severe or getting worse fast, go to the nearest hospital now.",
   noChipsYet: "Your health office has not published symptom words yet. You can still type how you feel.",
 
   // Figure 23
@@ -181,7 +184,10 @@ const tl: Dictionary = {
   orSelectCommon: "O pumili ng karaniwang sintomas:",
   notADiagnosis: "Hindi ito diagnosis.",
   noSymptomsYet: "I-type ang nararamdaman mo, o pumindot ng sintomas sa itaas.",
-  noWordsMatched: "Hindi pa kilala ng My Care ang mga salitang ito. Pakipindot ang sintomas sa ibaba na pinakaangkop.",
+  noWordsMatched:
+    "Hindi pa kilala ng My Care ang mga salitang ito. Pumindot ng sintomas sa ibaba kung may angkop, o magpatuloy at sasabihin sa iyo kung saan pupunta.",
+  failSafeUnrecognised:
+    "Hindi nakilala ng My Care ang iyong mga sintomas, kaya para sigurado, magpatingin sa Rural Health Unit. Kung malala o mabilis lumalala, pumunta agad sa pinakamalapit na ospital.",
   noChipsYet:
     "Wala pang nailathalang mga salita para sa sintomas ang inyong health office. Maaari ka pa ring mag-type ng nararamdaman mo.",
 
@@ -288,7 +294,10 @@ const ceb: Dictionary = {
   orSelectCommon: "O pagpili ug komon nga sintomas:",
   notADiagnosis: "Dili kini diagnosis.",
   noSymptomsYet: "I-type kung unsa imong gibati, o i-tap ang sintomas sa taas.",
-  noWordsMatched: "Wala pa mailhi sa My Care kini nga mga pulong. Palihug i-tap ang sintomas sa ubos nga labing haom.",
+  noWordsMatched:
+    "Wala pa mailhi sa My Care kini nga mga pulong. I-tap ang sintomas sa ubos kung naay haom, o padayon ug isulti kanimo kung asa moadto.",
+  failSafeUnrecognised:
+    "Wala mailhi sa My Care ang imong mga sintomas, busa aron sigurado, palihug pasusi sa Rural Health Unit. Kung grabe o paspas nga mograbe, adto dayon sa pinakaduol nga ospital.",
   noChipsYet:
     "Wala pa nakapatik ug mga pulong para sa sintomas ang inyong health office. Makasulat gihapon ka sa imong gibati.",
 

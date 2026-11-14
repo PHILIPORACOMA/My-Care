@@ -204,6 +204,57 @@ describe("a patient checking their symptoms", () => {
   }, 20000);
 
   /*
+   * Words the lexicon does not know used to be a dead end: Continue stayed
+   * disabled. Now they go on to the engine's RHU fail-safe (ADR-0001).
+   */
+  it("sends words it cannot recognise to the RHU fail-safe, never home, and syncs none of them", async () => {
+    const user = await launch();
+
+    await user.click(await screen.findByRole("button", { name: /Get started/ }));
+    await user.click(await screen.findByRole("button", { name: /English/ }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: /Yes, I'm 18/ }));
+    await user.click(await screen.findByRole("button", { name: /Valladolid/ }));
+    await user.click(screen.getByRole("button", { name: /Confirm barangay/ }));
+    await user.click(await screen.findByRole("button", { name: /Check symptoms/ }));
+
+    // Nothing typed, nothing tapped: still nothing to go on.
+    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+
+    await user.type(await screen.findByRole("textbox"), "nagkurog akong tuhod");
+    expect(screen.getByText(/continue and you'll be told where to go/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    expect(await screen.findByText(/Go to the nearest Rural Health Unit/, {}, { timeout: 4000 })).toBeInTheDocument();
+    expect(screen.getByText(/could not recognise your symptoms/)).toBeInTheDocument();
+
+    // Every upload, not the first: an earlier test's queued check can retry
+    // into this one's fetch stub.
+    const uploaded = () =>
+      posted.filter((p) => p.url.includes("/sync/batches")).flatMap((p) => p.body.sessions as Record<string, unknown>[]);
+    await waitFor(() => expect(uploaded().filter((s) => JSON.stringify(s.symptoms) === "[]")).toHaveLength(1));
+    expect(JSON.stringify(posted)).not.toMatch(/nagkurog|tuhod/);
+  }, 20000);
+
+  it("shows no fail-safe line when a symptom was recognised", async () => {
+    const user = await launch();
+
+    await user.click(await screen.findByRole("button", { name: /Get started/ }));
+    await user.click(await screen.findByRole("button", { name: /English/ }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: /Yes, I'm 18/ }));
+    await user.click(await screen.findByRole("button", { name: /Valladolid/ }));
+    await user.click(screen.getByRole("button", { name: /Confirm barangay/ }));
+    await user.click(await screen.findByRole("button", { name: /Check symptoms/ }));
+    await user.click(await screen.findByRole("button", { name: /Fixture fever/ }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(await screen.findByRole("button", { name: "gamay" }));
+
+    expect(await screen.findByText(/Go to the nearest Rural Health Unit/, {}, { timeout: 4000 })).toBeInTheDocument();
+    expect(screen.queryByText(/could not recognise your symptoms/)).not.toBeInTheDocument();
+  }, 20000);
+
+  /*
    * The language pill (every screen after onboarding). Switching mid-check
    * changes the copy and nothing else: what was typed stays typed, and the
    * session is recorded in the language the check finished in.
