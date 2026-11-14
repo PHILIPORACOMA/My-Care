@@ -1,6 +1,28 @@
 # From demo to production
 
-Everything My Care needs before a real patient uses it. Written 2026-11-14.
+Everything My Care needs before a real patient uses it. **This is the progress
+tracker:** tick an item when it is done, with the date, update the counts, and
+add a line to the log at the bottom. Started 2026-11-14.
+
+## Progress
+
+| Section | Done | Status |
+|---|---|---|
+| 1. Clinical content | 0 / 7 | ⛔ blocks launch. v2 merged as a draft, not yet reviewed |
+| 2. Decisions and open PRs | 1 / 2 | all PRs merged; zero-suppression open |
+| 3. Partners and permission | 0 / 4 | not started |
+| 4. Server | 0 / 7 | not started; scripted and CI-proven |
+| 5. First run | 0 / 5 | waits on 1, 3 and 4 |
+| 6. Prove it before launch | 0 / 5 | waits on 5 |
+| 7. Manuscript paperwork | 0 / 3 | not blocking |
+| 8. Code health | 0 / 1 | not blocking |
+| **Total** | **1 / 34** | |
+
+**Next up:** §1's first three items (v1 paperwork, Part C, lexicon terms) and
+§3's facilities and staff lists. They are all people's work, and everything
+after them depends on them.
+
+---
 
 **The demo itself is never deployed.** `npm run dev:demo` fills the device with
 invented, unreviewed vocabulary (`apps/pwa/src/demo.ts`). Production is the
@@ -35,9 +57,10 @@ City Health Office · **S** whoever runs the server.
       words per symptom, with negations tagged. These also become the chip
       names in each language. Never copy from the demo vocabulary or the test
       fixture.
-- [ ] **P C** Decide v2 (PR #20: 26 more complaints). Merge it, add the Part C
-      questions and escalation comments, and get it clinically reviewed, or
-      launch with v1 only.
+- [ ] **P C** v2 (26 more complaints): add the Part C questions and escalation
+      comments, and get it clinically reviewed, or launch with v1 only.
+      *2026-11-14: merged into the code as a draft bundle (PR #20); nothing
+      publishes it.*
 - [ ] **P C** Health tips (Figure 28): none exist yet. Write them per tier and
       language, or accept an empty tips screen at launch.
 - [ ] **P C** Native and clinical review of the tl/ceb UI copy in
@@ -49,9 +72,8 @@ City Health Office · **S** whoever runs the server.
 
 ## 2. Decisions and open PRs
 
-- [ ] **P** Merge or close the open PRs: #18 (unrecognised words → RHU
-      fail-safe), #19 (demo-only, no effect on production), #20 (v2 draft),
-      #21 (symptom input redesign), #23 (e2e for emergency numbers).
+- [x] **P** Merge or close the open PRs (#18–#23). *Done 2026-11-14: all
+      merged (BUILD-LOG 9u).*
 - [ ] **P** Does a true zero suppress? `SuppressionRule::render(0)` returns
       `<5` today. Decide before staff read real dashboards.
 
@@ -97,13 +119,14 @@ City Health Office · **S** whoever runs the server.
 
 ## 6. Prove it before launch
 
+> ⚠️ **Never run the Playwright suite against the production server.** Its
+> setup runs `migrate:fresh` and the lexicon test publishes the invented test
+> lexicon to whatever server it points at. The `deploy-smoke` CI job already
+> runs it through a fresh, throwaway deploy on every PR; to test a real host,
+> use a separate staging server.
+
 - [ ] **S** DEPLOYMENT.md §9 checks: health, engine replay **ok**, scheduler
       running, online, **offline**, sync, portal scoping.
-- [ ] **S** **Never run the Playwright suite against the production server.**
-      Its setup runs `migrate:fresh` and the lexicon test publishes the
-      invented test lexicon to whatever server it points at. The `deploy-smoke`
-      CI job already runs it through a fresh, throwaway deploy on every PR;
-      to test a real host, use a separate staging server.
 - [ ] **P** A real low-end Android phone (close to Table 27: 2 GB RAM, Chrome):
       Playwright uses a current Chromium, so Chrome 80 compatibility is
       only proven on a real handset.
@@ -122,8 +145,20 @@ City Health Office · **S** whoever runs the server.
 - [ ] Figure 22's screenshot no longer matches the redesigned input screen
       (accepted; replace the image if you want them to match).
 
+## 8. Code health (not blocking launch)
+
+- [ ] Make the two flaky tests wait properly (BUILD-LOG 9u): the portal's
+      "names the health worker's own barangay" and the PWA's "with no signal,
+      keeps triaging under the new barangay". Test timing only; the app is
+      correct.
+
 ---
 
 **Shortest path to a pilot:** finish §1's first three items, then §3's
-facilities list and staff list, then §4 and §5 in one sitting, then §6.
+facilities and staff lists, then §4 and §5 in one sitting, then §6.
 Everything else can follow.
+
+## Log
+
+- **2026-11-14:** checklist written. PRs #18–#23 merged; v2 is on main as a
+  draft. 1 / 34.
