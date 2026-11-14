@@ -308,8 +308,8 @@ export function App() {
     setCheck((c) => ({ ...c, result }));
     setScreen("result");
 
-    // The server does not know demo mode's invented presentation (./demo).
-    if (demo?.isDemoOnly(codes)) return;
+    // The server does not know demo mode's invented content (./demo).
+    if (demo?.isDemoOnly(codes, Object.keys(input.answers))) return;
     await recordSession(
       buildSession({
         bundle,

@@ -72,9 +72,70 @@ describe("demo mode", () => {
     expect(tierFor("grabe nga sakit sa tiyan")).toEqual({ codes: ["abdominal_pain_severe_rigidity"], asked: 0, tier: "emergency" });
   });
 
-  it("keeps checks that used the invented presentation off the sync queue", () => {
+  // Invented for demos: the milder v1 presentations ask, and can only go up.
+  it("asks follow-up questions that can only raise a mild presentation's tier", () => {
+    /** Triage `text`, answering each question by key with the given position (0 if unlisted). */
+    const triage = (text: string, picks: Record<string, number> = {}) => {
+      const matches = matchSymptoms(text, demo.lexiconTerms);
+      const codes = matches.filter((m) => !m.negated).map((m) => m.symptomCode);
+      const questions = questionsFor(demo, codes, "tl");
+      const answers = Object.fromEntries(
+        questions.map((q) => [q.questionKey, canonicalAnswer(demo, q.questionKey, picks[q.questionKey] ?? 0)])
+      );
+      return { asked: questions.map((q) => q.questionKey), tier: runTriage(demo, { picked: [], matches, answers }).tier };
+    };
+
+    // Fever: days, then red flags. Answer positions: "1".."7", "No"/"Yes".
+    expect(triage("hilanat")).toEqual({ asked: ["demo_fever_days", "demo_fever_red_flags"], tier: "home" });
+    expect(triage("hilanat", { demo_fever_days: 1 }).tier).toBe("home");
+    expect(triage("hilanat", { demo_fever_days: 2 }).tier).toBe("rhu");
+    expect(triage("hilanat", { demo_fever_days: 6 }).tier).toBe("rhu");
+    expect(triage("hilanat", { demo_fever_red_flags: 1 }).tier).toBe("emergency");
+
+    // Cough: weeks, then red flags.
+    expect(triage("ubo").asked).toEqual(["demo_cough_weeks", "demo_cough_red_flags"]);
+    expect(triage("ubo", { demo_cough_weeks: 1 }).tier).toBe("home");
+    expect(triage("ubo", { demo_cough_weeks: 2 }).tier).toBe("rhu");
+    expect(triage("ubo", { demo_cough_red_flags: 1 }).tier).toBe("emergency");
+
+    // Diarrhea: days, then red flags.
+    expect(triage("nagtatae", { demo_diarrhea_days: 0 }).tier).toBe("home");
+    expect(triage("nagtatae", { demo_diarrhea_days: 1 }).tier).toBe("rhu");
+    expect(triage("nagtatae", { demo_diarrhea_red_flags: 1 }).tier).toBe("emergency");
+
+    // Red-flag questions alone: "No" keeps v1's tier, "Yes" is emergency.
+    for (const [text, key, v1Tier] of [
+      ["sakit sa ulo", "demo_headache_red_flags", "home"],
+      ["gamay nga samad", "demo_wound_red_flags", "home"],
+      ["high blood", "demo_bp_red_flags", "rhu"],
+      ["spotting while pregnant", "demo_spotting_red_flags", "rhu"],
+      ["always thirsty", "demo_thirst_red_flags", "rhu"],
+    ] as const) {
+      expect(triage(text)).toEqual({ asked: [key], tier: v1Tier });
+      expect(triage(text, { [key]: 1 }).tier).toBe("emergency");
+    }
+
+    // Emergency presentations ask nothing.
+    expect(triage("hindi makahinga")).toEqual({ asked: [], tier: "emergency" });
+  });
+
+  it("asks every follow-up in all three languages, with the same answers in the same order", () => {
+    const keys = [...new Set(demo.clarificationQuestions.map((q) => q.questionKey))];
+    for (const key of keys) {
+      const variants = demo.clarificationQuestions.filter((q) => q.questionKey === key);
+      expect(variants.map((q) => q.language)).toEqual(["en", "tl", "ceb"]);
+      const lengths = new Set(variants.map((q) => q.allowedAnswers.length));
+      expect(lengths.size).toBe(1);
+      const redFlagAt = new Set(variants.map((q) => (q.redFlagAnswer === undefined ? -1 : q.allowedAnswers.indexOf(q.redFlagAnswer))));
+      expect(redFlagAt.size).toBe(1);
+    }
+  });
+
+  it("keeps checks that used invented content off the sync queue", () => {
     expect(isDemoOnly(["demo_abdominal_pain"])).toBe(true);
     expect(isDemoOnly(["fever_mild", "demo_abdominal_pain"])).toBe(true);
+    expect(isDemoOnly(["fever_mild"], ["demo_fever_days"])).toBe(true);
     expect(isDemoOnly(["fever_mild"])).toBe(false);
+    expect(isDemoOnly(["chest_pain_severe_radiating"], [])).toBe(false);
   });
 });
