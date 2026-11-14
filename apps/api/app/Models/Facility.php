@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * Data Dictionary Table 20: FACILITY.
  *
- * Not yet read by any module — see the migration for the open decision.
+ * Powers the patient app's emergency "Call for help" (Figure 27, ADR-0005).
+ * Loaded from the City Health Office CSV or edited in the console
+ * (Console\FacilityController); either way, numbers pass FacilityRules.
  */
 class Facility extends Model
 {

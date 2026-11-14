@@ -2,6 +2,7 @@ import { AppShell, Button, CareMark, Spinner, type NavItem } from "@mycare/ui";
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth";
 import { DashboardPage } from "./pages/DashboardPage";
+import { EmergencyNumbersPage } from "./pages/EmergencyNumbersPage";
 import { LoginPage } from "./pages/LoginPage";
 import { MapPage } from "./pages/MapPage";
 import { ReportsPage } from "./pages/ReportsPage";
@@ -14,6 +15,7 @@ const NAV: NavItem[] = [
   { to: "/sync", label: "Sync & status" },
   { to: "/reports", label: "Data & reports" },
   { to: "/map", label: "Aggregate map" },
+  { to: "/emergency-numbers", label: "Emergency numbers" },
 ];
 
 export function App() {
@@ -58,6 +60,7 @@ export function App() {
         <Route path="/sync" element={<SyncStatusPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/map" element={<MapPage />} />
+        <Route path="/emergency-numbers" element={<EmergencyNumbersPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AppShell>

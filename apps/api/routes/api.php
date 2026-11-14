@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Console\AuditLogController;
 use App\Http\Controllers\Api\V1\Console\DeviceController;
+use App\Http\Controllers\Api\V1\Console\FacilityController;
 use App\Http\Controllers\Api\V1\Console\RulesetVersionController;
 use App\Http\Controllers\Api\V1\Console\SymptomCodeController;
 use App\Http\Controllers\Api\V1\Console\SystemHealthController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Api\V1\DeviceRegistrationController;
 use App\Http\Controllers\Api\V1\ReferenceDataController;
 use App\Http\Controllers\Api\V1\RulesetController;
 use App\Http\Controllers\Api\V1\Staff\AuthController;
+use App\Http\Controllers\Api\V1\Staff\FacilityDirectoryController;
 use App\Http\Controllers\Api\V1\Staff\ReportController;
 use App\Http\Controllers\Api\V1\Staff\SurveillanceController;
 use App\Http\Controllers\Api\V1\SyncBatchController;
@@ -79,6 +81,9 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
             Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
             Route::get('/reports/{report}/download', [ReportController::class, 'download'])->name('reports.download');
+
+            // Read-only: the numbers "Call for help" gives patients (ADR-0005).
+            Route::get('/facilities', [FacilityDirectoryController::class, 'index'])->name('facilities.index');
         });
     });
 
@@ -121,6 +126,11 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/devices', [DeviceController::class, 'index'])->name('devices.index');
             Route::post('/devices/{device}/revoke', [DeviceController::class, 'revoke'])->name('devices.revoke');
             Route::post('/devices/{device}/reinstate', [DeviceController::class, 'reinstate'])->name('devices.reinstate');
+
+            // ADR-0005: the emergency numbers behind "Call for help" (Figure 27).
+            Route::get('/facilities', [FacilityController::class, 'index'])->name('facilities.index');
+            Route::post('/facilities', [FacilityController::class, 'store'])->name('facilities.store');
+            Route::patch('/facilities/{facility}', [FacilityController::class, 'update'])->name('facilities.update');
         });
 
     /*

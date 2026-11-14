@@ -59,6 +59,8 @@ export function ResultScreen(props: {
   chips: string[];
   facilities: Facility[];
   barangayId: number | null;
+  /** Nothing the patient typed was recognised, so this is the RHU fail-safe. */
+  unrecognised?: boolean;
   /** Absent when no tip applies, so the button never leads to an empty page. */
   onTips?: () => void;
   onAgain: () => void;
@@ -93,6 +95,7 @@ export function ResultScreen(props: {
 
       <div className="result-sheet">
         <p className="result-advice">{props.t(ADVICE[tier])}</p>
+        {props.unrecognised && <p className="banner banner-warn">{props.t("failSafeUnrecognised")}</p>}
 
         {tier !== "home" && <p className="referral">{props.t("showToHealthWorker")}</p>}
 

@@ -68,3 +68,19 @@ export function saveBlob(blob: Blob, filename: string): void {
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+/**
+ * FACILITY.type (Table 20) for people: the console's editor and the portal's
+ * read-only list say the same thing. `type` is free text, so an unknown one is
+ * shown as stored.
+ */
+const FACILITY_TYPE_LABELS: Record<string, string> = {
+  emergency_hotline: "Emergency hotline",
+  rhu: "RHU",
+  health_station: "Health station",
+  hospital: "Hospital",
+};
+
+export function facilityTypeLabel(type: string): string {
+  return FACILITY_TYPE_LABELS[type] ?? type;
+}

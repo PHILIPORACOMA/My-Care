@@ -2,6 +2,7 @@ import { AppShell, Button, CareMark, Spinner, type NavItem } from "@mycare/ui";
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth";
 import { AuditLogPage } from "./pages/AuditLogPage";
+import { FacilitiesPage } from "./pages/FacilitiesPage";
 import { LoginPage } from "./pages/LoginPage";
 import { SyncHealthPage } from "./pages/SyncHealthPage";
 import { SystemDashboardPage } from "./pages/SystemDashboardPage";
@@ -15,6 +16,7 @@ const NAV: NavItem[] = [
   { to: "/rules", label: "Rules & lexicon" },
   { to: "/symptom-codes", label: "Symptom codes" },
   { to: "/users", label: "User management" },
+  { to: "/facilities", label: "Emergency numbers" },
   { to: "/sync", label: "Sync & system health" },
   { to: "/audit", label: "Audit log" },
 ];
@@ -63,6 +65,7 @@ export function App() {
         <Route path="/rules/:id" element={<RulesetVersionPage />} />
         <Route path="/symptom-codes" element={<SymptomCodesPage />} />
         <Route path="/users" element={<UsersPage />} />
+        <Route path="/facilities" element={<FacilitiesPage />} />
         <Route path="/sync" element={<SyncHealthPage />} />
         <Route path="/audit" element={<AuditLogPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

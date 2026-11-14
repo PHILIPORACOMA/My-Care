@@ -1704,3 +1704,133 @@ Decisions, in order (Philipo's):
 An earlier, superseded draft also exists as a Claude doc
 (https://claude.ai/artifact/MBxLU7dGmAG149oSWTbc6P). Philipo has not said to
 delete it.
+
+---
+
+### 9p - Batch 2 form back; ruleset v2 draft from Part D (2026-11-07)
+
+**The completed Lexicon Appraisal Form (Batch 2) came back** (4 photos, so one
+page is likely missing). Appraiser: a nurse with under 3 years' experience; the
+attestation is ticked, **"agree to be named" is not**, so neither the
+manuscript nor the repo names them. Dated 11/04/26, a day before the form's
+own date of 5 Nov.
+- **Part B:** all 9 emergency presentations "commonly described: Y", but
+  **no words were written for any of them**. The emergency vocabulary is
+  still owed.
+- **Part C:** all 7 follow-ups ticked "needed". The handwriting is mostly
+  unreadable, so **Philipo will type the wording out**. The legible points:
+  spotting should ask how many pads are soaked, not the amount; for an animal
+  bite, "Do not wait for danger signs. Consult immediately".
+- **Part D:** all 25 complaints marked "include", each with a tier and
+  "follow-up: Y".
+- **Part E:** coverage 4, follow-ups acceptable 4. **"Residents can describe
+  these in a few typed words well enough to tell them apart": 2 (Disagree).**
+  The answer belongs in the manuscript's Discussion or Limitations. The
+  "dangerously misread words" line is blank.
+
+**Ruleset v2 draft** (PR #20, `feat/UT-005-ruleset-v2-batch2`, approved plan):
+`packages/ruleset/src/bundle/v2.ts` = v1 unchanged + 26 new atomic symptom
+codes and rules R-024 to R-049, labelled `v2-draft`. It has the appraiser's
+Part D tiers, with two of Philipo's readings: "insect sting or snake bite" (RHU
+and E both ticked) is split into insect sting → rhu and snake bite →
+emergency; back pain (faint tick) → home. Totals: 13 home, 21 rhu,
+15 emergency. **Burns and heartburn go to emergency as ticked**, a cautious
+call by the appraiser.
+- No follow-up questions yet: the escalation comments (pain over 24 hours,
+  abdominal distention, tinnitus or hearing loss, rule out cardiac) wait for
+  Part C. No lexicon terms (none came back) and no health tips. The new
+  presentations show as English chips until terms are entered; typed text that
+  matches nothing still goes to RHU.
+- `npm run export:v2 -w @mycare/ruleset` → `dist/v2.json`, then
+  `mycare:ruleset:import` as a draft and publish from the console. CI and
+  `deploy.sh` now export v2 too. Nothing imports it automatically.
+- Tests: engine (every v2 tier, the 26 checked against a list typed from the
+  form), ruleset (v1 untouched, unique codes, column widths), Pest (import
+  gives 49 rules: 13/21/15). The check screen now shows 49 chips.
+- **One appraiser, unreviewed:** a draft for clinical review, not validated.
+  The manuscript's "23 presentations" describes v1 only.
+
+---
+
+### 9q - Symptom chips grouped by body area (PR #21) (2026-11-13)
+
+Philipo found Figure 22's chips unorganised: one flat list in code order,
+severe and mild presentations mixed together. **PR #21**
+(`feat/UT-002-chip-groups`, approved plan) puts them under body-area
+headings, each with a line icon: fever and general, breathing, heart, stomach,
+head and nerves, eyes/ears/mouth, skin and bites, muscles and joints, women's
+health and urination, and a catch-all "Other". Checked in the demo PWA in
+English and Cebuano: 24 chips, 8 groups, none under Other.
+- **Layout only.** No tier, rule, lexicon or synced field changes. The map is
+  `apps/pwa/src/chip-groups.ts`, because SYMPTOM_CODE (Table 7) has no
+  category column (no amendment).
+- Ordered by body area, **never by urgency**. All groups open, so no
+  emergency chip is behind an extra tap. An unmapped code goes to "Other";
+  empty groups are hidden. The map already covers PR #20's v2 codes.
+- Icons are inline SVG in Lucide's stroke style (ISC); stomach, head and
+  female are drawn by hand. No dependency added.
+- **Owed:** native review of the tl/ceb headings, and clinical review of
+  which group each presentation sits in (e.g. allergic reaction under skin,
+  swollen legs under heart, excessive thirst under fever and general).
+
+---
+
+### 9r - Symptom input redesign A (PR #21) (2026-11-13)
+
+Philipo found Figure 22 plain. Three directions were mocked up on a private
+design canvas (https://claude.ai/artifact/42KrTf35NFngEhiEGyCPjD): A, a teal
+header with body-area shortcuts; B, calm cards with "we recognised" words;
+C, checklist rows. **He chose A**, built into PR #21 on top of the grouping:
+- **Teal header band** with the title and "Nothing you write leaves this
+  phone" (true: raw text never syncs, non-negotiable #8). The text box is a
+  card overlapping it, with a "Cebuano, Tagalog or English" hint by the mic.
+- **Shortcut tiles**, one per body-area group: buttons that scroll to the
+  group and focus its heading (no `#` links, so the URL never changes). Every
+  group stays open below.
+- **A footer that stays in view**: "{n} selected" with the picked labels,
+  Continue, the disclaimer.
+- Same textbox, chips, codes and Continue; existing English copy kept; 14
+  new strings (tl/ceb drafts). CSS and markup only. Build: 65.9 kB gzipped
+  JS, 4.1 kB CSS. 74/74 PWA tests.
+- Philipo accepted that **Figure 22's screenshot will no longer match** the
+  app's look; its described function still holds, so no amendment.
+- Not used from the mockups: B's hint lines and "we recognised" panel,
+  C's checklist rows. Either could be added later.
+
+---
+
+### 9s - Emergency numbers editable in the console (PR #22) (2026-11-14)
+
+Philipo asked that the system admin can change an emergency number when an
+RHU sends an updated one. **He chose option 1**: the RHU tells the admin
+outside the app, and the super-admin edits the number in the console. An
+in-app request table was rejected, because it would be a schema change and
+so a manuscript amendment. He also asked for a read-only portal panel.
+- **Console, "Emergency numbers"**: list, add, edit, deactivate/reactivate.
+  There is no delete. Saving shows the old number struck through and the new
+  one in large type, with "check it digit by digit". Deactivating the last
+  active number warns that "Call for help" falls back to 911.
+- **Portal, "Emergency numbers"**: read-only, scoped by `BarangayScope`
+  (own barangay plus city-wide, active only; UT-016). It tells RHU staff to
+  send corrections to the system administrator.
+- **API**: `GET/POST/PATCH /api/v1/console/facilities` (super-admin) and
+  `GET /api/v1/staff/facilities`. Audit goes through the existing `Facility`
+  observer, with the old number kept in `old_value`.
+- **`Domain/Facility/FacilityRules`**: one dialable-number rule (digits,
+  spaces, hyphens, brackets, a leading +, at least 3 digits, at most 30
+  characters). `mycare:facilities:import` now refuses rows that fail it.
+- No schema change. ADR-0005 amended; ut-matrix UT-016 row updated. 204/204
+  Pest, console 7/7, portal 6/6.
+- Phones get a change only on their next connection; both pages say so.
+- **Owed:** the City Health Office CSV (still no real numbers). These pages
+  are not among the manuscript's figures; they extend Figure 27's data path.
+
+---
+
+### 9t - Emergency numbers in the e2e smoke tests (PR #23) (2026-11-14)
+
+PR #22 merged (`6b8e44a`); a Playwright rerun on main passed 12/12 but
+never visited the new pages, because the smoke tests click a fixed list of
+screens. PR #23 adds both. With no facilities in the e2e database, each
+page must show its 911 fallback warning, and the portal page must offer no
+Edit, Add or Deactivate button. 12/12 locally. Test files only.

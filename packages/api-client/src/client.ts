@@ -8,6 +8,8 @@ import type {
   ConsoleUser,
   Dashboard,
   DateRangeParams,
+  FacilityEntry,
+  FacilityInput,
   FieldErrors,
   GenerateReportInput,
   ReportList,
@@ -138,6 +140,8 @@ export function createClient(options: ClientOptions = {}) {
         json<Dashboard>("GET", `/api/v1/staff/dashboard${query({ ...params })}`),
       trends: (barangayId?: number | null) => json<Trends>("GET", `/api/v1/staff/trends${query({ barangayId })}`),
       syncStatus: () => json<SyncStatus>("GET", "/api/v1/staff/sync-status"),
+      /** Read-only: the numbers "Call for help" gives patients in this account's barangay. */
+      facilities: () => json<{ facilities: FacilityEntry[] }>("GET", "/api/v1/staff/facilities").then((r) => r.facilities),
       map: (params: DateRangeParams) => json<AggregateMap>("GET", `/api/v1/staff/map${query({ ...params })}`),
       reports: () => json<ReportList>("GET", "/api/v1/staff/reports"),
       generateReport: (input: GenerateReportInput) =>
@@ -190,6 +194,12 @@ export function createClient(options: ClientOptions = {}) {
       devices: () => json<{ devices: ConsoleDevice[] }>("GET", "/api/v1/console/devices").then((r) => r.devices),
       revokeDevice: (id: number) => json<{ approved: boolean }>("POST", `/api/v1/console/devices/${id}/revoke`),
       reinstateDevice: (id: number) => json<{ approved: boolean }>("POST", `/api/v1/console/devices/${id}/reinstate`),
+
+      facilities: () => json<{ facilities: FacilityEntry[]; suggestedTypes: string[] }>("GET", "/api/v1/console/facilities"),
+      createFacility: (input: FacilityInput) =>
+        json<{ facility: FacilityEntry }>("POST", "/api/v1/console/facilities", input).then((r) => r.facility),
+      updateFacility: (id: number, changes: Partial<FacilityInput> & { isActive?: boolean }) =>
+        json<{ facility: FacilityEntry }>("PATCH", `/api/v1/console/facilities/${id}`, changes).then((r) => r.facility),
 
       auditLog: (params: DateRangeParams & { category?: AuditCategory | ""; page?: number }) =>
         json<AuditPage>("GET", `/api/v1/console/audit-logs${query({ ...params })}`),

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -162,8 +162,18 @@ describe("a patient checking their symptoms", () => {
     await user.click(screen.getByRole("button", { name: /Kumpirmaha ang barangay/ }));
 
     await user.click(await screen.findByRole("button", { name: /Susiha ang sintomas/ }));
+    // This fixture's codes are not in chip-groups.ts, so its chips still show,
+    // under "Other" in the patient's language, rather than vanishing.
+    const other = await screen.findByRole("heading", { name: "Uban pa" });
+    // A body-area shortcut moves focus to its group, so a keyboard or
+    // screen-reader user lands where the page scrolled to.
+    const shortcuts = screen.getByRole("navigation", { name: "Adto sa bahin sa lawas" });
+    await user.click(within(shortcuts).getByRole("button", { name: "Uban pa" }));
+    expect(other).toHaveFocus();
     // Tapping the chip rather than typing: the same structured output.
     await user.click(await screen.findByRole("button", { name: /hilanat/ }));
+    // The footer says what is picked while the patient scrolls on.
+    expect(screen.getByRole("status")).toHaveTextContent(/^1 ang napili · .*hilanat/);
     await user.click(screen.getByRole("button", { name: "Padayon" }));
 
     await user.click(await screen.findByRole("button", { name: "grabe" }));
@@ -201,6 +211,57 @@ describe("a patient checking their symptoms", () => {
     // And the record is waiting rather than lost.
     const storage = await import("./storage");
     await waitFor(async () => expect(await storage.queueLength()).toBe(1));
+  }, 20000);
+
+  /*
+   * Words the lexicon does not know used to be a dead end: Continue stayed
+   * disabled. Now they go on to the engine's RHU fail-safe (ADR-0001).
+   */
+  it("sends words it cannot recognise to the RHU fail-safe, never home, and syncs none of them", async () => {
+    const user = await launch();
+
+    await user.click(await screen.findByRole("button", { name: /Get started/ }));
+    await user.click(await screen.findByRole("button", { name: /English/ }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: /Yes, I'm 18/ }));
+    await user.click(await screen.findByRole("button", { name: /Valladolid/ }));
+    await user.click(screen.getByRole("button", { name: /Confirm barangay/ }));
+    await user.click(await screen.findByRole("button", { name: /Check symptoms/ }));
+
+    // Nothing typed, nothing tapped: still nothing to go on.
+    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+
+    await user.type(await screen.findByRole("textbox"), "nagkurog akong tuhod");
+    expect(screen.getByText(/continue and you'll be told where to go/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    expect(await screen.findByText(/Go to the nearest Rural Health Unit/, {}, { timeout: 4000 })).toBeInTheDocument();
+    expect(screen.getByText(/could not recognise your symptoms/)).toBeInTheDocument();
+
+    // Every upload, not the first: an earlier test's queued check can retry
+    // into this one's fetch stub.
+    const uploaded = () =>
+      posted.filter((p) => p.url.includes("/sync/batches")).flatMap((p) => p.body.sessions as Record<string, unknown>[]);
+    await waitFor(() => expect(uploaded().filter((s) => JSON.stringify(s.symptoms) === "[]")).toHaveLength(1));
+    expect(JSON.stringify(posted)).not.toMatch(/nagkurog|tuhod/);
+  }, 20000);
+
+  it("shows no fail-safe line when a symptom was recognised", async () => {
+    const user = await launch();
+
+    await user.click(await screen.findByRole("button", { name: /Get started/ }));
+    await user.click(await screen.findByRole("button", { name: /English/ }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: /Yes, I'm 18/ }));
+    await user.click(await screen.findByRole("button", { name: /Valladolid/ }));
+    await user.click(screen.getByRole("button", { name: /Confirm barangay/ }));
+    await user.click(await screen.findByRole("button", { name: /Check symptoms/ }));
+    await user.click(await screen.findByRole("button", { name: /Fixture fever/ }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(await screen.findByRole("button", { name: "gamay" }));
+
+    expect(await screen.findByText(/Go to the nearest Rural Health Unit/, {}, { timeout: 4000 })).toBeInTheDocument();
+    expect(screen.queryByText(/could not recognise your symptoms/)).not.toBeInTheDocument();
   }, 20000);
 
   /*

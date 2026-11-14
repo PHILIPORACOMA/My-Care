@@ -44,8 +44,20 @@ it('updates in place when re-imported', function () {
 
 it('imports nothing when any row is invalid', function () {
     $path = facilityCsv(
-        "Good,rhu,Valladolid,,1,,yes\n"
-        ."Bad,rhu,Atlantis,,2,,yes\n"
+        "Good,rhu,Valladolid,,111,,yes\n"
+        ."Bad,rhu,Atlantis,,222,,yes\n"
+    );
+
+    $this->artisan('mycare:facilities:import', ['file' => $path])->assertFailed();
+
+    expect(Facility::count())->toBe(0);
+});
+
+it('imports nothing when a number cannot be dialled', function () {
+    // The same check as the console (FacilityRules): "Call for help" dials it.
+    $path = facilityCsv(
+        "Good,rhu,Valladolid,,111,,yes\n"
+        ."Bad,rhu,Valladolid,,ask the nurse,,yes\n"
     );
 
     $this->artisan('mycare:facilities:import', ['file' => $path])->assertFailed();

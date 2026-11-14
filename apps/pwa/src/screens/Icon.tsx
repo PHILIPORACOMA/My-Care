@@ -6,6 +6,8 @@
  *
  * Most paths are ported from kizaru3214's `feat/pwa-ui-polish`
  * (apps/pwa/src/components/Icon.tsx). Added here: alert, x, plus and circle.
+ * The symptom-group icons (thermometer to more) follow Lucide's 24px stroke
+ * style (ISC licence); stomach, head and female are drawn for this app.
  * Inline SVG, no icon library: the whole set is a couple of kilobytes.
  */
 
@@ -25,7 +27,18 @@ export type IconName =
   | "plus"
   | "search"
   | "user"
-  | "x";
+  | "x"
+  // Symptom groups (chip-groups.ts)
+  | "thermometer"
+  | "wind"
+  | "heart"
+  | "stomach"
+  | "head"
+  | "eye"
+  | "bandage"
+  | "bone"
+  | "female"
+  | "more";
 
 const PATHS: Record<IconName, string> = {
   alert: "M12 4 2.8 19.5a1 1 0 0 0 .86 1.5h16.68a1 1 0 0 0 .86-1.5zM12 10v4.5M12 17.5v.01",
@@ -44,6 +57,18 @@ const PATHS: Record<IconName, string> = {
   search: "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM21 21l-4.35-4.35",
   user: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20a7.5 7.5 0 0 1 15 0",
   x: "M6 6l12 12M18 6 6 18",
+  thermometer: "M14 14.76V4.5a2.5 2.5 0 0 0-5 0v10.26a4 4 0 1 0 5 0zM11.5 17.5v-6",
+  wind: "M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2M9.6 4.6A2 2 0 1 1 11 8H2M12.6 19.4A2 2 0 1 0 14 16H2",
+  heart:
+    "M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7z",
+  stomach: "M10 3v3a3 3 0 0 0 3 3h1a5 5 0 0 1 5 5 7 7 0 0 1-7 7H9a4 4 0 0 1-4-4 3 3 0 0 1 3-3h2a2 2 0 0 0 2-2",
+  head: "M12 2.5a7.5 7.5 0 0 0-7.5 7.5c0 2.3 1 4.3 2.5 5.7V21.5h8V19h2a2 2 0 0 0 2-2v-2.5l2-1-2-3.5A7.5 7.5 0 0 0 12 2.5z",
+  eye: "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
+  bandage: "M4 7h16a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2zM8 7v10M16 7v10M11 11h.01M13 13h.01",
+  bone:
+    "M17 10c.7-.7 1.69 0 2.5 0a2.5 2.5 0 1 0 0-5 .5.5 0 0 1-.5-.5 2.5 2.5 0 1 0-5 0c0 .81.7 1.8 0 2.5l-7 7c-.7.7-1.69 0-2.5 0a2.5 2.5 0 0 0 0 5c.28 0 .5.22.5.5a2.5 2.5 0 1 0 5 0c0-.81-.7-1.8 0-2.5z",
+  female: "M12 14a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 14v7M9 18h6",
+  more: "M5 12h.01M12 12h.01M19 12h.01",
 };
 
 /** Decorative by default: the control around it carries the accessible name. */
