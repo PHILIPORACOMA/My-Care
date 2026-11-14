@@ -1824,3 +1824,13 @@ so a manuscript amendment. He also asked for a read-only portal panel.
 - Phones get a change only on their next connection; both pages say so.
 - **Owed:** the City Health Office CSV (still no real numbers). These pages
   are not among the manuscript's figures; they extend Figure 27's data path.
+
+---
+
+### 9t - Emergency numbers in the e2e smoke tests (PR #23) (2026-11-14)
+
+PR #22 merged (`6b8e44a`); a Playwright rerun on main passed 12/12 but
+never visited the new pages, because the smoke tests click a fixed list of
+screens. PR #23 adds both. With no facilities in the e2e database, each
+page must show its 911 fallback warning, and the portal page must offer no
+Edit, Add or Deactivate button. 12/12 locally. Test files only.
