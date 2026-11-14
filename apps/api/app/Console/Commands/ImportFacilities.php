@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Domain\Facility\FacilityRules;
 use App\Models\Barangay;
 use App\Models\Facility;
 use Illuminate\Console\Command;
@@ -117,7 +118,8 @@ class ImportFacilities extends Command
             'name' => ['required', 'max:150'],
             'type' => ['required', 'max:30'],
             'address' => ['max:255'],
-            'contact_number' => ['max:30'],
+            // The same dialable check as the console (FacilityRules).
+            'contact_number' => FacilityRules::contactNumber(),
             'operating_hours' => ['max:100'],
             'is_active' => ['required', 'in:0,1,true,false,yes,no,TRUE,FALSE,Yes,No'],
         ]);

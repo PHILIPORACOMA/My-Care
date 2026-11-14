@@ -168,6 +168,32 @@ export interface ConsoleDevice {
   pendingSessions: number | null;
 }
 
+/**
+ * FACILITY (Table 20): a number behind the patient app's emergency "Call for
+ * help" (Figure 27, ADR-0005). Edited in the console, read-only in the portal.
+ */
+export interface FacilityEntry {
+  id: number;
+  barangayId: number | null;
+  /** Null for a city-wide facility, offered to patients in every barangay. */
+  barangayName: string | null;
+  name: string;
+  type: string;
+  address: string | null;
+  contactNumber: string | null;
+  operatingHours: string | null;
+  isActive: boolean;
+}
+
+export interface FacilityInput {
+  name: string;
+  type: string;
+  barangayId: number | null;
+  contactNumber: string;
+  address: string | null;
+  operatingHours: string | null;
+}
+
 export type AuditCategory = "rules" | "accounts" | "sign-in" | "exports" | "devices" | "reference" | "other";
 
 export interface AuditEntry {

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { Dashboard, StaffUser, Trends } from "@mycare/api-client";
+import type { Dashboard, FacilityEntry, StaffUser, Trends } from "@mycare/api-client";
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -34,6 +34,12 @@ const trends: Trends = {
   computedAt: "2026-09-18T03:00:00+00:00",
 };
 
+/* Placeholder numbers: test scaffolding, not real contact details. */
+const facilities: FacilityEntry[] = [
+  { id: 1, barangayId: 7, barangayName: "Valladolid", name: "Valladolid RHU", type: "rhu", address: null, contactNumber: "0900 000 0001", operatingHours: null, isActive: true },
+  { id: 2, barangayId: null, barangayName: null, name: "City Hotline", type: "emergency_hotline", address: null, contactNumber: "0900 000 0002", operatingHours: "24/7", isActive: true },
+];
+
 const api = {
   auth: { me: vi.fn(async () => staff), login: vi.fn(), logout: vi.fn() },
   staff: {
@@ -41,6 +47,7 @@ const api = {
     trends: vi.fn(async () => trends),
     barangays: vi.fn(async () => []),
     syncStatus: vi.fn(),
+    facilities: vi.fn(async () => facilities),
     map: vi.fn(),
     reports: vi.fn(),
     generateReport: vi.fn(),
@@ -53,6 +60,7 @@ vi.mock("./api", () => ({ api, onUnauthenticated: () => () => {} }));
 const { App } = await import("./App");
 const { AuthProvider } = await import("./auth");
 const { TrendsPage } = await import("./pages/TrendsPage");
+const { EmergencyNumbersPage } = await import("./pages/EmergencyNumbersPage");
 
 function renderIn(children: React.ReactNode, path = "/") {
   return render(
@@ -128,5 +136,21 @@ describe("portal", () => {
     const titles = [...container.querySelectorAll("rect > title")].map((t) => t.textContent);
     expect(titles.some((t) => t?.includes("2026-09-18") && t.includes("Fewer than 5"))).toBe(true);
     expect(titles).toContain("2026-09-17 — Home management: 7");
+  });
+
+  /* ADR-0005: RHU staff see the numbers patients are given, and cannot change them. */
+  it("lists the emergency numbers read-only, hotline first, city-wide ones marked", async () => {
+    renderIn(<EmergencyNumbersPage />, "/emergency-numbers");
+
+    const rows = await screen.findAllByRole("row");
+    // Header, then the hotline ahead of the RHU: the order "Call for help" prefers.
+    expect(rows[1]).toHaveTextContent("City Hotline");
+    expect(rows[1]).toHaveTextContent("City-wide");
+    expect(rows[2]).toHaveTextContent("Valladolid RHU");
+    expect(screen.getByText("0900 000 0002")).toBeInTheDocument();
+    expect(screen.getByText(/system administrator/)).toBeInTheDocument();
+    // No way to edit from the portal.
+    expect(screen.queryByRole("button", { name: /edit|deactivate|add/i })).toBeNull();
+    expect(screen.queryByRole("textbox")).toBeNull();
   });
 });
