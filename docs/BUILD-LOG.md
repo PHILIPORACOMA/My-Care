@@ -1834,3 +1834,29 @@ never visited the new pages, because the smoke tests click a fixed list of
 screens. PR #23 adds both. With no facilities in the e2e database, each
 page must show its 911 fallback warning, and the portal page must offer no
 Edit, Add or Deactivate button. 12/12 locally. Test files only.
+
+---
+
+### 9u - PRs #18 to #21 merged (2026-11-14)
+
+Philipo asked for the remaining PRs merged so kizaru3214 can test from main.
+All four were first merged together on a scratch branch and tested as one:
+typecheck, every workspace's tests, Pest 205/205, Playwright 12/12.
+- **#18** (unrecognised words go to the RHU fail-safe), **#19** (demo-only
+  follow-up questions) and **#21** (symptom chips by body area, redesign A)
+  merged as they were.
+- **#20** (ruleset v2 draft) conflicted with #18 on the UT-005 row of
+  `docs/ut-matrix.md`; both had rewritten it. The row now keeps both
+  sentences and both sets of tests. v2 is in the code as a draft bundle
+  only; nothing publishes it.
+- **Two old flaky tests, not caused by these PRs:**
+  - `portal.test.tsx` "names the health worker's own barangay...": the
+    heading comes from the signed-in user and can render before the dashboard
+    request starts, so the final `toHaveBeenCalled()` can run too early.
+    Failed once in #20's CI; passed on re-run.
+  - `app.test.tsx` "with no signal, keeps triaging under the new
+    barangay...": the last `waitFor` (1 s default) for the stored device
+    barangay can time out under heavy CPU load. About 2 failures in 20
+    loaded local runs. The patient-data checks before it always passed.
+  Both are test timing, not app behaviour. A follow-up can make each wait
+  properly.
