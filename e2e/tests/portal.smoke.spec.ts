@@ -34,16 +34,24 @@ test("a sub-admin signs in and every screen renders (UT-014, UT-016, UT-020)", a
   await expect(page.getByText("<5").first()).toBeVisible();
   await shot(page, "31-portal-dashboard");
 
-  const screens: [string, RegExp, string][] = [
+  const screens: [string, RegExp, string, RegExp?][] = [
     ["Trends & surveillance", /Trends & surveillance/, "32-portal-trends"],
     ["Sync & status", /Sync & status/, "33-portal-sync"],
     ["Data & reports", /Data & reports/, "34-portal-reports"],
     ["Aggregate map", /Aggregate map/, "35-portal-map"],
+    // Not a manuscript figure (ADR-0005). Read-only, and with no facilities in
+    // the e2e database it must say "Call for help" dials 911.
+    ["Emergency numbers", /Emergency numbers/, "35b-portal-emergency-numbers", /dials the national emergency number 911/],
   ];
 
-  for (const [link, heading, name] of screens) {
+  for (const [link, heading, name, content] of screens) {
     await page.getByRole("link", { name: link }).click();
     await expect(page.getByRole("heading", { name: heading }).first()).toBeVisible();
+    if (content) await expect(page.getByText(content).first()).toBeVisible();
+    if (link === "Emergency numbers") {
+      // Only the super-admin changes a number, in the console.
+      await expect(page.getByRole("button", { name: /Edit|Add|Deactivate/ })).toHaveCount(0);
+    }
     if (link === "Sync & status") {
       // UT-014: the sync just happened, so the data is current, not "never".
       await expect(page.getByText("Data is current")).toBeVisible();
