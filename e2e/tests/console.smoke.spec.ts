@@ -32,6 +32,9 @@ test("a super-admin signs in and every screen renders", async ({ page }) => {
     // The phone sent everything, so it must not be shown as still holding any.
     ["Sync & system health", /Sync & system health/, "40-console-sync-health", /^none$/],
     ["Audit log", /Audit log/, "41-console-audit"],
+    // Not a manuscript figure (ADR-0005). The e2e database has no facilities,
+    // so the page must say "Call for help" falls back to 911.
+    ["Emergency numbers", /Emergency numbers/, "41b-console-emergency-numbers", /falls back to the national emergency number 911/],
   ];
 
   for (const [link, heading, name, content] of screens) {
