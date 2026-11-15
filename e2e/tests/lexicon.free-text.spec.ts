@@ -160,6 +160,9 @@ test("a phone downloads it and triages free text with no signal (UT-013, UT-002 
   await cont().click();
   await expect(page.getByText("Go to the nearest Rural Health Unit.")).toBeVisible();
   await expect(page.getByText(/could not recognise your symptoms/)).toBeVisible();
+  // Someone who cannot describe their symptoms may be too unwell to type: the
+  // fail-safe offers a call too.
+  await expect(page.getByRole("link", { name: /Call for help/ })).toHaveAttribute("href", /^tel:/);
   await shot(page, "26b-result-rhu-unrecognised");
   await checkAgain();
 });
