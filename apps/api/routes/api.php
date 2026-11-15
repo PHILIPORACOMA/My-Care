@@ -104,6 +104,7 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/ruleset-versions/{version}/return-to-draft', [RulesetVersionController::class, 'returnToDraft'])->name('ruleset-versions.return');
             Route::post('/ruleset-versions/{version}/publish', [RulesetVersionController::class, 'publish'])->name('ruleset-versions.publish');
             Route::post('/ruleset-versions/{version}/rollback', [RulesetVersionController::class, 'rollback'])->name('ruleset-versions.rollback');
+            Route::delete('/ruleset-versions/{version}', [RulesetVersionController::class, 'destroy'])->name('ruleset-versions.destroy');
 
             Route::get('/symptom-codes', [SymptomCodeController::class, 'index'])->name('symptom-codes.index');
             Route::post('/symptom-codes', [SymptomCodeController::class, 'store'])->name('symptom-codes.store');

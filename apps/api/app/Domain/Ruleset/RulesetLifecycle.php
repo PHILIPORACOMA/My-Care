@@ -4,9 +4,11 @@ namespace App\Domain\Ruleset;
 
 use App\Domain\DomainActionException;
 use App\Domain\Audit\Recorder;
+use App\Models\AuditLog;
 use App\Models\RulesetVersion;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -153,6 +155,61 @@ final class RulesetLifecycle
             $this->recorder->record('rollback', 'ruleset_versions', $restored->getKey(), ['restored_from' => $target->label]);
 
             return $restored;
+        });
+    }
+
+    /**
+     * Delete a draft that was never submitted: a "New draft" clicked by mistake,
+     * an import nobody wants, unfinished work (ADR-0006, amended).
+     *
+     * Only a `draft` can go. A version that was in review, published, retired or
+     * saved over (`superseded`) is history that sessions and UT-010 rely on, so
+     * it is kept. Phones only ever receive the published version, so deleting a
+     * draft changes nothing for them.
+     *
+     * The rows it held go with it (the database cascades), and those are not
+     * individually audited, so the audit entry records what was lost: the label,
+     * the version it was based on and how many of each thing it held. The label
+     * is then reserved, so it is never handed out again (VersionWriter).
+     */
+    public function deleteDraft(RulesetVersion $version): void
+    {
+        DB::transaction(function () use ($version): void {
+            $locked = $this->lock($version);
+
+            if ($locked->status !== RulesetStatus::DRAFT) {
+                throw DomainActionException::conflict(
+                    "{$locked->label} is {$locked->status}. Only a draft can be deleted; a version that was in review, published or saved over is kept as history."
+                );
+            }
+
+            $locked->loadCount(['rules', 'lexiconTerms', 'severityThresholds', 'clarificationQuestions', 'healthTips']);
+
+            $basedOn = AuditLog::where('target_table', 'ruleset_versions')
+                ->where('target_id', $locked->getKey())
+                ->whereIn('action_type', ['draft_started', 'draft_saved'])
+                ->latest('id')
+                ->first()?->old_value['based_on'] ?? null;
+
+            $this->recorder->record('draft_deleted', 'ruleset_versions', $locked->getKey(), [
+                'label' => $locked->label,
+                'based_on' => $basedOn,
+                'held' => [
+                    'rules' => $locked->rules_count,
+                    'lexiconTerms' => $locked->lexicon_terms_count,
+                    'severityThresholds' => $locked->severity_thresholds_count,
+                    'clarificationQuestions' => $locked->clarification_questions_count,
+                    'healthTips' => $locked->health_tips_count,
+                ],
+            ]);
+
+            try {
+                $locked->delete();
+            } catch (QueryException) {
+                // A draft is never served to a device, so no session should point
+                // at it. The foreign key is the backstop if one ever does.
+                throw DomainActionException::conflict("{$locked->label} is referred to by triage sessions, so it cannot be deleted.");
+            }
         });
     }
 
