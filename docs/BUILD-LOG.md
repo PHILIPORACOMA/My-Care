@@ -1941,3 +1941,43 @@ for the sickest patient.
     gaps and how many patients could not describe a problem);
   - pointing at the chips more clearly when nothing matches.
 - Voice input stays parked by the earlier no-microphone decision.
+
+---
+
+### 9y - Batch 2 scan received; transcription sheet for Philipo (2026-11-15)
+
+Philipo uploaded the scanned, handwritten Batch 2 form (4 pages) and asked
+for a Word sheet to type the empty parts and the unreadable handwriting
+himself, before anything is integrated. **Nothing was published or changed in
+the ruleset.**
+- **The sheet** is outside the repo:
+  `Downloads\My_Care_Batch2_Transcription_Sheet_2026-11-15.docx` (landscape,
+  Parts A to E). Grey cells are Claude's reading of the scan, yellow cells
+  are the unclear ones, white cells are for Philipo. It carries no reviewer
+  name (field-study respondent data).
+- **Empty on the scan:** Part B's word column for all nine emergency rows
+  (Philipo translates the vocabulary himself); Part C's emergency-answer
+  column except animal bite; the Part D "Other" rows; and the Part E
+  "dangerously misread" answer line, which the scan ends before.
+- **Unclear, flagged in the sheet:** the date and facility in Part A;
+  seizure's Part B mark; Part C's wound question; heartburn's tier box;
+  burns' include box; insect sting or snake bite, where RHU and E both look
+  ticked; one word in heartburn's comment.
+- **Claude's reading of the 25 Part D tiers matches the v2 draft** (26 codes:
+  sting and snake bite split). Both are the same reader on the same scan, so
+  Philipo checks each against the paper.
+- **Handwritten comments that look like new rules, for Philipo to confirm:**
+  - escalations: constipation (abdominal distension), ear pain (tinnitus and
+    hearing loss), dizziness (rule out cardiac);
+  - a persistence condition for nausea or vomiting, and "if pain persists
+    more than 24 hours" for ordinary stomach pain;
+  - a note on high fever with stiff neck: "add in your app for infection
+    precaution".
+- **Part C's suggested questions are not tappable questions.** The app needs
+  2 to 6 fixed answer choices (numbers for days or weeks), so the sheet asks
+  Philipo to type the questions and choices.
+- **Part E, statement 2 was rated 2 (disagree):** residents cannot always
+  describe these complaints in a few typed words. That supports PR #25's
+  call button on the unrecognised-words result.
+- **Next:** Philipo uploads the finished sheet; Claude then proposes how it
+  becomes v2 (rules, follow-ups, terms) and waits for a go-ahead.

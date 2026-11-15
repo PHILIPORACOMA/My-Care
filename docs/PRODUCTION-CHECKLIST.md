@@ -175,3 +175,6 @@ Everything else can follow.
   is ready, not yet published. 1 / 35.
 - **2026-11-15:** added §1 "Unrecognised words" (BUILD-LOG 9x); PR #25 adds a
   call button to that result. 1 / 36.
+- **2026-11-15:** Batch 2 scan received; transcription sheet made for Philipo to
+  type Part B words, Part C questions and the unclear handwriting (BUILD-LOG
+  9y). Nothing ticked. 1 / 36.
