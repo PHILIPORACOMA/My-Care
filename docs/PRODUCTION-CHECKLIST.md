@@ -8,7 +8,7 @@ add a line to the log at the bottom. Started 2026-11-14.
 
 | Section | Done | Status |
 |---|---|---|
-| 1. Clinical content | 0 / 8 | ⛔ blocks launch. v2 merged as a draft, not yet reviewed |
+| 1. Clinical content | 0 / 9 | ⛔ blocks launch. v2 merged as a draft, not yet reviewed |
 | 2. Decisions and open PRs | 1 / 2 | all PRs merged; zero-suppression open |
 | 3. Partners and permission | 0 / 4 | not started |
 | 4. Server | 0 / 7 | not started; scripted and CI-proven |
@@ -16,7 +16,7 @@ add a line to the log at the bottom. Started 2026-11-14.
 | 6. Prove it before launch | 0 / 5 | waits on 5 |
 | 7. Manuscript paperwork | 0 / 3 | not blocking |
 | 8. Code health | 0 / 1 | not blocking |
-| **Total** | **1 / 35** | |
+| **Total** | **1 / 36** | |
 
 **Next up:** §1's first three items (v1 paperwork, Part C, lexicon terms) and
 §3's facilities and staff lists. They are all people's work, and everything
@@ -71,6 +71,9 @@ City Health Office · **S** whoever runs the server.
       `apps/pwa/src/i18n.ts`. Most important: the three result verdicts, the
       advice under each, the disclaimer and the emergency instruction. Also the
       newer strings: body-area headings and the input-screen text (PR #21).
+- [ ] **C** Unrecognised words (BUILD-LOG 9x): should they ever go to
+      Emergency, and is a "confused, very sleepy or can't speak: get help
+      now" line wanted on that screen? Both are clinical calls.
 - [ ] **C** Check which body-area group each symptom sits in (PR #21), e.g.
       allergic reaction under skin, swollen legs under heart.
 
@@ -170,3 +173,5 @@ Everything else can follow.
   import file is ready, not yet published. 1 / 35.
 - **2026-11-15:** v1 chip names approved in both languages; the import file
   is ready, not yet published. 1 / 35.
+- **2026-11-15:** added §1 "Unrecognised words" (BUILD-LOG 9x); PR #25 adds a
+  call button to that result. 1 / 36.

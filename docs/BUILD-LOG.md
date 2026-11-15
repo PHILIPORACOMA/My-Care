@@ -1915,3 +1915,29 @@ He kept the four Cebuano names flagged for wording as they were: #3 headache,
 - Demo mode already shows the same names, so there is no code change.
 - **Next:** import it on the server and publish from the console. Keep these
   names first for each symptom when the reviewed lexicon words are added.
+
+---
+
+### 9x - "Call for help" on the unrecognised-words result (PR #25) (2026-11-15)
+
+Philipo found that nonsense typed into the symptom box still gets through to
+a result. That is PR #18's choice (Option 2, 2026-10-25): unrecognised words
+go to the RHU fail-safe, never home, because a real complaint in a dialect
+the lexicon does not know must not hit a dead end. He then raised that a
+patient struggling to type or spell may be affected cognitively by what they
+feel, which is itself a warning sign. So **nothing blocks Continue**: input
+filters and a confirmation step were rejected, since each is another hurdle
+for the sickest patient.
+- **Done (PR #25):** the unrecognised-words result shows the emergency
+  result's "Call for help" button (hotline, then RHU, then 911). No new
+  wording, so nothing new to review. The tier is unchanged. Ordinary RHU
+  referrals still have no call button.
+- **Still open, for a clinician or Philipo:**
+  - should unrecognised text ever go to Emergency (a new rule);
+  - a line about confusion, sleepiness or being unable to speak on this
+    screen (medical advice, needs review);
+  - whether unrecognised checks keep syncing as RHU sessions with no
+    symptoms (they currently do; they inflate RHU counts but show lexicon
+    gaps and how many patients could not describe a problem);
+  - pointing at the chips more clearly when nothing matches.
+- Voice input stays parked by the earlier no-microphone decision.
