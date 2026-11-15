@@ -2209,3 +2209,34 @@ question wording is as below.
     much", "chest pain that won't go away", "kumikirot ang dibdib ko",
     "nagsakit ang akong dughan"; stomach "sobrang sakit ng sikmura ko",
     "lumalala ang sakit ng tiyan ko", "nagkagrabe ang sakit sa akong tiyan".
+
+---
+
+### 9af - Some chips still English in Cebuano (2026-11-15)
+
+Philipo published v8 locally (50 rules, 339 terms, both follow-up questions) and
+noticed chips still in English in Cebuano. Cause, checked with the app's own
+`chipsFor` on the published content:
+- **25 chips are English in Cebuano and 27 in Tagalog.** They are the new v2
+  symptoms (the form's 26 plus chest pain). Only v1's 23 have approved tl and
+  ceb chip names (9v/9w). v2's 26 never got any: the English wording and
+  Philipo's Cebuano were pending.
+- **The two follow-up symptoms show odd Cebuano chips.** A chip shows the
+  *first* term in the language, and the only Cebuano terms for
+  `abdominal_pain_ordinary` and `chest_pain_unspecified` are the nurse's
+  plain phrases, so their chips read "sakit ako tiyan" and "sakit ako dughan".
+  Proper chip names listed first fix this; Claude did not invent Cebuano ones.
+- **Sheet:** `Downloads\My_Care_Chip_Names_v2_Sheet_2026-11-15.docx`, 27 rows:
+  the form's English wording, Claude's Tagalog translation (grey) with a tick
+  or change box, and a blank Cebuano column for Philipo. Claude treated the
+  Part D complaint names as confirmed (Philipo checked the transcription sheet).
+  Yellow: insect sting and snake bite (one form row, split) and chest pain
+  (any kind), which is not on the form.
+- **Next:** the sheet comes back, then Claude regenerates the v2 import file
+  with the chip names first (then the approved phrases), and checks every
+  chip is non-English in tl and ceb.
+- **Related, found the same day:** a device re-downloads the rules only when its
+  copy is over 6 hours old, or when setup completes (first onboarding, change
+  of barangay), so a new publish can take up to 6 hours to reach a phone that
+  already has a copy. Offered: a quiet check on launch and a "Check for new
+  rules" button. Not built; a sync-layer change awaiting Philipo's go-ahead.

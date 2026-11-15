@@ -8,7 +8,7 @@ add a line to the log at the bottom. Started 2026-11-14.
 
 | Section | Done | Status |
 |---|---|---|
-| 1. Clinical content | 0 / 11 | ⛔ blocks launch. v2 merged as a draft, not yet reviewed |
+| 1. Clinical content | 0 / 12 | ⛔ blocks launch. v2 merged as a draft, not yet reviewed |
 | 2. Decisions and open PRs | 1 / 2 | all PRs merged; zero-suppression open |
 | 3. Partners and permission | 0 / 4 | not started |
 | 4. Server | 0 / 7 | not started; scripted and CI-proven |
@@ -16,7 +16,7 @@ add a line to the log at the bottom. Started 2026-11-14.
 | 6. Prove it before launch | 0 / 5 | waits on 5 |
 | 7. Manuscript paperwork | 0 / 3 | not blocking |
 | 8. Code health | 0 / 1 | not blocking |
-| **Total** | **1 / 38** | |
+| **Total** | **1 / 39** | |
 
 **Next up:** §1's first three items (v1 paperwork, Part C, lexicon terms) and
 §3's facilities and staff lists. They are all people's work, and everything
@@ -67,6 +67,9 @@ City Health Office · **S** whoever runs the server.
       2026-11-15 (BUILD-LOG 9w). Import
       `My_Care_ruleset_v1_tagalog_cebuano_chip_names_2026-11-15.json` on the
       server and publish it from the console.
+- [ ] **P** Tagalog and Cebuano chip names for the 27 new v2 symptoms: fill in
+      `My_Care_Chip_Names_v2_Sheet_2026-11-15.docx` (BUILD-LOG 9af). Until then
+      those chips show in English.
 - [ ] **P C** Native and clinical review of the tl/ceb UI copy in
       `apps/pwa/src/i18n.ts`. Most important: the three result verdicts, the
       advice under each, the disclaimer and the emergency instruction. Also the
@@ -188,3 +191,5 @@ Everything else can follow.
   approve (BUILD-LOG 9z). Nothing ticked. 1 / 36.
 - **2026-11-15:** severe-or-not follow-ups built in the v2 draft (PR #27, BUILD-LOG
   9ae); two new items for the appraiser and a phrase sheet to approve. 1 / 38.
+- **2026-11-15:** 25 chips found still in English in Cebuano (the new v2 symptoms);
+  chip names sheet made (BUILD-LOG 9af). 1 / 39.
