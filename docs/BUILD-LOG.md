@@ -1981,3 +1981,43 @@ the ruleset.**
   call button on the unrecognised-words result.
 - **Next:** Philipo uploads the finished sheet; Claude then proposes how it
   becomes v2 (rules, follow-ups, terms) and waits for a go-ahead.
+
+---
+
+### 9z - Transcription sheet checked; phrase approval sheet drafted (2026-11-15)
+
+Philipo checked the Batch 2 transcription sheet (9y): most readings were
+correct. What he typed, and what follows:
+- **Part C, wound question:** "Include presence of pain, describe the wound (if
+  big or deep cut)". Replaces the unclear reading.
+- **Insect sting or snake bite: the nurse ticked Emergency.** The v2 draft has
+  `insect_sting` as RHU and `snake_bite` as Emergency (Philipo's earlier
+  split, 9p). **Open decision for Philipo:** keep the split, or set both to
+  Emergency as the form reads.
+- Part A facility and date were typed in the sheet. They identify the
+  respondent, so they are not recorded here.
+- Yellow readings he did not change are taken as correct: heartburn tier,
+  burns include box, seizure mark.
+- **Part B words:** the appraiser could not supply them, because patients
+  phrase things in many ways, and asked for **Claude to draft candidates for a
+  reviewer to approve or reject.** This is a second, narrower exception to
+  "never invent lexicon terms" (see memory). Claude drafted **272 phrases** for
+  the nine emergency presentations in English, Tagalog and Cebuano: 8 positive
+  phrases per language per presentation, 2 negations, plus Philipo's two
+  English phrases for difficulty breathing. 27 are marked **broad** (a milder
+  problem could say them, so approving sends that patient to Emergency).
+  Everything is in `Downloads\My_Care_Batch2_Phrase_Approval_Sheet_2026-11-15.docx`
+  with Approve / Reject boxes. Nothing is in the repo or any ruleset.
+- **Checked by computer:** with the real matcher, all 218 positive phrases
+  match only their own presentation and all 54 negations negate only their
+  own. No phrase repeats another in its language, and the longest is 55
+  characters (limit 100). The check caught one defect: the Cebuano negation
+  "klaro akong pagsulti" sat inside the positive "dili klaro akong pagsulti" and
+  would have cancelled it. It was replaced, and a second check now looks for
+  any negation inside a positive phrase.
+- **Not yet reviewed by anyone.** The Tagalog and Cebuano are AI-written and
+  need a native speaker; Carcar Cebuano may differ.
+- **Next:** the approved sheet comes back, then Claude proposes the import
+  (the 49-rule v2 with approved terms, plus the follow-up questions) and waits
+  for a go-ahead. Phrases for the other presentations are a separate
+  decision.

@@ -178,3 +178,6 @@ Everything else can follow.
 - **2026-11-15:** Batch 2 scan received; transcription sheet made for Philipo to
   type Part B words, Part C questions and the unclear handwriting (BUILD-LOG
   9y). Nothing ticked. 1 / 36.
+- **2026-11-15:** Batch 2 transcription sheet checked by Philipo. Part B phrases
+  drafted by Claude (272, nine emergency presentations) for a reviewer to
+  approve (BUILD-LOG 9z). Nothing ticked. 1 / 36.
