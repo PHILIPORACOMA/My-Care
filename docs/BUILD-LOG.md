@@ -1860,3 +1860,36 @@ typecheck, every workspace's tests, Pest 205/205, Playwright 12/12.
     loaded local runs. The patient-data checks before it always passed.
   Both are test timing, not app behaviour. A follow-up can make each wait
   properly.
+
+---
+
+### 9v - Tagalog chip names for v1, through the console (PR #24) (2026-11-15)
+
+On a demo test server, chips stayed English in Tagalog and Cebuano. Philipo
+sent the scanned, approved v1 appraisal form and asked for Tagalog chip names
+in the **real app**: Claude translates the approved Part C wording into
+Tagalog; he provides the Cebuano later. The 23 English display names match the
+form exactly.
+- **Option A chosen:** the names go in as Tagalog **lexicon terms** in a new
+  ruleset version, published from the console. The chips stay "drawn directly
+  from the versioned lexicon" (Figure 22), so there is no code change in the
+  real app and no amendment. Option B (a table in the PWA) was rejected.
+- **The import file** is outside the repo:
+  `Downloads\My_Care_ruleset_v1_tagalog_chip_names_2026-11-15.json` (v1's
+  rules unchanged, plus 23 `tl` terms). It was checked on the throwaway e2e
+  schema: the importer accepts it as a draft (the server picks the label),
+  all 23 chips show Tagalog, and each name matches only its own symptom.
+- 20 names are Kizaru's demo drafts, checked against the form. Claude fixed 3:
+  - stroke signs: a drooping face, not a grimace; slurred speech, not a
+    stutter;
+  - headache: "red flags" restored;
+  - thirst: "no altered consciousness".
+  The stroke name was shortened to 96 characters for `term` VARCHAR(100).
+- PR #24: demo mode uses the same three fixes.
+- **Side effects of publishing it:**
+  - Demo mode steps aside on that server, because a real lexicon now exists.
+    Test the demo on a server without this version.
+  - A chip shows the *first* Tagalog term for its code. When the reviewed
+    lexicon words arrive, keep these names first.
+- **Owed:** a native Tagalog speaker's check of the 23 names; Philipo's
+  Cebuano.

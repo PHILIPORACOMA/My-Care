@@ -8,7 +8,7 @@ add a line to the log at the bottom. Started 2026-11-14.
 
 | Section | Done | Status |
 |---|---|---|
-| 1. Clinical content | 0 / 7 | ⛔ blocks launch. v2 merged as a draft, not yet reviewed |
+| 1. Clinical content | 0 / 8 | ⛔ blocks launch. v2 merged as a draft, not yet reviewed |
 | 2. Decisions and open PRs | 1 / 2 | all PRs merged; zero-suppression open |
 | 3. Partners and permission | 0 / 4 | not started |
 | 4. Server | 0 / 7 | not started; scripted and CI-proven |
@@ -16,7 +16,7 @@ add a line to the log at the bottom. Started 2026-11-14.
 | 6. Prove it before launch | 0 / 5 | waits on 5 |
 | 7. Manuscript paperwork | 0 / 3 | not blocking |
 | 8. Code health | 0 / 1 | not blocking |
-| **Total** | **1 / 34** | |
+| **Total** | **1 / 35** | |
 
 **Next up:** §1's first three items (v1 paperwork, Part C, lexicon terms) and
 §3's facilities and staff lists. They are all people's work, and everything
@@ -63,6 +63,9 @@ City Health Office · **S** whoever runs the server.
       publishes it.*
 - [ ] **P C** Health tips (Figure 28): none exist yet. Write them per tier and
       language, or accept an empty tips screen at launch.
+- [ ] **P** Tagalog chip names for v1: translated from the approved form
+      (BUILD-LOG 9v). Publish the import file from the console, then have a
+      native speaker check the 23 names. Cebuano names: from Philipo.
 - [ ] **P C** Native and clinical review of the tl/ceb UI copy in
       `apps/pwa/src/i18n.ts`. Most important: the three result verdicts, the
       advice under each, the disclaimer and the emergency instruction. Also the
@@ -162,3 +165,5 @@ Everything else can follow.
 
 - **2026-11-14:** checklist written. PRs #18–#23 merged; v2 is on main as a
   draft. 1 / 34.
+- **2026-11-15:** added §1 "Tagalog chip names for v1" (BUILD-LOG 9v): the
+  import file is ready, not yet published. 1 / 35.
