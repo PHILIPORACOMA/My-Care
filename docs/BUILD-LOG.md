@@ -2156,3 +2156,56 @@ mistake.
   left alone.
 - **Not touched:** Philipo's own dev drafts (the browser check used the
   throwaway e2e database).
+
+---
+
+### 9ae - "Is the pain severe?" follow-ups, v2 (PR #27) (2026-11-15)
+
+Philipo answered 9ab's open question: a plain "sakit akong tiyan / dughan"
+asks "is it severe?", and **"No, not severe" leads to Home with a health
+tip.** Claude proposed four defaults and he accepted them with "go": chest
+"No" goes to **RHU, not Home**; the tip is limited to the appraiser's own
+wording; the English and Tagalog plain phrases get drafted for approval; the
+question wording is as below.
+- **Mechanism: nothing new in the engine.** A question's `redFlagAnswer` goes
+  to Emergency (ADR-0001 step 1). In v2: `abdominal_pain_ordinary` and a new
+  `chest_pain_unspecified` (R-050, "Chest pain (any kind)") ask "Is the
+  stomach / chest pain severe?" (en, tl "Matindi ba…?", ceb "Grabe ba…?";
+  answers No/Yes, Hindi/Oo, Dili/Oo). Yes is Emergency. No: stomach Home (the
+  appraiser's own tier) and chest RHU. The app has no way to skip a question.
+- **Why chest "No" is RHU, not Home (open for the appraiser):** a patient with
+  a heart problem may well answer "No", and the form marks chest tightness
+  Emergency. The appraiser has never ruled on chest pain "not severe".
+  Philipo can still choose Home.
+- **The tip** (stomach, Home only) says only what the appraiser wrote: pain
+  over 24 hours, or no relief from medication, go to the RHU. tl and ceb are
+  unreviewed drafts. Other home advice must come from the appraiser. No chest
+  tip.
+- **Repo (PR #27):** `v2.ts`, tests, `ut-matrix.md`. The form's 26 stay as
+  appraised; v2 is now 50 presentations. v1, the engine and the schema are
+  untouched.
+- **Import file:** `Downloads\My_Care_ruleset_v2_with_approved_content_2026-11-15.json`
+  (339 terms, 50 rules, 6 question rows, 3 tips). It holds the 46 approved chip
+  names, the approved emergency phrases and the nurse's four plain Cebuano
+  phrases, now under the two follow-up symptoms. The importer accepts it on the
+  throwaway schema. It supersedes the v1 phrases file. Not imported anywhere.
+  The 26 new v2 symptoms still have no tl or ceb chip names (their wording and
+  Cebuano are not yet confirmed).
+- **Sheet:** `Downloads\My_Care_Plain_Stomach_Chest_Phrase_Sheet_2026-11-15.docx`,
+  46 drafted phrases: plain stomach and chest pain in English, Tagalog and a
+  few more Cebuano, plus "no stomach pain" negations. Until it is approved, the
+  English and Tagalog plain phrases match nothing (RHU fail-safe with the call
+  button), and "walay sakit akong tiyan" is read as stomach pain.
+- **Checks:** every approved and new positive (317) matches only its own
+  symptom; 64 negations negate only their own; severe wording still goes
+  straight to Emergency.
+- **Two weak spots found, not fixed:**
+  - Any text containing a recognised phrase counts as understood, so a second
+    complaint is missed: "sakit akong tiyan ug dughan" matches only the
+    stomach, so the chest part is lost and the answer can end at Home. Before
+    this change it matched nothing and got RHU.
+  - Phrases approved earlier as "broad" and meaning the same as a plain phrase
+    still go straight to Emergency without asking: chest "my chest hurts so
+    much", "chest pain that won't go away", "kumikirot ang dibdib ko",
+    "nagsakit ang akong dughan"; stomach "sobrang sakit ng sikmura ko",
+    "lumalala ang sakit ng tiyan ko", "nagkagrabe ang sakit sa akong tiyan".
