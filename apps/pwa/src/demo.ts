@@ -31,7 +31,12 @@ import { testLexiconTerms } from "@mycare/ruleset/testing";
  * already carries reviewed terms is left untouched: real vocabulary wins.
  */
 
-/** Draft translations of v1's display names, for chip labels only. */
+/**
+ * Translations of v1's display names, for chip labels only. The Tagalog
+ * matches the import file Philipo publishes for the real app (BUILD-LOG 9v):
+ * Claude's translation of the approved v1 appraisal wording, awaiting a native
+ * speaker's check. The Cebuano is still kizaru3214's unreviewed draft.
+ */
 const DEMO_LABELS: Record<string, Partial<Record<LanguageCode, string>>> = {
   fever_mild: {
     tl: "Banayad na lagnat, wala pang 3 araw, walang babalang senyales",
@@ -42,7 +47,7 @@ const DEMO_LABELS: Record<string, Partial<Record<LanguageCode, string>>> = {
     ceb: "Sip-on / ubo, dili ginahangos",
   },
   headache_mild_moderate: {
-    tl: "Banayad hanggang katamtamang sakit ng ulo, walang senyales sa nerbiyos",
+    tl: "Banayad hanggang katamtamang sakit ng ulo, walang babalang senyales sa utak o nerbiyos",
     ceb: "Hinay hangtod kasarangan nga sakit sa ulo, walay senyales sa nerbiyos",
   },
   minor_wound_no_infection: {
@@ -86,7 +91,7 @@ const DEMO_LABELS: Record<string, Partial<Record<LanguageCode, string>>> = {
     ceb: "Paak sa hayop nga nisamad sa panit, stable, walay senyales sa rabies",
   },
   excessive_thirst_urination: {
-    tl: "Labis na pagkauhaw / pag-ihi, malinaw ang isip",
+    tl: "Labis na pagkauhaw / pag-ihi, walang pagbabago sa malay",
     ceb: "Sobra nga kauhaw / pag-ihi, klaro ang panghunahuna",
   },
   difficulty_breathing: {
@@ -98,7 +103,7 @@ const DEMO_LABELS: Record<string, Partial<Record<LanguageCode, string>>> = {
     ceb: "Grabe nga sakit sa dughan nga moabot sa bukton o apapangig",
   },
   stroke_signs: {
-    tl: "Biglang pagngiwi ng mukha, utal na pananalita, o panghihina ng isang bahagi ng katawan",
+    tl: "Biglang paglaylay ng mukha, bulol o malabong pananalita, o panghihina ng isang bahagi ng katawan",
     ceb: "Kalit nga pagkiwi sa nawong, dili klaro nga pagsulti, o kahuyang sa usa ka kilid sa lawas",
   },
   abdominal_pain_severe_rigidity: {
