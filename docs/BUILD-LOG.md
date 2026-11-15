@@ -2095,3 +2095,31 @@ Philipo answered the two held items from 9aa:
 - It supersedes `..._tagalog_cebuano_chip_names_...json` (kept, not deleted;
   that one is already published in Philipo's local database). Not imported
   anywhere new.
+
+---
+
+### 9ac - Console import failed with "Unexpected token '<'" (2026-11-15)
+
+Philipo tried **Import bundle JSON** in the console and got `Unexpected token
+'<', "<br /> <b>"... is not valid JSON`. It was not the file.
+- **The file is fine.** Posted over real HTTP to a spare-port API on the
+  throwaway e2e database: 201 in 1.2 s. Run on the dev database inside a
+  rolled-back transaction: accepted in 0.7 s. Nothing was saved anywhere.
+  Bad bundles (not a bundle, an unknown symptom code, no body) come back as
+  clean JSON 422s.
+- **The cause is the dev API process on port 8000.** It had been running since
+  13 Nov (started from a VS Code PowerShell terminal). On every POST it prints
+  `Warning: PHP Request Startup: Unable to create temporary file, Check
+  permissions in temporary files directory` and `POST data can't be buffered;
+  all data discarded`, even for a 50 KB body. PHP echoes that HTML before
+  Laravel can reply, so the log shows `422 ... headers already sent` (the empty
+  body failed validation) and the browser gets HTML where it expects JSON.
+  A fresh PHP process on the same machine creates temp files normally (the temp
+  folder holds 178 files and has 308 GB free). A throwaway server started with
+  a nonexistent TEMP reproduces the exact symptom, so that process inherited
+  a bad temp setting.
+- **Fix:** restart the API from a terminal with a normal TEMP:
+  `php -d variables_order=EGPCS artisan serve --no-reload --port=8000`.
+- **Deployments:** the same symptom on a real server means PHP's temp
+  directory is not writable by the web user (`www-data` for PHP-FPM).
+  Large posts, including this import and device syncs, would fail with it.
