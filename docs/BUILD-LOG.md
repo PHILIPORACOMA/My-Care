@@ -2021,3 +2021,43 @@ correct. What he typed, and what follows:
   (the 49-rule v2 with approved terms, plus the follow-up questions) and waits
   for a go-ahead. Phrases for the other presentations are a separate
   decision.
+
+---
+
+### 9aa - Phrase approval sheet came back (2026-11-15)
+
+Philipo returned the phrase approval sheet (9z): **no row is marked Reject, and
+he said the rows left blank are approved**, so all 272 drafted phrases are
+approved, including the 27 marked broad. He typed **9 corrections, all
+Cebuano**. They read as additions to the approved phrases; where the wording
+did not say "add", Claude treated them the same way (to be confirmed).
+- **12 distinct added phrases**, none yet in any file:
+  - chest pain: "sakit ako dughan", "sakit akong dughan", negations
+    "way sakit ako dughan" and "way sakit akong dughan";
+  - severe stomach pain: "sakit ako tiyan", "sakit akong tiyan", "gahi akong
+    tiyan", "nangahi akong tiyan", "gahi kaayu akong tiyan", "grabe sakita sa
+    ako tiyan";
+  - allergic swelling: "nihubag akong nawng", "nanghubag ug gi hikap ako nawng".
+- **Matcher test of the additions** (against all 272 plus the 12): no
+  duplicates, and the negations still negate. Two problems, so five of the
+  twelve are **held for Philipo's decision**:
+  - **Too broad.** "sakit akong tiyan" (my stomach hurts) now resolves to
+    severe abdominal pain, which is Emergency, so a Cebuano stomach ache of
+    any size is Emergency, and the v2 row "ordinary stomach pain" (Home) can
+    never be reached with those words. Likewise "sakit akong dughan"
+    resolves to severe chest pain. Held: "sakit ako/akong tiyan" and
+    "sakit ako/akong dughan".
+  - **Misplaced.** "grabe sakita sa ako tiyan" (stomach) sits under the chest
+    pain row (B2-ceb-01), and again under B4. It would also repeat the same
+    term twice in one version, which the database rejects. Probably meant
+    "grabe sakit sa ako dughan" there. "sakita" may be a typo for "sakit".
+- Minor: "gahi kaayu akong tiyan" has no negation partner, so "dili gahi kaayu
+  akong tiyan" (not very hard) comes back as present. That errs toward
+  escalation.
+- **Plan proposed, not started:** a new import file for **v1** (the nine
+  emergency presentations are all in v1, so v2 need not wait): v1's rules, the
+  46 approved chip names first, the nine English display names first among
+  the English terms (otherwise English chips would change to the first phrase),
+  then the approved phrases. It replaces
+  `My_Care_ruleset_v1_tagalog_cebuano_chip_names_2026-11-15.json` and goes in
+  as a draft.
