@@ -2240,3 +2240,31 @@ noticed chips still in English in Cebuano. Cause, checked with the app's own
   of barangay), so a new publish can take up to 6 hours to reach a phone that
   already has a copy. Offered: a quiet check on launch and a "Check for new
   rules" button. Not built; a sync-layer change awaiting Philipo's go-ahead.
+
+---
+
+### 9ag - Cebuano chip names drafted for Philipo to check (2026-11-15)
+
+Philipo asked Claude to **generate the Cebuano chip names** for the 27 new v2
+symptoms and said they would check them "like before" (the phrase approval
+pattern, 9z/9aa). So Claude, not Philipo, wrote the Cebuano this time.
+- **Sheet:** `Downloads\My_Care_Chip_Names_v2_Sheet_with_Cebuano_draft_2026-11-15.docx`
+  (the earlier copy without Cebuano was open in Word and was left alone).
+  Per row: the form's English, Claude's Tagalog and Cebuano drafts (grey), and
+  "fine / change to" boxes for each. Yellow Cebuano cells name the words
+  Claude is least sure of: constipation, heartburn, tingling, "lutahan"
+  (joint) and "paak o tusok" (insect sting). The Cebuano reuses the style of
+  the approved v1 chip names ("samad", "hubag", "sakit sa").
+- **Checked before handing over, with the real matcher:** every name is under
+  100 characters; no name repeats another term under a different symptom;
+  all 337 positive terms (approved plus the 54 new chip names) still match only
+  their own symptom; the 56 negations still negate only their own; and with
+  these names first, **0 of 50 chips are English** in tl or ceb. The two follow-up
+  symptoms get proper chip names instead of "sakit ako tiyan / dughan".
+- **A consequence to weigh:** chip names are also lexicon terms, so typing
+  "sakit sa likod" or "sakit ng likod" is now read as back pain (Home).
+  Intended, but each name is therefore also a recognition phrase.
+- **Not reviewed by anyone.** Both languages are AI-written. Carcar Cebuano may
+  differ. The memory note on drafting lexicon content now covers this too.
+- **Next:** the checked sheet comes back; Claude regenerates the v2 import file
+  with the approved chip names first, then the approved phrases.

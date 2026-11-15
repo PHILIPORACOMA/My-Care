@@ -67,9 +67,9 @@ City Health Office · **S** whoever runs the server.
       2026-11-15 (BUILD-LOG 9w). Import
       `My_Care_ruleset_v1_tagalog_cebuano_chip_names_2026-11-15.json` on the
       server and publish it from the console.
-- [ ] **P** Tagalog and Cebuano chip names for the 27 new v2 symptoms: fill in
-      `My_Care_Chip_Names_v2_Sheet_2026-11-15.docx` (BUILD-LOG 9af). Until then
-      those chips show in English.
+- [ ] **P C** Tagalog and Cebuano chip names for the 27 new v2 symptoms: check
+      Claude's drafts in `My_Care_Chip_Names_v2_Sheet_with_Cebuano_draft_2026-11-15.docx`
+      (BUILD-LOG 9af, 9ag). Until then those chips show in English.
 - [ ] **P C** Native and clinical review of the tl/ceb UI copy in
       `apps/pwa/src/i18n.ts`. Most important: the three result verdicts, the
       advice under each, the disclaimer and the emergency instruction. Also the
@@ -193,3 +193,5 @@ Everything else can follow.
   9ae); two new items for the appraiser and a phrase sheet to approve. 1 / 38.
 - **2026-11-15:** 25 chips found still in English in Cebuano (the new v2 symptoms);
   chip names sheet made (BUILD-LOG 9af). 1 / 39.
+- **2026-11-15:** Cebuano chip names drafted by Claude for Philipo to check (BUILD-LOG
+  9ag). Nothing ticked. 1 / 39.
