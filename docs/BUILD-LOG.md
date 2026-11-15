@@ -2268,3 +2268,31 @@ pattern, 9z/9aa). So Claude, not Philipo, wrote the Cebuano this time.
   differ. The memory note on drafting lexicon content now covers this too.
 - **Next:** the checked sheet comes back; Claude regenerates the v2 import file
   with the approved chip names first, then the approved phrases.
+
+---
+
+### 9ah - Chip names approved; v2 import file with them (2026-11-15)
+
+Philipo said "all good" to the chip names sheet (9ag). The sheet on disk has
+no ticks or edits, so this is his approval in chat of **all 27 Tagalog and
+all 27 Cebuano drafts as written**, including the Cebuano words Claude had
+flagged as least sure of (constipation, heartburn, tingling, "lutahan",
+"paak o tusok"). Both languages remain AI-written; no native speaker has
+reviewed them beyond Philipo.
+- **New import file:** `Downloads\My_Care_ruleset_v2_with_chip_names_2026-11-15.json`.
+  393 terms: the 46 approved v1 chip names, the 54 new chip names (27 tl + 27
+  ceb) listed right after them, then the 293 approved phrases. Plus v2's 50
+  rules, 6 question rows and 3 tips. It supersedes
+  `..._v2_with_approved_content_...json` (kept, not deleted).
+- **Checks:** the real importer accepts it on the throwaway schema (393 terms:
+  en 101, tl 139, ceb 153); **0 of 50 chips are English in Tagalog or Cebuano**;
+  the English chips still equal the form's wording; all 337 positive terms match
+  only their own symptom and the 56 negations negate only their own; the app flow
+  still gives stomach "Dili" = Home plus the tip, "Oo" = Emergency, chest "Dili" =
+  RHU, and "kaayo" goes straight to Emergency.
+- **Still pending:** the plain stomach and chest phrase sheet (so the English
+  and Tagalog plain phrases still match nothing), the appraiser's ruling on
+  chest "No", and the stomach tip's wording.
+- **To use it:** import as a draft, submit for review, publish with the
+  clinical-review confirmation, then force the device to re-download (change
+  barangay or clear site data), since a device only refreshes after 6 hours.
