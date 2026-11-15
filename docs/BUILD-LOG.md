@@ -2061,3 +2061,37 @@ did not say "add", Claude treated them the same way (to be confirmed).
   then the approved phrases. It replaces
   `My_Care_ruleset_v1_tagalog_cebuano_chip_names_2026-11-15.json` and goes in
   as a draft.
+
+---
+
+### 9ab - v1 import file with the approved phrases (2026-11-15)
+
+Philipo answered the two held items from 9aa:
+- **The misplaced phrase: "correct it".** B2-ceb-01's stomach phrase is now the
+  chest phrase "grabe sakit sa ako dughan" (Claude's guess, accepted). The
+  stomach phrase stays once, under B4, spelled "grabe sakit sa ako tiyan"
+  ("sakita" read as a typo).
+- **The short plain phrases: "keep the 'kaayu', but make a follow-up with the
+  negation if it's severe or not".** Read as: phrases with "kaayo/kaayu"
+  stay as the severe presentation, and plain "sakit akong tiyan / dughan"
+  should ask a follow-up question (is it severe?) instead of going straight
+  to Emergency. **Claude has not built that.** It is a new rule and a new
+  clarification question, so it waits for Philipo to confirm the reading and
+  the "No" branch (see the message that followed).
+- **The file:** `Downloads\My_Care_ruleset_v1_with_approved_phrases_2026-11-15.json`.
+  335 terms on v1's 23 rules (rules unchanged): the 46 approved chip names
+  first, the nine English display names first among the English terms (so
+  English chips are unchanged), then the approved phrases and Philipo's
+  additions: English 83 + 18 negations, Tagalog 94 + 18, Cebuano 102 + 20.
+  One drafted Tagalog phrase equalled an approved chip name for the same
+  symptom and was skipped as a duplicate.
+- **Held out of the file:** "sakit ako/akong tiyan" and "sakit ako/akong
+  dughan". With them out, those phrases match nothing, so a plain "sakit akong
+  tiyan" gets the RHU fail-safe with the call button (PR #25).
+- **Checks:** the real importer accepts it on the throwaway schema (335
+  stored, 23 rules); tl and ceb chips identical to the approved chip names;
+  English chips unchanged; all 279 positives match only their own symptom;
+  all 56 negations negate only their own symptom.
+- It supersedes `..._tagalog_cebuano_chip_names_...json` (kept, not deleted;
+  that one is already published in Philipo's local database). Not imported
+  anywhere new.
