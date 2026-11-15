@@ -63,9 +63,10 @@ City Health Office · **S** whoever runs the server.
       publishes it.*
 - [ ] **P C** Health tips (Figure 28): none exist yet. Write them per tier and
       language, or accept an empty tips screen at launch.
-- [ ] **P** Tagalog chip names for v1: translated from the approved form
-      (BUILD-LOG 9v). Publish the import file from the console, then have a
-      native speaker check the 23 names. Cebuano names: from Philipo.
+- [ ] **P** Tagalog and Cebuano chip names for v1: approved by Philipo
+      2026-11-15 (BUILD-LOG 9w). Import
+      `My_Care_ruleset_v1_tagalog_cebuano_chip_names_2026-11-15.json` on the
+      server and publish it from the console.
 - [ ] **P C** Native and clinical review of the tl/ceb UI copy in
       `apps/pwa/src/i18n.ts`. Most important: the three result verdicts, the
       advice under each, the disclaimer and the emergency instruction. Also the
@@ -167,3 +168,5 @@ Everything else can follow.
   draft. 1 / 34.
 - **2026-11-15:** added §1 "Tagalog chip names for v1" (BUILD-LOG 9v): the
   import file is ready, not yet published. 1 / 35.
+- **2026-11-15:** v1 chip names approved in both languages; the import file
+  is ready, not yet published. 1 / 35.

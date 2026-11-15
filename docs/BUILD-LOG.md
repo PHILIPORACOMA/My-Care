@@ -1893,3 +1893,25 @@ form exactly.
     lexicon words arrive, keep these names first.
 - **Owed:** a native Tagalog speaker's check of the 23 names; Philipo's
   Cebuano.
+
+---
+
+### 9w - v1 chip names approved in Tagalog and Cebuano (2026-11-15)
+
+Philipo reviewed all 23 v1 chip names in both languages and **approved all**:
+- the Tagalog from 9v;
+- the Cebuano exactly as in demo mode (kizaru3214's wording, now his approved
+  text).
+
+He kept the four Cebuano names flagged for wording as they were: #3 headache,
+#6 muscle pain, #14 thirst, #17 stroke.
+- **The import file now carries both languages:**
+  `Downloads\My_Care_ruleset_v1_tagalog_cebuano_chip_names_2026-11-15.json`
+  (v1's 23 rules unchanged, plus 23 `tl` and 23 `ceb` terms, longest 96
+  characters). It replaces 9v's Tagalog-only file, which was deleted.
+- Checked on the throwaway e2e schema: the importer accepts it; every chip
+  differs from English in both languages; each of the 46 names matches only
+  its own symptom.
+- Demo mode already shows the same names, so there is no code change.
+- **Next:** import it on the server and publish from the console. Keep these
+  names first for each symptom when the reviewed lexicon words are added.
