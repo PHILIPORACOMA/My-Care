@@ -25,6 +25,12 @@ describe("demo mode", () => {
     }
     expect(chipsFor(demo, "en").slice(0, v1Bundle.symptomCodes.length)).toEqual(chipsFor(v1Bundle, "en"));
     expect(symptomLabel(demo, "chest_pain_severe_radiating", "tl")).toBe("Matinding sakit ng dibdib na umaabot sa braso o panga");
+    // Stroke signs, as the approved v1 form words them: a drooping face (not a
+    // grimace) and slurred speech (not a stutter). Same text as the Tagalog
+    // import file Philipo publishes (BUILD-LOG 9v).
+    expect(symptomLabel(demo, "stroke_signs", "tl")).toBe(
+      "Biglang paglaylay ng mukha, bulol o malabong pananalita, o panghihina ng isang bahagi ng katawan"
+    );
   });
 
   it("lets typed symptoms through to the real engine", () => {
