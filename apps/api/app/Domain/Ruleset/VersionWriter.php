@@ -2,6 +2,7 @@
 
 namespace App\Domain\Ruleset;
 
+use App\Models\AuditLog;
 use App\Models\ClarificationQuestion;
 use App\Models\HealthTip;
 use App\Models\LexiconTerm;
@@ -82,7 +83,15 @@ final class VersionWriter
 
     private function nextLabel(): string
     {
+        // A deleted draft's label stays reserved (RulesetLifecycle::deleteDraft
+        // records it), so two different versions are never both called "v7".
+        $deleted = AuditLog::where('target_table', 'ruleset_versions')
+            ->where('action_type', 'draft_deleted')
+            ->pluck('old_value')
+            ->map(fn (mixed $old): string => (string) (is_array($old) ? ($old['label'] ?? '') : (json_decode((string) $old, true)['label'] ?? '')));
+
         $highest = RulesetVersion::pluck('label')
+            ->merge($deleted)
             ->map(fn (string $label): int => preg_match('/^v(\d+)$/', $label, $m) ? (int) $m[1] : 0)
             ->max() ?? 0;
 

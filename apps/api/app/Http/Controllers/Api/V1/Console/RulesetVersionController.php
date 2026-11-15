@@ -109,6 +109,14 @@ class RulesetVersionController extends Controller
         return $this->created($this->lifecycle->rollbackTo($version, $user));
     }
 
+    /** Delete a draft that never went to review. Anything else is history and is kept. */
+    public function destroy(RulesetVersion $version): JsonResponse
+    {
+        $this->lifecycle->deleteDraft($version);
+
+        return response()->json(['deleted' => ['id' => $version->getKey(), 'label' => $version->label]]);
+    }
+
     /** @return array<string, mixed> */
     private function present(RulesetVersion $version): array
     {

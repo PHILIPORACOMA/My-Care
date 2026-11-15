@@ -30,7 +30,26 @@ UT-010 says "each save creates a new version; prior versions remain
 retrievable", and it is taken literally. `PUT
 /console/ruleset-versions/{id}/content` validates the full content and writes a
 new `draft` version (`VersionWriter`); the old draft becomes `superseded`.
-Nothing is ever edited in place and nothing is ever deleted.
+Nothing is ever edited in place. Nothing that went to review or was published is ever deleted.
+
+**Amended 2026-11-15: a draft can be deleted.** The console's Delete button removes a
+version whose status is `draft`: a "New draft" clicked by mistake, an import nobody
+wants, unfinished work. Philipo asked for it. It does not touch UT-010, which is
+about saves: a version that was saved over (`superseded`) is a prior version and
+stays retrievable. Rules:
+
+- Only `draft` can be deleted. `in_review` must be returned to draft first;
+  `superseded`, `published` and `retired` are never deleted. A draft is never
+  served to a device, and no session points at one.
+- The rules, terms, thresholds, questions and tips it held go with it (the foreign
+  keys cascade). Those rows are not audited one by one, so the audit entry
+  `draft_deleted` records the label, the version it was based on and how many of
+  each it held. The content itself is not kept.
+- The label is reserved. `VersionWriter::nextLabel` also counts labels in
+  `draft_deleted` entries, so a deleted v7 is never reused and the audit log never
+  has two different v7s.
+- The list hides `superseded` and `retired` behind "Show older versions" so the
+  history stays retrievable without cluttering the page.
 
 That one rule resolves two gaps without an amendment:
 

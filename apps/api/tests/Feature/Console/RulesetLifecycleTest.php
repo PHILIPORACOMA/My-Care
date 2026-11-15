@@ -369,3 +369,92 @@ it('imports the exported v2 bundle (v1 + Lexicon Appraisal Batch 2) as a draft',
         ->and($version->rules()->where('outcome_tier', 'rhu')->count())->toBe(21)
         ->and($version->rules()->where('outcome_tier', 'emergency')->count())->toBe(15);
 });
+
+/*
+ * ADR-0006 (amended): a draft that never went to review can be deleted. Anything
+ * that was in review, published, retired or saved over is history and stays.
+ */
+it('deletes a draft that never went to review, and the audit log records what it held', function () {
+    $draft = draftWith(fixtureContent());
+
+    $this->deleteJson("/api/v1/console/ruleset-versions/{$draft->id}")
+        ->assertStatus(200)
+        ->assertJsonPath('deleted.label', $draft->label);
+
+    expect(RulesetVersion::whereKey($draft->id)->exists())->toBeFalse()
+        ->and(TriageRule::where('ruleset_version_id', $draft->id)->exists())->toBeFalse();
+
+    $listed = collect($this->getJson('/api/v1/console/ruleset-versions')->json('versions'))->pluck('id');
+    expect($listed->all())->not->toContain($draft->id);
+
+    $entry = AuditLog::where('target_table', 'ruleset_versions')->where('target_id', $draft->id)
+        ->where('action_type', 'draft_deleted')->firstOrFail();
+    expect($entry->actor_id)->toBe($this->admin->id)
+        ->and($entry->old_value['label'])->toBe($draft->label)
+        ->and($entry->old_value['held']['rules'])->toBe(1)
+        ->and($entry->old_value['held']['lexiconTerms'])->toBe(1);
+});
+
+it('records which version a deleted draft was copied from', function () {
+    $v1 = draftWith(fixtureContent());
+    publishVersion($v1);
+
+    $copy = RulesetVersion::findOrFail(
+        $this->postJson('/api/v1/console/ruleset-versions', ['baseVersionId' => $v1->id])->assertStatus(201)->json('version.id')
+    );
+    $this->deleteJson("/api/v1/console/ruleset-versions/{$copy->id}")->assertStatus(200);
+
+    $entry = AuditLog::where('target_id', $copy->id)->where('action_type', 'draft_deleted')->firstOrFail();
+    expect($entry->old_value['based_on'])->toBe($v1->label);
+});
+
+it('keeps every version that was in review, published, retired or saved over', function () {
+    $first = draftWith(fixtureContent());
+    $savedOver = RulesetVersion::where('status', RulesetStatus::SUPERSEDED)->firstOrFail();
+
+    $this->postJson("/api/v1/console/ruleset-versions/{$first->id}/submit")->assertStatus(200);
+    $inReview = $first->id;
+    $published = $first->id;
+    $retired = null;
+
+    $try = function (int $id) {
+        $this->deleteJson("/api/v1/console/ruleset-versions/{$id}")->assertStatus(409);
+        expect(RulesetVersion::whereKey($id)->exists())->toBeTrue();
+    };
+
+    $try($savedOver->id);
+    $try($inReview);
+
+    $this->postJson("/api/v1/console/ruleset-versions/{$first->id}/publish", ['clinicalReviewConfirmed' => true])->assertStatus(200);
+    $try($published);
+
+    publishVersion(draftWith(fixtureContent(['lexiconTerms' => [
+        ['symptomCode' => 'code_a', 'language' => 'ceb', 'term' => 'fixture term b', 'isNegation' => false],
+    ]])));
+    $retired = RulesetVersion::findOrFail($first->id);
+    expect($retired->status)->toBe(RulesetStatus::RETIRED);
+    $try($retired->id);
+
+    // The rows that version holds are untouched.
+    expect(TriageRule::where('ruleset_version_id', $first->id)->count())->toBe(1);
+});
+
+it('never hands out a deleted draft\'s label again', function () {
+    $draft = draftWith(fixtureContent());
+    $label = $draft->label;
+    $number = (int) substr($label, 1);
+
+    $this->deleteJson("/api/v1/console/ruleset-versions/{$draft->id}")->assertStatus(200);
+
+    $next = $this->postJson('/api/v1/console/ruleset-versions')->assertStatus(201)->json('version.label');
+    expect($next)->toBe('v'.($number + 1))->not->toBe($label);
+});
+
+it('does not let a sub-admin delete a draft', function () {
+    $draft = draftWith(fixtureContent());
+
+    $this->actingAsStaff($this->subAdmin($this->makeBarangay()));
+    $this->deleteJson("/api/v1/console/ruleset-versions/{$draft->id}")->assertStatus(403);
+
+    expect(RulesetVersion::whereKey($draft->id)->exists())->toBeTrue();
+});

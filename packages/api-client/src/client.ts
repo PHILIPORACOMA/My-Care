@@ -175,6 +175,9 @@ export function createClient(options: ClientOptions = {}) {
         json<{ version: RulesetVersionSummary }>("POST", `/api/v1/console/ruleset-versions/${id}/publish`, { clinicalReviewConfirmed }).then((r) => r.version),
       rollback: (id: number) =>
         json<{ version: RulesetVersionSummary }>("POST", `/api/v1/console/ruleset-versions/${id}/rollback`).then((r) => r.version),
+      /** A draft that never went to review. Anything else is kept as history. */
+      deleteDraft: (id: number) =>
+        json<{ deleted: { id: number; label: string } }>("DELETE", `/api/v1/console/ruleset-versions/${id}`).then((r) => r.deleted),
 
       symptomCodes: () => json<{ symptomCodes: SymptomCodeEntry[] }>("GET", "/api/v1/console/symptom-codes").then((r) => r.symptomCodes),
       createSymptomCode: (entry: Omit<SymptomCodeEntry, "locked">) =>
