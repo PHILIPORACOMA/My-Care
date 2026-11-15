@@ -2123,3 +2123,36 @@ Philipo tried **Import bundle JSON** in the console and got `Unexpected token
 - **Deployments:** the same symptom on a real server means PHP's temp
   directory is not writable by the web user (`www-data` for PHP-FPM).
   Large posts, including this import and device syncs, would fail with it.
+
+---
+
+### 9ad - Delete a draft in the console (PR #26) (2026-11-15)
+
+Philipo asked for a delete button on drafts in Triage rules & lexicon, because
+the list looked messy. Every save and import adds a draft, and a mistaken
+"New draft" click could not be undone. He chose a real delete over hiding or
+"discarding", for drafts that are not published, unfinished, or created by
+mistake.
+- **Only `draft` can be deleted.** In review must be returned to draft first.
+  Saved-over (`superseded`), published and retired versions are never
+  deleted: UT-010 says prior versions remain retrievable. Superseded and
+  retired versions sit behind "Show older versions (n)" so the list is
+  readable without losing history.
+- **ADR-0006 amended** (our document, not the manuscript): "nothing is ever
+  deleted" became "nothing that went to review or was published is ever
+  deleted". No schema change, no manuscript amendment.
+- **Audit:** `draft_deleted` records who, when, the label, the version it was
+  based on, and how many of each thing it held. The content itself goes with
+  the version (the cascade is not audited row by row). A draft is never
+  served to a device and no session points at one; the foreign key is the
+  backstop.
+- **Labels are reserved.** `VersionWriter::nextLabel` counts labels in
+  `draft_deleted` entries, so a deleted v3 is never reused. Checked in a
+  browser: after deleting v3, the next new draft was v4.
+- **Tests:** Pest 210/210 (5 new; the label test fails when the reservation
+  is disabled), console 11/11 (4 new), Playwright 12/12.
+- **Caveat found:** the PHP Pint style fixers already flag
+  `RulesetLifecycle.php` and the controller on main. CI does not run Pint;
+  left alone.
+- **Not touched:** Philipo's own dev drafts (the browser check used the
+  throwaway e2e database).
