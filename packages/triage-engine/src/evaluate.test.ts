@@ -48,8 +48,8 @@ const BATCH2_TIERS: Record<string, "home" | "rhu" | "emergency"> = {
   vaginal_discharge_itching: "rhu",
 };
 
-test("v2 bundle: all 49 presentations resolve to their assigned tier, the 26 Batch 2 ones as appraised", () => {
-  assert.equal(v2SymptomCodes.length, 49);
+test("v2 bundle: all 50 presentations resolve to their assigned tier, the 26 Batch 2 ones as appraised", () => {
+  assert.equal(v2SymptomCodes.length, 50);
   for (const symptom of v2SymptomCodes) {
     const rule = v2Bundle.rules.find((r) => r.conditions[0]?.symptomCode === symptom.code);
     assert.ok(rule, `no rule found for ${symptom.code}`);
@@ -62,6 +62,47 @@ test("v2 bundle: all 49 presentations resolve to their assigned tier, the 26 Bat
     assert.equal(evaluate({ symptomCodes: [code] }, v2Bundle).tier, tier, `${code} should resolve to ${tier}`);
   }
   assert.equal(Object.keys(BATCH2_TIERS).length, 26);
+});
+
+// Added after the appraisal form, at Philipo's request (2026-11-15): a plain "my stomach
+// hurts" / "my chest hurts" asks "Is the pain severe?". Yes is the red flag.
+test("v2 bundle: ordinary stomach pain asks if it is severe; Yes is Emergency, No stays home", () => {
+  const answer = (value: string) => ({ questionKey: "abdominal_pain_severe", answer: value });
+
+  const yes = evaluate({ symptomCodes: ["abdominal_pain_ordinary"], clarificationAnswers: [answer("Yes")] }, v2Bundle);
+  assert.equal(yes.tier, "emergency");
+  assert.equal(yes.reason, "red_flag_clarification");
+
+  const no = evaluate({ symptomCodes: ["abdominal_pain_ordinary"], clarificationAnswers: [answer("No")] }, v2Bundle);
+  assert.equal(no.tier, "home");
+  assert.equal(no.reason, "rule_match");
+  assert.equal(no.matchedRuleCode, "R-024");
+});
+
+test("v2 bundle: unspecified chest pain asks if it is severe; Yes is Emergency, No goes to the RHU, never home", () => {
+  const answer = (value: string) => ({ questionKey: "chest_pain_severe", answer: value });
+
+  const yes = evaluate({ symptomCodes: ["chest_pain_unspecified"], clarificationAnswers: [answer("Yes")] }, v2Bundle);
+  assert.equal(yes.tier, "emergency");
+  assert.equal(yes.reason, "red_flag_clarification");
+
+  const no = evaluate({ symptomCodes: ["chest_pain_unspecified"], clarificationAnswers: [answer("No")] }, v2Bundle);
+  assert.equal(no.tier, "rhu");
+  assert.equal(no.matchedRuleCode, "R-050");
+
+  // Unanswered is never home either.
+  assert.equal(evaluate({ symptomCodes: ["chest_pain_unspecified"] }, v2Bundle).tier, "rhu");
+});
+
+test("v2 bundle: saying 'not severe' cannot pull down a severe presentation that was also matched", () => {
+  const result = evaluate(
+    {
+      symptomCodes: ["abdominal_pain_ordinary", "abdominal_pain_severe_rigidity"],
+      clarificationAnswers: [{ questionKey: "abdominal_pain_severe", answer: "No" }],
+    },
+    v2Bundle
+  );
+  assert.equal(result.tier, "emergency");
 });
 
 test("v2 bundle: a home complaint alongside an emergency one still resolves to emergency", () => {

@@ -352,7 +352,7 @@ it('imports the exported v1 bundle file through the artisan command', function (
         ->and($version->rules()->where('outcome_tier', 'emergency')->count())->toBe(9);
 });
 
-it('imports the exported v2 bundle (v1 + Lexicon Appraisal Batch 2) as a draft', function () {
+it('imports the exported v2 bundle (v1 + Lexicon Appraisal Batch 2 + the severe-or-not follow-ups) as a draft', function () {
     $path = base_path('../../packages/ruleset/dist/v2.json');
 
     if (! is_readable($path)) {
@@ -364,10 +364,15 @@ it('imports the exported v2 bundle (v1 + Lexicon Appraisal Batch 2) as a draft',
     $version = RulesetVersion::latest('id')->firstOrFail();
 
     expect($version->status)->toBe(RulesetStatus::DRAFT)
-        ->and($version->rules()->count())->toBe(49)
+        // 23 (v1) + 26 (the form's Part D) + 1 (chest pain, added after the form).
+        ->and($version->rules()->count())->toBe(50)
         ->and($version->rules()->where('outcome_tier', 'home')->count())->toBe(13)
-        ->and($version->rules()->where('outcome_tier', 'rhu')->count())->toBe(21)
-        ->and($version->rules()->where('outcome_tier', 'emergency')->count())->toBe(15);
+        ->and($version->rules()->where('outcome_tier', 'rhu')->count())->toBe(22)
+        ->and($version->rules()->where('outcome_tier', 'emergency')->count())->toBe(15)
+        // Two "Is the pain severe?" questions in en, tl and ceb, and one home tip in each language.
+        ->and($version->clarificationQuestions()->count())->toBe(6)
+        ->and($version->clarificationQuestions()->whereNotNull('red_flag_answer')->count())->toBe(6)
+        ->and($version->healthTips()->where('outcome_tier', 'home')->count())->toBe(3);
 });
 
 /*

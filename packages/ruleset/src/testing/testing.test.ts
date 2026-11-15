@@ -31,16 +31,43 @@ test("the test bundle is v1 plus the fixture, and nothing else changed", () => {
   assert.equal(lexiconTerms, testLexiconTerms);
 });
 
-test("v2 is v1 plus the 26 Batch 2 presentations, and no v1 code or rule changed", () => {
+test("v2 is v1 plus the 26 Batch 2 presentations and one added after the form, and no v1 code or rule changed", () => {
   assert.equal(v2Bundle.versionLabel, "v2-draft");
   assert.deepEqual(v2Bundle.symptomCodes.slice(0, 23), v1Bundle.symptomCodes);
   assert.deepEqual(v2Bundle.rules.slice(0, 23), v1Bundle.rules);
-  assert.equal(v2Bundle.symptomCodes.length, 49);
-  assert.equal(v2Bundle.rules.length, 49);
+  // 23 (v1) + 26 (the appraisal form's Part D) + 1 (chest pain, added 2026-11-15).
+  assert.equal(v2Bundle.symptomCodes.length, 50);
+  assert.equal(v2Bundle.rules.length, 50);
+  assert.equal(v2Bundle.symptomCodes[49]!.code, "chest_pain_unspecified");
 
-  const { symptomCodes: _, rules: __, versionLabel: ___, ...rest } = v2Bundle;
-  const { symptomCodes: _v1, rules: __v1, versionLabel: ___v1, ...v1Rest } = v1Bundle;
+  // Nothing else about v1 changed except the follow-up questions and tip added below.
+  const { symptomCodes: _, rules: __, versionLabel: ___, clarificationQuestions: ____, healthTips: _____, ...rest } = v2Bundle;
+  const { symptomCodes: _v1, rules: __v1, versionLabel: ___v1, clarificationQuestions: _q1, healthTips: _t1, ...v1Rest } = v1Bundle;
   assert.deepEqual(rest, v1Rest);
+});
+
+test("v2's severe-or-not follow-ups: two questions in three languages, Yes is the red flag, the tip is home-only", () => {
+  const asking = v2Bundle.symptomCodes.filter((c) => c.needsClarification).map((c) => c.code);
+  assert.deepEqual(asking, ["abdominal_pain_ordinary", "chest_pain_unspecified"]);
+
+  for (const key of ["abdominal_pain_severe", "chest_pain_severe"]) {
+    const variants = v2Bundle.clarificationQuestions.filter((q) => q.questionKey === key);
+    assert.deepEqual(variants.map((q) => q.language), ["en", "tl", "ceb"]);
+    for (const q of variants) {
+      // "Yes" sits in the same position in every language, so a tl or ceb answer
+      // is checked against the English red flag (the engine compares the first variant).
+      assert.equal(q.allowedAnswers.indexOf(q.redFlagAnswer!), 1, `${key}/${q.language}`);
+      assert.ok(/^[a-z0-9_]+$/.test(q.questionKey) && q.questionKey.length <= 50 && q.prompt.length <= 2000);
+      assert.ok(q.allowedAnswers.length >= 2 && q.allowedAnswers.every((a) => a.length <= 50));
+    }
+  }
+
+  assert.deepEqual(v2Bundle.healthTips.map((t) => t.language), ["en", "tl", "ceb"]);
+  for (const tip of v2Bundle.healthTips) {
+    assert.equal(tip.outcomeTier, "home");
+    assert.equal(tip.symptomCode, "abdominal_pain_ordinary");
+    assert.ok(tip.title.length <= 150 && tip.body.length <= 5000);
+  }
 });
 
 test("v2's codes, rule codes and priorities are unique, and fit the API's column widths", () => {
