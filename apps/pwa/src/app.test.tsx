@@ -237,6 +237,10 @@ describe("a patient checking their symptoms", () => {
 
     expect(await screen.findByText(/Go to the nearest Rural Health Unit/, {}, { timeout: 4000 })).toBeInTheDocument();
     expect(screen.getByText(/could not recognise your symptoms/)).toBeInTheDocument();
+    // A patient who cannot put their symptoms into words may be too unwell to
+    // type them, so the fail-safe also offers "Call for help" (911 with no
+    // facility loaded).
+    expect(screen.getByRole("link", { name: /Call for help/ })).toHaveAttribute("href", "tel:911");
 
     // Every upload, not the first: an earlier test's queued check can retry
     // into this one's fetch stub.
@@ -262,6 +266,9 @@ describe("a patient checking their symptoms", () => {
 
     expect(await screen.findByText(/Go to the nearest Rural Health Unit/, {}, { timeout: 4000 })).toBeInTheDocument();
     expect(screen.queryByText(/could not recognise your symptoms/)).not.toBeInTheDocument();
+    // An ordinary RHU referral has no call button: only emergencies and the
+    // unrecognised fail-safe do.
+    expect(screen.queryByRole("link", { name: /Call for help/ })).not.toBeInTheDocument();
   }, 20000);
 
   /*

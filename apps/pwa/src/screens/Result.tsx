@@ -104,7 +104,9 @@ export function ResultScreen(props: {
         </p>
 
         <div className="push stack">
-          {tier === "emergency" && (
+          {/* Also on the RHU fail-safe for unrecognised words: a patient who cannot
+              describe their symptoms may be too unwell or confused to type them. */}
+          {(tier === "emergency" || props.unrecognised) && (
             <a className="btn btn-danger btn-link" href={`tel:${number}`}>
               <Icon name="phone" size={20} />
               {props.t("callForHelp")} · {number}
