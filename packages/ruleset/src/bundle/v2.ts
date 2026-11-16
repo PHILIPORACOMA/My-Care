@@ -21,13 +21,18 @@ import { v1Bundle, v1Rules, v1SymptomCodes } from "./v1.js";
  *   chest_pain_unspecified presentation, so a plain "my stomach / chest hurts"
  *   does not have to be either Emergency or nothing. "Yes" is the red-flag
  *   answer (Emergency, ADR-0001 step 1). "No" keeps ordinary stomach pain at
- *   the tier the appraiser ticked (home) and sends unspecified chest pain to
- *   rhu. Philipo first asked for home on both; rhu for chest was proposed and
- *   accepted by default, because a patient with a heart problem may well
- *   answer "No". The appraiser has never ruled on chest pain "not severe".
- * - One home tip for ordinary stomach pain, limited to what the appraiser
- *   wrote beside it: if the pain lasts over 24 hours with no relief from
- *   medication, go to the RHU. The tl and ceb wording is an unreviewed draft.
+ *   the tier the appraiser ticked (home) and, on Philipo's decision of
+ *   2026-11-16, sends unspecified chest pain to home as well, with a tip. A
+ *   rhu for chest was proposed first, because a patient with a heart problem
+ *   may well answer "No"; Philipo chose home, and the tip puts the warning
+ *   signs first. The appraiser has never ruled on chest pain "not severe".
+ * - Three home tips each for ordinary stomach pain and unspecified chest pain:
+ *   what can help, when to get help right away, and what to do if the pain
+ *   does not go away. The stomach "does not go away" tip is the appraiser's
+ *   own wording (pain over 24 hours with no relief from medication: RHU). The
+ *   rest was drafted by Claude at Philipo's request for the appraiser to
+ *   review. It names no medicine and gives no dose. All of it, and the tl and
+ *   ceb wording, is unreviewed.
  *
  * Deliberately not encoded yet:
  * - The appraiser answered "follow-up needed" for every complaint and wrote
@@ -84,7 +89,7 @@ const BATCH2_PRESENTATIONS: Presentation[] = [
  * the form's 26 so those stay exactly as appraised.
  */
 const FOLLOW_UP_PRESENTATIONS: Presentation[] = [
-  { code: "chest_pain_unspecified", displayName: "Chest pain (any kind)", tier: "rhu" },
+  { code: "chest_pain_unspecified", displayName: "Chest pain (any kind)", tier: "home" },
 ];
 
 /** Codes that ask "Is the pain severe?" before a tier is decided. */
@@ -140,26 +145,89 @@ export const batch2Questions: ClarificationQuestion[] = SEVERE_PROMPTS.flatMap((
   }))
 );
 
+type Words = Record<LanguageCode, string>;
+
 /**
- * Ordinary stomach pain, answered "No": only the appraiser's own condition, that
- * pain lasting over 24 hours or not relieved by medication should be seen at the
- * RHU. Any other home-care advice has to come from the appraiser. tl and ceb are
- * unreviewed drafts of the English.
+ * Home-tier tips shown after "No" to "Is the pain severe?" (Figure 28). MEDICAL
+ * CONTENT drafted by Claude for the appraiser's review, in the order shown. The
+ * one exception is stomach tip 3, which is the appraiser's own condition. No
+ * medicine is named and no dose given. The chest warning signs come first on
+ * purpose: a patient with a heart problem may well have answered "No".
  */
-export const batch2HealthTips: HealthTip[] = (
-  [
-    ["en", "If the pain does not go away", "If the pain lasts more than 24 hours, or medicine does not help, go to your Rural Health Unit."],
-    ["tl", "Kung hindi nawawala ang sakit", "Kung tumagal ang sakit nang higit sa 24 oras, o hindi ito nawawala kahit uminom ng gamot, pumunta sa Rural Health Unit."],
-    ["ceb", "Kung dili mawala ang sakit", "Kung molapas sa 24 ka oras ang sakit, o dili kini mawala bisan nakainom na ug tambal, adto sa Rural Health Unit."],
-  ] as const
-).map(([language, title, body]) => ({
-  symptomCode: "abdominal_pain_ordinary",
-  outcomeTier: "home" as const,
-  language,
-  title,
-  body,
-  displayOrder: 1,
-}));
+const HOME_TIPS: { symptomCode: string; tips: { title: Words; body: Words }[] }[] = [
+  {
+    symptomCode: "abdominal_pain_ordinary",
+    tips: [
+      {
+        title: { en: "What can help", tl: "Ano ang makakatulong", ceb: "Unsa ang makatabang" },
+        body: {
+          en: "Rest. Drink water in small sips. Eat light, plain food such as rice porridge. Avoid oily or spicy food, coffee, soft drinks and alcohol until the pain is gone.",
+          tl: "Magpahinga. Uminom ng tubig nang paunti-unti. Kumain ng magaan at simpleng pagkain tulad ng lugaw. Iwasan ang mamantika o maanghang na pagkain, kape, softdrinks at alak hanggang mawala ang sakit.",
+          ceb: "Pahulay. Imnon ang tubig sa gagmay nga hugop. Kaon ug magaan ug yano nga pagkaon sama sa lugaw. Likayi ang tambok o maanghang nga pagkaon, kape, softdrinks ug bino hangtod mawala ang sakit.",
+        },
+      },
+      {
+        title: { en: "Get help right away if", tl: "Humingi agad ng tulong kung", ceb: "Pagpangayo dayon ug tabang kung" },
+        body: {
+          en: "Go to the nearest hospital now if the pain gets much worse, your belly becomes hard or swollen, you vomit blood, you have black stool, or you cannot stop vomiting.",
+          tl: "Pumunta agad sa pinakamalapit na ospital kung lumalala nang husto ang sakit, tumigas o namaga ang tiyan, nagsuka ka ng dugo, may maitim kang dumi, o hindi ka tumitigil sa pagsusuka.",
+          ceb: "Adto dayon sa pinakaduol nga ospital kung mograbe pag-ayo ang sakit, mogahi o mohubag ang tiyan, nagsuka ka ug dugo, naay itom nga tae, o dili ka mohunong sa pagsuka.",
+        },
+      },
+      {
+        // The appraiser's own condition, unchanged.
+        title: { en: "If the pain does not go away", tl: "Kung hindi nawawala ang sakit", ceb: "Kung dili mawala ang sakit" },
+        body: {
+          en: "If the pain lasts more than 24 hours, or medicine does not help, go to your Rural Health Unit.",
+          tl: "Kung tumagal ang sakit nang higit sa 24 oras, o hindi ito nawawala kahit uminom ng gamot, pumunta sa Rural Health Unit.",
+          ceb: "Kung molapas sa 24 ka oras ang sakit, o dili kini mawala bisan nakainom na ug tambal, adto sa Rural Health Unit.",
+        },
+      },
+    ],
+  },
+  {
+    symptomCode: "chest_pain_unspecified",
+    tips: [
+      {
+        title: { en: "Get help right away if", tl: "Humingi agad ng tulong kung", ceb: "Pagpangayo dayon ug tabang kung" },
+        body: {
+          en: "Go to the nearest hospital now if the pain spreads to your arm, jaw or back, or comes with trouble breathing, cold sweat or feeling faint, or if it gets worse.",
+          tl: "Pumunta agad sa pinakamalapit na ospital kung kumakalat ang sakit sa braso, panga o likod, o may kasamang hirap sa paghinga, malamig na pawis o pakiramdam na mahihimatay, o kung lumalala ito.",
+          ceb: "Adto dayon sa pinakaduol nga ospital kung mokaylap ang sakit sa bukton, apapangig o likod, o naay kauban nga lisod ginhawa, bugnaw nga singot o gibati nga mahimatay, o kung mograbe kini.",
+        },
+      },
+      {
+        title: { en: "What can help", tl: "Ano ang makakatulong", ceb: "Unsa ang makatabang" },
+        body: {
+          en: "Stop what you are doing and rest sitting up. Avoid heavy work, smoking and coffee for now.",
+          tl: "Itigil ang ginagawa at magpahinga nang nakaupo. Iwasan muna ang mabibigat na gawain, paninigarilyo at kape.",
+          ceb: "Undanga ang imong gihimo ug pahulay nga naglingkod. Likayi una ang bug-at nga trabaho, pagsigarilyo ug kape.",
+        },
+      },
+      {
+        title: { en: "If the pain does not go away", tl: "Kung hindi nawawala ang sakit", ceb: "Kung dili mawala ang sakit" },
+        body: {
+          en: "If the pain does not go away after resting, or it keeps coming back, go to your Rural Health Unit the same day.",
+          tl: "Kung hindi nawawala ang sakit pagkatapos magpahinga, o paulit-ulit itong bumabalik, pumunta sa Rural Health Unit sa araw ding iyon.",
+          ceb: "Kung dili mawala ang sakit human mopahulay, o balik-balik kini, adto sa Rural Health Unit niana ding adlawa.",
+        },
+      },
+    ],
+  },
+];
+
+export const batch2HealthTips: HealthTip[] = HOME_TIPS.flatMap(({ symptomCode, tips }) =>
+  tips.flatMap((tip, index) =>
+    (["en", "tl", "ceb"] as const).map((language) => ({
+      symptomCode,
+      outcomeTier: "home" as const,
+      language,
+      title: tip.title[language],
+      body: tip.body[language],
+      displayOrder: index + 1,
+    }))
+  )
+);
 
 export const v2SymptomCodes: SymptomCode[] = [...v1SymptomCodes, ...batch2SymptomCodes];
 

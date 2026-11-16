@@ -62,12 +62,26 @@ test("v2's severe-or-not follow-ups: two questions in three languages, Yes is th
     }
   }
 
-  assert.deepEqual(v2Bundle.healthTips.map((t) => t.language), ["en", "tl", "ceb"]);
+  // Home tips for both: three each, in all three languages (18 rows), shown in order 1, 2, 3.
+  assert.equal(v2Bundle.healthTips.length, 18);
+  for (const symptomCode of ["abdominal_pain_ordinary", "chest_pain_unspecified"]) {
+    for (const language of ["en", "tl", "ceb"] as const) {
+      const tips = v2Bundle.healthTips.filter((t) => t.symptomCode === symptomCode && t.language === language);
+      assert.deepEqual(tips.map((t) => t.displayOrder), [1, 2, 3], `${symptomCode}/${language}`);
+    }
+  }
   for (const tip of v2Bundle.healthTips) {
     assert.equal(tip.outcomeTier, "home");
-    assert.equal(tip.symptomCode, "abdominal_pain_ordinary");
     assert.ok(tip.title.length <= 150 && tip.body.length <= 5000);
+    // No medicine is named and no dose is given in any tip (CLAUDE.md: no prescriptions).
+    assert.doesNotMatch(`${tip.title} ${tip.body}`, /paracetamol|ibuprofen|aspirin|biogesic|mg|tablet|pill/i);
   }
+  // The appraiser's own stomach condition is kept word for word.
+  const own = v2Bundle.healthTips.find((t) => t.symptomCode === "abdominal_pain_ordinary" && t.language === "en" && t.displayOrder === 3);
+  assert.equal(own?.body, "If the pain lasts more than 24 hours, or medicine does not help, go to your Rural Health Unit.");
+  // Every chest tip list opens with the warning signs.
+  const chestFirst = v2Bundle.healthTips.find((t) => t.symptomCode === "chest_pain_unspecified" && t.language === "en" && t.displayOrder === 1);
+  assert.match(chestFirst!.body, /nearest hospital now/);
 });
 
 test("v2's codes, rule codes and priorities are unique, and fit the API's column widths", () => {

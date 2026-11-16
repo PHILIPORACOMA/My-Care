@@ -366,13 +366,13 @@ it('imports the exported v2 bundle (v1 + Lexicon Appraisal Batch 2 + the severe-
     expect($version->status)->toBe(RulesetStatus::DRAFT)
         // 23 (v1) + 26 (the form's Part D) + 1 (chest pain, added after the form).
         ->and($version->rules()->count())->toBe(50)
-        ->and($version->rules()->where('outcome_tier', 'home')->count())->toBe(13)
-        ->and($version->rules()->where('outcome_tier', 'rhu')->count())->toBe(22)
+        ->and($version->rules()->where('outcome_tier', 'home')->count())->toBe(14)
+        ->and($version->rules()->where('outcome_tier', 'rhu')->count())->toBe(21)
         ->and($version->rules()->where('outcome_tier', 'emergency')->count())->toBe(15)
-        // Two "Is the pain severe?" questions in en, tl and ceb, and one home tip in each language.
+        // Two "Is the pain severe?" questions in en, tl and ceb, and three home tips per symptom in each language.
         ->and($version->clarificationQuestions()->count())->toBe(6)
         ->and($version->clarificationQuestions()->whereNotNull('red_flag_answer')->count())->toBe(6)
-        ->and($version->healthTips()->where('outcome_tier', 'home')->count())->toBe(3);
+        ->and($version->healthTips()->where('outcome_tier', 'home')->count())->toBe(18);
 });
 
 /*

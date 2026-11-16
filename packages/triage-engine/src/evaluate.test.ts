@@ -79,19 +79,18 @@ test("v2 bundle: ordinary stomach pain asks if it is severe; Yes is Emergency, N
   assert.equal(no.matchedRuleCode, "R-024");
 });
 
-test("v2 bundle: unspecified chest pain asks if it is severe; Yes is Emergency, No goes to the RHU, never home", () => {
+test("v2 bundle: unspecified chest pain asks if it is severe; Yes is Emergency, No goes to home (Philipo, 2026-11-16)", () => {
   const answer = (value: string) => ({ questionKey: "chest_pain_severe", answer: value });
 
   const yes = evaluate({ symptomCodes: ["chest_pain_unspecified"], clarificationAnswers: [answer("Yes")] }, v2Bundle);
   assert.equal(yes.tier, "emergency");
   assert.equal(yes.reason, "red_flag_clarification");
 
+  // Home was Philipo's decision. RHU was proposed instead, because a patient with a
+  // heart problem may well answer No; the chest tip puts the warning signs first.
   const no = evaluate({ symptomCodes: ["chest_pain_unspecified"], clarificationAnswers: [answer("No")] }, v2Bundle);
-  assert.equal(no.tier, "rhu");
+  assert.equal(no.tier, "home");
   assert.equal(no.matchedRuleCode, "R-050");
-
-  // Unanswered is never home either.
-  assert.equal(evaluate({ symptomCodes: ["chest_pain_unspecified"] }, v2Bundle).tier, "rhu");
 });
 
 test("v2 bundle: saying 'not severe' cannot pull down a severe presentation that was also matched", () => {
