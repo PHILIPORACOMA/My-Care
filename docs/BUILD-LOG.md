@@ -2397,3 +2397,22 @@ Philipo reported that the nurse reviewed the health tips review sheet (9ak):
   chest rule and one stomach tip.
 - **Next:** merge PR #28; import the final file as a draft; publish with the
   clinical-review confirmation; force the device to refresh.
+
+---
+
+### 9am - Insect sting is RHU, snake bite is Emergency (2026-11-16)
+
+Philipo clarified the Batch 2 Part D row "insect sting or snake bite" (9p, 9z):
+the nurse's form already approves **insect sting → RHU and snake bite →
+Emergency**. The two ticks on the one row are one tier per animal, not
+Emergency for both.
+- **Who confirmed:** Philipo, in chat, reading the nurse's form.
+- **No code change:** `packages/ruleset/src/bundle/v2.ts` already has
+  `insect_sting` at `rhu` and `snake_bite` at `emergency`, and the final import
+  file was built from it.
+- **Closes** the open decision in 9z and the "insect sting / snake bite tier"
+  item carried in 9aj and 9ak.
+- **PR #28** has since been merged (`df693e5`), so 9al's "waiting for Philipo
+  to merge it" is out of date.
+- **Still open:** "Check for new rules"; Part C questions; unrecognised words
+  and Emergency; body-area groups; zero suppression.
