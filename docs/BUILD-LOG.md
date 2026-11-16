@@ -2453,3 +2453,27 @@ Claude drafted the follow-ups for the nurse to review, as with the tips (9ak).
 - **Next:** the nurse reviews; Philipo checks the Tagalog and Cebuano; then
   Claude proposes the code change (questions, `needsClarification`, new rules,
   tests) and waits for a go-ahead.
+
+---
+
+### 9ao - Nurse approved the Part C follow-up questions (2026-11-16)
+
+The review sheet from 9an came back with **"approve" on all 8 rows**: the seven
+questions, their answers and results, and the animal-bite tip.
+- **Who approved:** the nurse (the Batch 2 appraiser), as Philipo confirmed in
+  chat. The approval **covers the English, Tagalog and Cebuano** wording, so the
+  tl and ceb text is no longer only Claude's draft.
+- **Reviewer name and date on the sheet were left blank.** The nurse is not
+  named in the repo either way.
+- **The yellow questions were left unanswered.** Philipo's reading is "keep as
+  drafted", so:
+  - exactly 3 days of fever goes to RHU;
+  - there is no second diarrhea duration question;
+  - the cough question does not also ask about blood or weight loss;
+  - the headache middle answer (3 days or more: RHU) stays;
+  - the spotting middle answer (1 pad or more a day, under 1 an hour) stays RHU,
+    and severe belly pain is not asked.
+- **The tip titles** keep no trailing colon in Tagalog and Cebuano. The colon
+  on the sheet was layout only, and the English title has none.
+- **Philipo gave the go-ahead** for the code change proposed in chat. The
+  change is described in 9ap.
