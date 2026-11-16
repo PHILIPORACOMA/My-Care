@@ -8,7 +8,7 @@ add a line to the log at the bottom. Started 2026-11-14.
 
 | Section | Done | Status |
 |---|---|---|
-| 1. Clinical content | 0 / 12 | ⛔ blocks launch. v2 merged as a draft, not yet reviewed |
+| 1. Clinical content | 1 / 12 | ⛔ blocks launch. v2 merged as a draft, not yet reviewed |
 | 2. Decisions and open PRs | 1 / 2 | all PRs merged; zero-suppression open |
 | 3. Partners and permission | 0 / 4 | not started |
 | 4. Server | 0 / 7 | not started; scripted and CI-proven |
@@ -16,7 +16,7 @@ add a line to the log at the bottom. Started 2026-11-14.
 | 6. Prove it before launch | 0 / 5 | waits on 5 |
 | 7. Manuscript paperwork | 0 / 3 | not blocking |
 | 8. Code health | 0 / 1 | not blocking |
-| **Total** | **1 / 39** | |
+| **Total** | **2 / 39** | |
 
 **Next up:** §1's first three items (v1 paperwork, Part C, lexicon terms) and
 §3's facilities and staff lists. They are all people's work, and everything
@@ -78,12 +78,11 @@ City Health Office · **S** whoever runs the server.
 - [ ] **C** Unrecognised words (BUILD-LOG 9x): should they ever go to
       Emergency, and is a "confused, very sleepy or can't speak: get help
       now" line wanted on that screen? Both are clinical calls.
-- [ ] **C** Severe-or-not follow-ups and tips (BUILD-LOG 9ae, 9ak): Philipo decided
-      2026-11-16 that chest "No" and stomach "No" both go to Home with three tips
-      each, drafted by Claude. The nurse must review the tips and rule on chest
-      "No" (Home, RHU or Emergency): sheet
-      `My_Care_Health_Tips_Review_Sheet_2026-11-16.docx`. Do not publish the tips
-      before then.
+- [x] **C** Severe-or-not follow-ups and tips (BUILD-LOG 9ae, 9ak, 9al):
+      2026-11-16, reported by Philipo in chat: the nurse approved all six
+      tips and chose Home for chest "No". No signed copy exists yet (the sheet
+      on disk has no ticks or reviewer name). Import
+      `My_Care_ruleset_v2_final_with_tips_2026-11-16.json` and publish it.
 - [ ] **P** Plain stomach and chest phrases: approved by Philipo 2026-11-16 (all
       46). Import `My_Care_ruleset_v2_final_2026-11-16.json` and publish it
       from the console (BUILD-LOG 9ai).
@@ -208,3 +207,5 @@ Everything else can follow.
   Philipo (BUILD-LOG 9aj); nurse's own ruling not on record. 1 / 39.
 - **2026-11-16:** chest "No" changed to Home and remedy tips drafted for the nurse's
   review (PR #28, BUILD-LOG 9ak). Nothing ticked. 1 / 39.
+- **2026-11-16:** tips and chest "No" = Home approved by the nurse (reported by Philipo;
+  no signed copy yet, BUILD-LOG 9al). 2 / 39.

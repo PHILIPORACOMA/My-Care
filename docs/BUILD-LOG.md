@@ -2375,3 +2375,25 @@ patient with a heart problem may well answer "No"; the choice is Philipo's.
   373 positive terms and 64 negations unchanged; no English chips.
 - **Open:** the nurse's ruling on chest "No" and sign-off on the tips; the
   insect sting / snake bite tier; "Check for new rules"; Part C questions.
+
+---
+
+### 9al - The nurse approved the tips; chest "No" is Home (2026-11-16)
+
+Philipo reported that the nurse reviewed the health tips review sheet (9ak):
+**all six tips approved, and Home ticked for chest pain "No".**
+- **Who confirmed:** Philipo, in chat, on the nurse's behalf. The copy of the
+  sheet on disk (`Downloads\My_Care_Health_Tips_Review_Sheet_2026-11-16.docx`) has no
+  ticks, no changes, no reviewer name and no date, so there is **no signed or
+  ticked record yet**. Worth keeping one (a photo or the ticked copy) for the
+  appendix.
+- **Taken as approved:** the English tips, and the Tagalog and Cebuano drafts
+  beside them, as written. No rewrite was requested, so
+  `My_Care_ruleset_v2_final_with_tips_2026-11-16.json` is final as built.
+- **Chest pain "No" is Home** with the three tips, with the nurse's agreement.
+  This settles the question Claude raised in 9ae and the RHU default of 9aj.
+- **PR #28** (the code behind this) passes all five CI checks and is waiting for
+  Philipo to merge it. Nothing is published yet; his local v10 still has the RHU
+  chest rule and one stomach tip.
+- **Next:** merge PR #28; import the final file as a draft; publish with the
+  clinical-review confirmation; force the device to refresh.
