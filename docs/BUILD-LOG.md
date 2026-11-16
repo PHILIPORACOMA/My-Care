@@ -2477,3 +2477,42 @@ questions, their answers and results, and the animal-bite tip.
   on the sheet was layout only, and the English title has none.
 - **Philipo gave the go-ahead** for the code change proposed in chat. The
   change is described in 9ap.
+
+---
+
+### 9ap - Part C follow-ups encoded in v2: PR #29 (2026-11-16)
+
+The approved follow-ups (9ao) are in `packages/ruleset/src/bundle/v2.ts` on
+`feat/UT-005-followup-questions`, **PR #29, waiting for Philipo to merge**.
+**Medical content from one appraiser: still a draft for clinical review.**
+- **Content:**
+  - 7 questions × 3 languages (21 rows) on six v1 codes, each code now asking
+    first;
+  - RHU rules R-051 to R-056, each "<question> != <home answer>";
+  - the animal-bite RHU tip × 3. R-013 stays RHU.
+- **Engine:** `=` and `!=` now compare exact text when either side is not a
+  number; numbers compare as before. Text used to become `NaN`, so `!=` was
+  always true. Still pure (ADR-0001 amended).
+- **Three gaps found while building it, each settled by Philipo in chat:**
+  1. **The server served Cebuano first.** `BundleAssembler` sorted by
+     language, and the phone submits and the server stores the first
+     variant's answer. So the 63-character Cebuano spotting answer would have
+     failed sync (VARCHAR(50)), and the RHU rules would have fired on every
+     answer. Now English first. Philipo chose this over comparing by answer
+     position.
+  2. **Answers were capped at 50 characters.** Now 100, since
+     `allowed_answers` is JSON. The English (submitted) answers are still held
+     to 50.
+  3. **The importer refused to change a code's follow-up flag.** A frozen code
+     may now switch it from off to on, audited. It can never go back to off,
+     and the switch is refused if a frozen version already has questions for
+     that code (ADR-0006 amended).
+- **Also fixed:** the "no medicine in tips" test guard held backspace bytes
+  instead of ``, so it never matched `mg`, `tablet` or `pill`.
+- **Tests:** all JS workspaces, purity, and 218/218 Pest on MySQL.
+- **Import file:** `Downloads\My_Care_ruleset_v2_final_with_followups_2026-11-16.json`,
+  which is the export plus the same 437 lexicon terms. It **replaces**
+  `..._with_tips_...`. Import it after the merge, then publish and force a
+  device refresh.
+- **Unanswered follow-up = base tier** (Home for five codes), the same as the
+  stomach and chest questions. Philipo did not ask for skipping to give RHU.
