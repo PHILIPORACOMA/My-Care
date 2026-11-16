@@ -2516,3 +2516,25 @@ The approved follow-ups (9ao) are in `packages/ruleset/src/bundle/v2.ts` on
   device refresh.
 - **Unanswered follow-up = base tier** (Home for five codes), the same as the
   stomach and chest questions. Philipo did not ask for skipping to give RHU.
+
+---
+
+### 9aq - "gi ubo ko" added for cough, draft v14 (2026-11-16)
+
+Philipo asked for the Cebuano phrase **"gi ubo ko"** ("I have a cough"). It is
+his own word, not one Claude drafted.
+- **Code:** `cold_cough_no_sob` (Home). The phrase gives no duration, so the
+  `cough_weeks` follow-up decides: 2 weeks or more goes to RHU. It is not
+  mapped to `cough_persistent`, which is RHU.
+- **Where:** added in the console to draft v13 and saved as **draft v14**, with
+  438 terms. Nothing is published yet. v14 replaces v13 as the version to
+  submit and publish.
+- **Matcher check before adding:**
+  - "gi ubo ko", "Gi-ubo ko", "giubo ko" and "gi ubo ko og 3 ka adlaw" all
+    match;
+  - "nag ubo ko" and "gi ubo" alone do not;
+  - "ubos sa 3 ka adlaw" ("under 3 days") does not misfire.
+  Before the term, "gi ubo ko" matched nothing and fell to the RHU fail-safe.
+  Test & explain on v14 shows it matching `cold_cough_no_sob`, R-002.
+- **Not added:** a Cebuano negation such as "dili ko gi ubo". Today that
+  phrase matches nothing. If one is wanted, the word must come from Philipo.
