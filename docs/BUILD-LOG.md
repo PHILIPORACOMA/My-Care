@@ -2326,3 +2326,20 @@ Claude had asked him to tick explicitly.
   wording; "Check for new rules" (not built); the insect sting / snake bite tier
   (the form ticked Emergency, the draft has insect_sting at RHU); Part C's
   follow-up questions.
+
+---
+
+### 9aj - Step 3 answered: chest "No" is RHU, stomach "No" is Home with the tip (2026-11-16)
+
+Philipo answered the two questions meant for the nurse:
+1. **Chest pain, "No" to "Is the chest pain severe?": RHU.** This is what is
+   built, so nothing changes.
+2. **Stomach pain, "No": Home, with the health tip.** Also as built. Read as:
+   the tip keeps only the appraiser's own wording and nothing else is added.
+- **Who confirmed:** Philipo, in chat. The nurse's own ruling on chest pain
+  "not severe" is **not on record**; it is still worth telling the nurse before
+  any real use.
+- **Not yet approved:** the Tagalog and Cebuano wording of the tip. They are
+  Claude's drafts of the English (see v2.ts), shown to Philipo for approval next.
+- No code, file or schema change. `My_Care_ruleset_v2_final_2026-11-16.json` is
+  unchanged and still unpublished.
