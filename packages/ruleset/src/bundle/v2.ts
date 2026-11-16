@@ -1,4 +1,13 @@
-import type { ClarificationQuestion, HealthTip, LanguageCode, RulesetBundle, SymptomCode, Tier, TriageRule } from "../schema.js";
+import type {
+  ClarificationQuestion,
+  HealthTip,
+  LanguageCode,
+  RulesetBundle,
+  SeverityThreshold,
+  SymptomCode,
+  Tier,
+  TriageRule,
+} from "../schema.js";
 import { v1Bundle, v1Rules, v1SymptomCodes } from "./v1.js";
 
 /**
@@ -34,9 +43,12 @@ import { v1Bundle, v1Rules, v1SymptomCodes } from "./v1.js";
  *   review. It names no medicine and gives no dose. All of it, and the tl and
  *   ceb wording, is unreviewed.
  *
+ * Added from Part C of the same form (2026-11-16): seven follow-up questions
+ * on six v1 presentations and an animal-bite tip. See FOLLOW_UPS below.
+ *
  * Deliberately not encoded yet:
- * - The appraiser answered "follow-up needed" for every complaint and wrote
- *   escalation conditions beside some (pain over 24 hours with no relief,
+ * - The appraiser answered "follow-up needed" for every Part D complaint and
+ *   wrote escalation conditions beside some (pain over 24 hours with no relief,
  *   abdominal distention, tinnitus or hearing loss, rule out cardiac). Each
  *   needs a clarification question with fixed answers, which Philipo will
  *   type up; until then every other complaint here resolves to its tier directly.
@@ -229,15 +241,211 @@ export const batch2HealthTips: HealthTip[] = HOME_TIPS.flatMap(({ symptomCode, t
   )
 );
 
-export const v2SymptomCodes: SymptomCode[] = [...v1SymptomCodes, ...batch2SymptomCodes];
+/**
+ * Batch 2 Part C follow-up questions on six v1 presentations. The appraiser's
+ * Part C wording was mostly illegible, so Claude drafted these at Philipo's
+ * request from what was legible; the appraiser approved all of them, and the
+ * Tagalog and Cebuano, on the 2026-11-16 review sheet (BUILD-LOG 9an, 9ao).
+ * MEDICAL CONTENT from one appraiser: a draft for clinical review, not a
+ * validated ruleset.
+ *
+ * Each answer leads to a result:
+ * - the `home` answer keeps the presentation at its v1 tier (home). Any other
+ *   answer matches a new rhu rule, "<questionKey> != <home answer>", whose
+ *   threshold holds the English home answer (ADR-0001: text comparison);
+ * - the `redFlag` answer is Emergency at once (ADR-0001 step 1);
+ * - a question can only keep or raise a result. The v1 rule still matches.
+ * A question the patient does not answer keeps the v1 tier, as with the
+ * stomach and chest questions above.
+ *
+ * English is listed first. The phone submits, and the server stores, the
+ * answer worded as in the English variant (ADR-0006), so the threshold values
+ * are English and every English answer fits the 50-character answer column.
+ */
+interface FollowUp {
+  key: string;
+  symptomCode: string;
+  prompt: Words;
+  answers: Record<LanguageCode, string[]>;
+  /** Position of the answer that keeps the v1 tier (home); undefined if none does. */
+  home?: number;
+  /** Position of the answer that is Emergency; undefined if none is. */
+  redFlag?: number;
+}
 
-export const v2Rules: TriageRule[] = [...v1Rules, ...batch2Rules];
+const FOLLOW_UPS: FollowUp[] = [
+  {
+    key: "fever_days",
+    symptomCode: "fever_mild",
+    prompt: { en: "How many days have you had the fever?", tl: "Ilang araw ka nang may lagnat?", ceb: "Pila na ka adlaw nga naa kay hilanat?" },
+    answers: {
+      en: ["1 to 2 days", "3 days or more"],
+      tl: ["1 hanggang 2 araw", "3 araw o higit pa"],
+      ceb: ["1 hangtod 2 ka adlaw", "3 ka adlaw o labaw pa"],
+    },
+    home: 0,
+  },
+  {
+    key: "cough_weeks",
+    symptomCode: "cold_cough_no_sob",
+    prompt: { en: "How long have you had the cough?", tl: "Gaano katagal ka nang inuubo?", ceb: "Unsa na kadugay ang imong ubo?" },
+    answers: {
+      en: ["Less than 2 weeks", "2 weeks or more"],
+      tl: ["Wala pang 2 linggo", "2 linggo o higit pa"],
+      ceb: ["Wala pay 2 ka semana", "2 ka semana o labaw pa"],
+    },
+    home: 0,
+  },
+  {
+    key: "diarrhea_dehydration",
+    symptomCode: "diarrhea_mild_no_dehydration",
+    prompt: {
+      en: "Do you have any of these: very thirsty, dry mouth, little urine or dark urine, or dizzy when you stand up?",
+      tl: "Mayroon ka ba ng alinman dito: sobrang uhaw, tuyong bibig, kaunti o madilim ang kulay ng ihi, o nahihilo kapag tumatayo?",
+      ceb: "Naa ba kay bisan usa niini: grabe nga kauhaw, uga nga baba, gamay o itom-itom nga ihi, o malipong kung motindog?",
+    },
+    answers: {
+      en: ["None of these", "Yes, one or more", "Very weak, confused, or cannot drink"],
+      tl: ["Wala sa mga ito", "Oo, isa o higit pa", "Sobrang hina, nalilito, o hindi makainom"],
+      ceb: ["Wala niini", "Oo, usa o labaw pa", "Grabe ka luya, naglibog, o dili makainom"],
+    },
+    home: 0,
+    redFlag: 2,
+  },
+  {
+    key: "wound_size",
+    symptomCode: "minor_wound_no_infection",
+    prompt: { en: "How big is the wound?", tl: "Gaano kalaki ang sugat?", ceb: "Unsa kadako ang samad?" },
+    answers: {
+      en: ["Small scrape or shallow cut", "Big or deep cut", "Bleeding that will not stop"],
+      tl: ["Maliit na gasgas o mababaw na hiwa", "Malaki o malalim na hiwa", "Pagdurugong hindi tumitigil"],
+      ceb: ["Gamay nga garas o mabaw nga samad", "Dako o lawom nga samad", "Pagdugo nga dili moundang"],
+    },
+    home: 0,
+    redFlag: 2,
+  },
+  {
+    key: "wound_infection",
+    symptomCode: "minor_wound_no_infection",
+    prompt: {
+      en: "Is the wound red, swollen, warm, or more painful each day?",
+      tl: "Namumula, namamaga, mainit, o lalong sumasakit ba ang sugat araw-araw?",
+      ceb: "Pula, hubag, init, o nagkagrabe ba ang sakit sa samad matag adlaw?",
+    },
+    answers: YES_NO,
+    home: 0,
+  },
+  {
+    key: "headache_danger_signs",
+    symptomCode: "headache_mild_moderate",
+    prompt: {
+      en: "With the headache, do you have any of these: sudden, very bad headache (the worst ever), weakness or numbness on one side, trouble speaking or seeing, fainting or confusion, or a stiff neck with fever?",
+      tl: "Kasabay ng sakit ng ulo, mayroon ka ba ng alinman dito: biglaan at napakatinding sakit ng ulo (pinakamatindi kailanman), panghihina o pamamanhid ng isang bahagi ng katawan, hirap magsalita o makakita, pagkahimatay o pagkalito, o paninigas ng leeg na may lagnat?",
+      ceb: "Uban sa sakit sa ulo, naa ba kay bisan usa niini: kalit ug grabe kaayo nga sakit sa ulo (pinakagrabe sukad), kahuyang o pagkamanhid sa usa ka bahin sa lawas, lisod mosulti o makakita, paghimatay o kalibog, o gahi nga liog nga naay hilanat?",
+    },
+    answers: {
+      en: ["No, none of these", "None of these, but it has lasted 3 days or more", "Yes, one or more"],
+      tl: ["Wala, wala sa mga ito", "Wala sa mga ito, pero 3 araw o higit pa na", "Oo, isa o higit pa"],
+      ceb: ["Wala, wala niini", "Wala niini, pero 3 ka adlaw o labaw na", "Oo, usa o labaw pa"],
+    },
+    home: 0,
+    redFlag: 2,
+  },
+  {
+    // v1 already sends this presentation to rhu, so no answer is home and no new
+    // rule is needed: only the red flag changes anything.
+    key: "spotting_pads",
+    symptomCode: "spotting_first_trimester_mild",
+    prompt: { en: "How many pads are you soaking with blood?", tl: "Ilang pad na ang nababasa mo ng dugo?", ceb: "Pila na ka pad ang nabasa sa dugo?" },
+    answers: {
+      en: ["Only spots, less than 1 pad a day", "1 pad or more a day, but less than 1 an hour", "1 pad or more every hour"],
+      tl: ["Patak-patak lang, wala pang 1 pad sa isang araw", "1 pad o higit pa sa isang araw, pero wala pang 1 kada oras", "1 pad o higit pa kada oras"],
+      ceb: ["Tulo-tulo ra, wala pay 1 ka pad sa usa ka adlaw", "1 ka pad o labaw pa sa usa ka adlaw, pero wala pay 1 matag oras", "1 ka pad o labaw pa matag oras"],
+    },
+    redFlag: 2,
+  },
+];
+
+export const followUpQuestions: ClarificationQuestion[] = FOLLOW_UPS.flatMap((q) =>
+  (["en", "tl", "ceb"] as const).map((language) => ({
+    questionKey: q.key,
+    symptomCode: q.symptomCode,
+    language,
+    prompt: q.prompt[language],
+    answerType: "single_select" as const,
+    allowedAnswers: q.answers[language],
+    ...(q.redFlag === undefined ? {} : { redFlagAnswer: q.answers[language][q.redFlag]! }),
+  }))
+);
+
+const HOME_ANSWERED = FOLLOW_UPS.filter((q): q is FollowUp & { home: number } => q.home !== undefined);
+
+/** Not an override: each only feeds its rule's "!=" condition (ADR-0001 step 3). */
+export const followUpThresholds: SeverityThreshold[] = HOME_ANSWERED.map((q) => ({
+  key: `${q.key}_home`,
+  label: `The ${q.key} answer that keeps the result at home`,
+  value: q.answers.en[q.home]!,
+  tier: "rhu",
+  isOverride: false,
+}));
+
+// R-051 onwards, after the 50 presentation rules.
+export const followUpRules: TriageRule[] = HOME_ANSWERED.map((q, index) => {
+  const n = v1Rules.length + batch2Rules.length + index + 1;
+  const value = q.answers.en[q.home]!;
+  return {
+    code: `R-${String(n).padStart(3, "0")}`,
+    name: `${v1SymptomCodes.find((c) => c.code === q.symptomCode)!.displayName}: follow-up answer other than "${value}"`,
+    expression: `IF ${q.symptomCode} AND ${q.key} != "${value}" THEN rhu`,
+    conditions: [
+      { symptomCode: q.symptomCode, operator: "AND" },
+      { attribute: q.key, comparator: "!=", severityThresholdKey: `${q.key}_home`, operator: "AND" },
+    ],
+    outcomeTier: "rhu",
+    priority: n,
+    isActive: true,
+  };
+});
+
+const ASKS_FOLLOW_UP = new Set(FOLLOW_UPS.map((q) => q.symptomCode));
+
+/**
+ * RHU tip for an animal bite (R-013 stays rhu: the form says to consult
+ * immediately whatever the signs, so no question is asked). Drafted by Claude,
+ * approved by the appraiser with the follow-up questions (BUILD-LOG 9ao).
+ */
+const ANIMAL_BITE_TIP: { title: Words; body: Words } = {
+  title: { en: "Get the bite checked today", tl: "Ipasuri ang kagat ngayong araw", ceb: "Ipatan-aw ang paak karong adlawa" },
+  body: {
+    en: "Wash the bite with soap and running water for 15 minutes. Go to the RHU or an animal bite center today for anti-rabies care. Do not wait for danger signs.",
+    tl: "Hugasan ang kagat ng sabon at umaagos na tubig nang 15 minuto. Pumunta sa RHU o sa animal bite center ngayong araw para sa bakuna laban sa rabies. Huwag nang hintayin ang mga senyales ng panganib.",
+    ceb: "Hugasi ang paak og sabon ug nagdagayday nga tubig sulod sa 15 minutos. Adto sa RHU o sa animal bite center karong adlawa para sa bakuna batok sa rabies. Ayaw na hulata ang mga timailhan sa peligro.",
+  },
+};
+
+export const followUpHealthTips: HealthTip[] = (["en", "tl", "ceb"] as const).map((language) => ({
+  symptomCode: "animal_bite_stable",
+  outcomeTier: "rhu" as const,
+  language,
+  title: ANIMAL_BITE_TIP.title[language],
+  body: ANIMAL_BITE_TIP.body[language],
+  displayOrder: 1,
+}));
+
+// The v1 codes keep their names; only the six with a follow-up now ask first.
+export const v2SymptomCodes: SymptomCode[] = [
+  ...v1SymptomCodes.map((c) => (ASKS_FOLLOW_UP.has(c.code) ? { ...c, needsClarification: true } : c)),
+  ...batch2SymptomCodes,
+];
+
+export const v2Rules: TriageRule[] = [...v1Rules, ...batch2Rules, ...followUpRules];
 
 export const v2Bundle: RulesetBundle = {
   ...v1Bundle,
   versionLabel: "v2-draft",
   symptomCodes: v2SymptomCodes,
+  severityThresholds: [...v1Bundle.severityThresholds, ...followUpThresholds],
   rules: v2Rules,
-  clarificationQuestions: [...v1Bundle.clarificationQuestions, ...batch2Questions],
-  healthTips: [...v1Bundle.healthTips, ...batch2HealthTips],
+  clarificationQuestions: [...v1Bundle.clarificationQuestions, ...batch2Questions, ...followUpQuestions],
+  healthTips: [...v1Bundle.healthTips, ...batch2HealthTips, ...followUpHealthTips],
 };

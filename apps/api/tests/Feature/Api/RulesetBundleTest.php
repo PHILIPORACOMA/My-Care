@@ -97,6 +97,42 @@ it('assembles a bundle in the shape the triage engine contract declares', functi
 });
 
 /*
+ * The phone submits, and the server stores, the answer as worded in the first
+ * variant of a question (ADR-0006). That has to be English, whatever order the
+ * rows were written in: a text threshold holds the English answer, and the
+ * Tagalog and Cebuano answers may be longer than CLARIFICATION_ANSWER's 50.
+ */
+it('lists each question\'s English variant first, then the others alphabetically', function () {
+    $version = $this->makePublishedVersion();
+    $code = $this->makeSymptomCode('fever_mild');
+    $this->makeRule($version, 'R-001', 'rhu');
+
+    // makeQuestion writes a ceb row, so ceb comes last; rows go in out of order.
+    foreach (['tl', 'en', 'ceb'] as $language) {
+        foreach (['b_question', 'a_question'] as $key) {
+            $this->makeQuestion($version, $code, $key)->update(['language' => $language]);
+        }
+    }
+    // A question with no English variant keeps the alphabetical order.
+    foreach (['tl', 'ceb'] as $language) {
+        $this->makeQuestion($version, $code, 'c_question')->update(['language' => $language]);
+    }
+
+    $questions = collect($this->withHeaders($this->asDevice($this->device))
+        ->getJson('/api/v1/ruleset/current')
+        ->assertStatus(200)
+        ->json('bundle.clarificationQuestions'))
+        ->map(fn (array $q): string => "{$q['questionKey']}/{$q['language']}")
+        ->all();
+
+    expect($questions)->toBe([
+        'a_question/en', 'a_question/ceb', 'a_question/tl',
+        'b_question/en', 'b_question/ceb', 'b_question/tl',
+        'c_question/ceb', 'c_question/tl',
+    ]);
+});
+
+/*
  * HEALTH_TIP is ruleset_version_id-scoped precisely so it ships with the
  * bundle. Until this change the contract had no healthTips field and the table
  * was stranded.

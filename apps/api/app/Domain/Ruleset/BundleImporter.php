@@ -20,8 +20,9 @@ use Illuminate\Support\Facades\DB;
  * same as having passed clinical review, and v1 has not.
  *
  * Symptom codes in the bundle are created if missing. A code that already
- * exists must match exactly; a silent overwrite would change every published
- * version that uses it (see SymptomCodeRegistry).
+ * exists must match; a silent overwrite would change every published version
+ * that uses it (see SymptomCodeRegistry). The one exception is switching
+ * needs_clarification on, which leaves older versions as they were.
  */
 final class BundleImporter
 {
@@ -73,12 +74,20 @@ final class BundleImporter
             return;
         }
 
+        $wanted = (bool) ($code['needsClarification'] ?? false);
+
         if ($existing->display_name !== ($code['displayName'] ?? null)
-            || (bool) $existing->needs_clarification !== (bool) ($code['needsClarification'] ?? false)) {
+            || ((bool) $existing->needs_clarification && ! $wanted)) {
             throw DomainActionException::invalid(["symptomCodes.{$index}" => [
-                "Symptom code \"{$code['code']}\" already exists with a different display name or clarification flag. "
-                .'Existing codes are not overwritten by an import.',
+                "Symptom code \"{$code['code']}\" already exists with a different display name, or asks a follow-up "
+                .'question that this bundle would switch off. Existing codes are not overwritten by an import.',
             ]]);
+        }
+
+        // A newer bundle may add a follow-up question to an existing code
+        // (SymptomCodeRegistry::onlyTurnsOnClarification).
+        if ($wanted && ! $existing->needs_clarification) {
+            $this->codes->update($existing, ['needsClarification' => true]);
         }
     }
 }

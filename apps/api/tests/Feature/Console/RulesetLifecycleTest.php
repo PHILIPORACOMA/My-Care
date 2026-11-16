@@ -284,14 +284,85 @@ it('rejects content that would silently mis-triage', function (array $content, s
         ['questionKey' => 'q', 'symptomCode' => 'code_b', 'language' => 'ceb', 'prompt' => 'p',
             'answerType' => 'single_select', 'allowedAnswers' => ['x', 'y'], 'redFlagAnswer' => 'x'],
     ]]), 'clarificationQuestions.0.questionKey'],
-    'non-numeric threshold value' => [fixtureContent(['severityThresholds' => [[
-        'key' => 'k', 'label' => 'l', 'value' => 'high', 'tier' => 'rhu', 'isOverride' => false,
+    // The engine fires an override when the answer is >= its value: text never is.
+    'text value on an override threshold' => [fixtureContent(['severityThresholds' => [[
+        'key' => 'k', 'label' => 'l', 'value' => 'high', 'tier' => 'emergency', 'isOverride' => true,
     ]]]), 'severityThresholds.0.value'],
+    // An ordering comparator against text never holds (ADR-0001).
+    'text threshold compared with >=' => [fixtureContent([
+        'severityThresholds' => [['key' => 'k', 'label' => 'l', 'value' => 'high', 'tier' => 'rhu', 'isOverride' => false]],
+        'rules' => [[
+            'code' => 'R-001', 'name' => 'x', 'outcomeTier' => 'rhu', 'priority' => 1, 'isActive' => true,
+            'conditions' => [
+                ['symptomCode' => 'code_a', 'operator' => 'AND'],
+                ['attribute' => 'q', 'comparator' => '>=', 'severityThresholdKey' => 'k', 'operator' => 'AND'],
+            ],
+        ]],
+    ]), 'rules.0.conditions.1.comparator'],
+    // The phone sends the English answer, which CLARIFICATION_ANSWER holds in 50.
+    'submitted answer over 50 characters' => [fixtureContent(['clarificationQuestions' => [
+        ['questionKey' => 'q', 'symptomCode' => 'code_b', 'language' => 'ceb', 'prompt' => 'p',
+            'answerType' => 'single_select', 'allowedAnswers' => ['a', 'b']],
+        ['questionKey' => 'q', 'symptomCode' => 'code_b', 'language' => 'en', 'prompt' => 'p',
+            'answerType' => 'single_select', 'allowedAnswers' => ['a', str_repeat('b', 51)]],
+    ]]), 'clarificationQuestions.1.allowedAnswers'],
+    'answer over 100 characters' => [fixtureContent(['clarificationQuestions' => [
+        ['questionKey' => 'q', 'symptomCode' => 'code_b', 'language' => 'en', 'prompt' => 'p',
+            'answerType' => 'single_select', 'allowedAnswers' => ['a', 'b']],
+        ['questionKey' => 'q', 'symptomCode' => 'code_b', 'language' => 'ceb', 'prompt' => 'p',
+            'answerType' => 'single_select', 'allowedAnswers' => ['a', str_repeat('b', 101)]],
+    ]]), 'clarificationQuestions.1.allowedAnswers.1'],
     'duplicate lexicon term ignoring case' => [fixtureContent(['lexiconTerms' => [
         ['symptomCode' => 'code_a', 'language' => 'ceb', 'term' => 'Same', 'isNegation' => false],
         ['symptomCode' => 'code_b', 'language' => 'ceb', 'term' => 'same', 'isNegation' => false],
     ]]), 'lexiconTerms.1.term'],
 ]);
+
+it('accepts a text threshold compared with = or !=, and a long answer that is not the one submitted', function () {
+    draftWith(fixtureContent([
+        'severityThresholds' => [['key' => 'q_home', 'label' => 'l', 'value' => '1 to 2 days', 'tier' => 'rhu', 'isOverride' => false]],
+        'clarificationQuestions' => [
+            ['questionKey' => 'q', 'symptomCode' => 'code_b', 'language' => 'en', 'prompt' => 'p',
+                'answerType' => 'single_select', 'allowedAnswers' => ['1 to 2 days', '3 days or more']],
+            ['questionKey' => 'q', 'symptomCode' => 'code_b', 'language' => 'ceb', 'prompt' => 'p',
+                'answerType' => 'single_select', 'allowedAnswers' => ['a', str_repeat('b', 100)]],
+        ],
+        'rules' => [[
+            'code' => 'R-001', 'name' => 'x', 'outcomeTier' => 'rhu', 'priority' => 1, 'isActive' => true,
+            'conditions' => [
+                ['symptomCode' => 'code_b', 'operator' => 'AND'],
+                ['attribute' => 'q', 'comparator' => '!=', 'severityThresholdKey' => 'q_home', 'operator' => 'AND'],
+            ],
+        ]],
+    ]));
+
+    expect(\App\Models\SeverityThreshold::where('key', 'q_home')->value('value'))->toBe('1 to 2 days');
+});
+
+it('lets a frozen symptom code start asking a follow-up, but never stop', function () {
+    publishVersion(draftWith(fixtureContent()));
+
+    // code_a is frozen. Switching its follow-up on changes nothing a frozen version does.
+    $this->patchJson('/api/v1/console/symptom-codes/code_a', ['needsClarification' => true])->assertStatus(200);
+    expect(SymptomCode::where('code', 'code_a')->value('needs_clarification'))->toBeTrue()
+        ->and(AuditLog::where('target_table', 'symptom_codes')->where('action_type', 'updated')->count())->toBe(1);
+
+    // Off again would silence a frozen version's questions; a rename is still refused.
+    $this->patchJson('/api/v1/console/symptom-codes/code_a', ['needsClarification' => false])->assertStatus(409);
+    $this->patchJson('/api/v1/console/symptom-codes/code_a', ['displayName' => 'Too late', 'needsClarification' => true])
+        ->assertStatus(409);
+});
+
+it('keeps a frozen code\'s follow-up off when a frozen version already holds a question for it', function () {
+    SymptomCode::create(['code' => 'code_c', 'display_name' => 'Fixture C', 'needs_clarification' => false]);
+    publishVersion(draftWith(fixtureContent(['clarificationQuestions' => [[
+        'questionKey' => 'q', 'symptomCode' => 'code_c', 'language' => 'en', 'prompt' => 'p',
+        'answerType' => 'single_select', 'allowedAnswers' => ['a', 'b'],
+    ]]])));
+
+    // The published version would start asking "q" for code_c.
+    $this->patchJson('/api/v1/console/symptom-codes/code_c', ['needsClarification' => true])->assertStatus(409);
+});
 
 it('imports a whole bundle as a draft, creating symptom codes', function () {
     $bundle = ['versionLabel' => 'ignored', 'symptomCodes' => [
@@ -352,7 +423,7 @@ it('imports the exported v1 bundle file through the artisan command', function (
         ->and($version->rules()->where('outcome_tier', 'emergency')->count())->toBe(9);
 });
 
-it('imports the exported v2 bundle (v1 + Lexicon Appraisal Batch 2 + the severe-or-not follow-ups) as a draft', function () {
+it('imports the exported v2 bundle (v1 + Lexicon Appraisal Batch 2 + the follow-up questions) as a draft', function () {
     $path = base_path('../../packages/ruleset/dist/v2.json');
 
     if (! is_readable($path)) {
@@ -364,15 +435,51 @@ it('imports the exported v2 bundle (v1 + Lexicon Appraisal Batch 2 + the severe-
     $version = RulesetVersion::latest('id')->firstOrFail();
 
     expect($version->status)->toBe(RulesetStatus::DRAFT)
-        // 23 (v1) + 26 (the form's Part D) + 1 (chest pain, added after the form).
-        ->and($version->rules()->count())->toBe(50)
+        // 23 (v1) + 26 (the form's Part D) + 1 (chest pain, added after the form)
+        // + 6 rhu rules for the Part C follow-up answers (R-051..R-056).
+        ->and($version->rules()->count())->toBe(56)
         ->and($version->rules()->where('outcome_tier', 'home')->count())->toBe(14)
-        ->and($version->rules()->where('outcome_tier', 'rhu')->count())->toBe(21)
+        ->and($version->rules()->where('outcome_tier', 'rhu')->count())->toBe(27)
         ->and($version->rules()->where('outcome_tier', 'emergency')->count())->toBe(15)
-        // Two "Is the pain severe?" questions in en, tl and ceb, and three home tips per symptom in each language.
-        ->and($version->clarificationQuestions()->count())->toBe(6)
-        ->and($version->clarificationQuestions()->whereNotNull('red_flag_answer')->count())->toBe(6)
-        ->and($version->healthTips()->where('outcome_tier', 'home')->count())->toBe(18);
+        // The rules' home answers, as text thresholds that never override.
+        ->and($version->severityThresholds()->count())->toBe(6)
+        ->and($version->severityThresholds()->where('is_override', true)->count())->toBe(0)
+        // 2 "Is the pain severe?" + 7 Part C questions, each in en, tl and ceb;
+        // 6 of the 9 have an Emergency answer.
+        ->and($version->clarificationQuestions()->count())->toBe(27)
+        ->and($version->clarificationQuestions()->whereNotNull('red_flag_answer')->count())->toBe(18)
+        // Three home tips each for stomach and chest pain, and the animal-bite rhu tip, in each language.
+        ->and($version->healthTips()->where('outcome_tier', 'home')->count())->toBe(18)
+        ->and($version->healthTips()->where('outcome_tier', 'rhu')->count())->toBe(3)
+        ->and(SymptomCode::where('needs_clarification', true)->count())->toBe(9); // 8 in v2, plus this file's code_b
+});
+
+/*
+ * The real order of events: v1 was imported and published first, so its codes
+ * are frozen with needs_clarification off. v2 switches it on for the six codes
+ * that now ask a Part C follow-up, and the switch is audited.
+ */
+it('imports v2 over a published v1, switching on the six follow-up codes', function () {
+    $v1 = base_path('../../packages/ruleset/dist/v1.json');
+    $v2 = base_path('../../packages/ruleset/dist/v2.json');
+
+    if (! is_readable($v1) || ! is_readable($v2)) {
+        $this->markTestSkipped('Run `npm run export:v1` and `npm run export:v2 -w @mycare/ruleset` first.');
+    }
+
+    $this->artisan('mycare:ruleset:import', ['file' => $v1])->assertSuccessful();
+    publishVersion(RulesetVersion::latest('id')->firstOrFail());
+    expect(SymptomCode::where('code', 'fever_mild')->value('needs_clarification'))->toBeFalse();
+
+    $this->artisan('mycare:ruleset:import', ['file' => $v2])->assertSuccessful();
+
+    $switched = ['cold_cough_no_sob', 'diarrhea_mild_no_dehydration', 'fever_mild', 'headache_mild_moderate',
+        'minor_wound_no_infection', 'spotting_first_trimester_mild'];
+    $audited = AuditLog::where('target_table', 'symptom_codes')->where('action_type', 'updated')->pluck('target_id');
+
+    expect(SymptomCode::whereIn('code', $switched)->where('needs_clarification', true)->count())->toBe(6)
+        ->and($audited->sort()->values()->all())
+        ->toBe(SymptomCode::whereIn('code', $switched)->orderBy('id')->pluck('id')->all());
 });
 
 /*

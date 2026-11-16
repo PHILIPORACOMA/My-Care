@@ -112,11 +112,36 @@ final class BundleAssembler
             ->all();
     }
 
+    /**
+     * The language whose variant of a question comes first in a bundle, from
+     * the languages it has: English where there is one, else the first
+     * alphabetically. The engine and the phone resolve a question by key alone
+     * (the first variant), so this variant's answers are what the phone
+     * submits, what CLARIFICATION_ANSWER stores, and what a rule's text
+     * threshold is compared with, whatever language the patient reads (ADR-0006).
+     *
+     * @param  list<string>  $languages
+     */
+    public static function submittedLanguage(array $languages): string
+    {
+        usort($languages, self::languageOrder(...));
+
+        return $languages[0];
+    }
+
+    private static function languageOrder(string $a, string $b): int
+    {
+        return [$a !== 'en', $a] <=> [$b !== 'en', $b];
+    }
+
     /** @return list<array<string, mixed>> */
     private function clarificationQuestions(RulesetVersion $version): array
     {
         return $version->clarificationQuestions
-            ->sortBy([['question_key', 'asc'], ['language', 'asc']])
+            ->sortBy([
+                ['question_key', 'asc'],
+                fn ($a, $b): int => self::languageOrder($a->language, $b->language),
+            ])
             ->values()
             ->map(fn ($question): array => array_filter([
                 'questionKey' => $question->question_key,
