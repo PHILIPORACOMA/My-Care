@@ -2483,7 +2483,7 @@ questions, their answers and results, and the animal-bite tip.
 ### 9ap - Part C follow-ups encoded in v2: PR #29 (2026-11-16)
 
 The approved follow-ups (9ao) are in `packages/ruleset/src/bundle/v2.ts` on
-`feat/UT-005-followup-questions`, **PR #29, waiting for Philipo to merge**.
+`feat/UT-005-followup-questions`, **PR #29, merged 2026-11-16 (`46b782c`)**, branch kept.
 **Medical content from one appraiser: still a draft for clinical review.**
 - **Content:**
   - 7 questions × 3 languages (21 rows) on six v1 codes, each code now asking
