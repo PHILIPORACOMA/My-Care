@@ -2,7 +2,7 @@ import type { RulesetContent, SymptomCodeEntry } from "@mycare/api-client";
 import { matchSymptoms } from "@mycare/lexicon-matcher";
 import type { RulesetBundle } from "@mycare/ruleset";
 import { evaluate, type TriageResult } from "@mycare/triage-engine";
-import { Banner, Card, TextAreaField, TextField, TierBadge } from "@mycare/ui";
+import { Banner, Card, SelectField, TextAreaField, TierBadge } from "@mycare/ui";
 import { useMemo, useState } from "react";
 
 const REASONS: Record<TriageResult["reason"], string> = {
@@ -40,8 +40,11 @@ export function TestPanel({ content, codes, versionLabel }: { content: RulesetCo
   const questionKeys = [...new Set(bundle.clarificationQuestions.filter((q) => symptomCodes.includes(q.symptomCode)).map((q) => q.questionKey))];
 
   const result = useMemo(() => {
+    // Only answers the question still offers: a stale choice from before an edit is dropped.
+    const offered = (key: string, answer: string) =>
+      bundle.clarificationQuestions.find((q) => q.questionKey === key)?.allowedAnswers.includes(answer) ?? false;
     const clarificationAnswers = Object.entries(answers)
-      .filter(([key, answer]) => answer !== "" && questionKeys.includes(key))
+      .filter(([key, answer]) => answer !== "" && questionKeys.includes(key) && offered(key, answer))
       .map(([questionKey, answer]) => ({ questionKey, answer }));
     return evaluate({ symptomCodes, clarificationAnswers }, bundle);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -88,14 +91,37 @@ export function TestPanel({ content, codes, versionLabel }: { content: RulesetCo
             </div>
           </fieldset>
           {questionKeys.map((key) => {
-            const question = bundle.clarificationQuestions.find((q) => q.questionKey === key)!;
+            // The engine and the phone resolve a question by key alone: the first
+            // variant in bundle order (English, from the API). The phone sends that
+            // variant's answer at the position the patient tapped, so a choice here
+            // sends exactly the same text.
+            const variants = bundle.clarificationQuestions.filter((q) => q.questionKey === key);
+            const canonical = variants[0]!;
+            const others = variants.slice(1);
+            const chosen = canonical.allowedAnswers.includes(answers[key] ?? "") ? answers[key]! : "";
             return (
-              <TextField
+              <SelectField
                 key={key}
-                label={`Answer to “${key}” (${question.allowedAnswers.join(" / ")})`}
-                value={answers[key] ?? ""}
+                label={canonical.prompt}
+                hint={`Follow-up “${key}” on ${canonical.symptomCode}. Other languages are shown after each answer.`}
+                value={chosen}
                 onChange={(e) => setAnswers((a) => ({ ...a, [key]: e.target.value }))}
-              />
+              >
+                <option value="">Not answered</option>
+                {canonical.allowedAnswers.map((answer, index) => {
+                  const translations = others
+                    .map((q) => q.allowedAnswers[index])
+                    .filter((t): t is string => t !== undefined && t !== answer);
+                  const redFlag = canonical.redFlagAnswer === answer ? " — red flag: emergency" : "";
+                  return (
+                    <option key={answer} value={answer}>
+                      {answer}
+                      {translations.length > 0 ? ` (${translations.join(" / ")})` : ""}
+                      {redFlag}
+                    </option>
+                  );
+                })}
+              </SelectField>
             );
           })}
         </div>
