@@ -27,7 +27,13 @@ use Illuminate\Support\Facades\Validator;
  *   question by key alone (the first in bundle order), so the PWA submits the
  *   answer at the chosen *position* from that first variant. If variants
  *   disagreed on position, a red-flag answer given in one language could be
- *   missed — an emergency read as routine (ADR-0006).
+ *   missed — an emergency read as routine (ADR-0006);
+ * - the answers of the variant the phone submits from (English where there is
+ *   one, BundleAssembler) fit CLARIFICATION_ANSWER.answer, VARCHAR(50): a
+ *   longer one would make the device's whole upload fail validation;
+ * - an override threshold is a number (the engine checks it with >=), and a
+ *   text threshold, such as a fixed-choice answer, is only compared with = or
+ *   != (an ordering comparator against text never holds, ADR-0001).
  */
 final class ContentValidator
 {
@@ -76,9 +82,9 @@ final class ContentValidator
             'severityThresholds' => ['present', 'array', 'max:200'],
             'severityThresholds.*.key' => ['required', 'string', 'max:50', 'regex:/^[a-z0-9_]+$/'],
             'severityThresholds.*.label' => ['required', 'string', 'max:100'],
-            // Stored as VARCHAR(30), but the engine compares with Number(), so
-            // anything non-numeric would compare as NaN and never match.
-            'severityThresholds.*.value' => ['required', 'max:30', 'regex:/^-?\d+(\.\d+)?$/'],
+            // VARCHAR(30). A number, or the exact text of an answer; which
+            // comparators may use a text value is checked below.
+            'severityThresholds.*.value' => ['required', 'max:30'],
             'severityThresholds.*.tier' => ['required', $tier],
             'severityThresholds.*.isOverride' => ['required', 'boolean'],
 
@@ -92,7 +98,9 @@ final class ContentValidator
             // Duplicates are checked per question below: Laravel's `distinct`
             // on a nested wildcard compares across every question, and two
             // questions may legitimately both offer "mild".
-            'clarificationQuestions.*.allowedAnswers.*' => ['required', 'string', 'max:50'],
+            // A JSON column, so no width of its own. The variant the phone
+            // submits from is held to 50 below (CLARIFICATION_ANSWER.answer).
+            'clarificationQuestions.*.allowedAnswers.*' => ['required', 'string', 'max:100'],
             'clarificationQuestions.*.redFlagAnswer' => ['nullable', 'string', 'max:50'],
 
             'rules' => ['present', 'array', 'max:1000'],
@@ -148,11 +156,20 @@ final class ContentValidator
         }
 
         $thresholdKeys = [];
+        $textThresholds = [];
         foreach ($content['severityThresholds'] as $i => $threshold) {
             if (isset($thresholdKeys[$threshold['key']])) {
                 $add("severityThresholds.{$i}.key", "Threshold key \"{$threshold['key']}\" is used twice.");
             }
             $thresholdKeys[$threshold['key']] = true;
+
+            if (preg_match('/^-?\d+(\.\d+)?$/', (string) $threshold['value']) !== 1) {
+                $textThresholds[$threshold['key']] = true;
+
+                if ($threshold['isOverride']) {
+                    $add("severityThresholds.{$i}.value", 'An override threshold needs a number: it fires when the answer is at least this value.');
+                }
+            }
         }
 
         $variants = [];
@@ -176,6 +193,7 @@ final class ContentValidator
 
             $variants[$question['questionKey']][$question['language']] = [
                 'index' => $i,
+                'answers' => $question['allowedAnswers'],
                 'symptomCode' => $question['symptomCode'],
                 'answerCount' => count($question['allowedAnswers']),
                 'redFlagPosition' => $position === false ? null : $position,
@@ -187,6 +205,17 @@ final class ContentValidator
                 fn (array $v): string => $v['symptomCode'].'|'.$v['answerCount'].'|'.var_export($v['redFlagPosition'], true),
                 $byLanguage,
             ));
+
+            $submitted = BundleAssembler::submittedLanguage(array_keys($byLanguage));
+            foreach ($byLanguage[$submitted]['answers'] as $answer) {
+                if (mb_strlen($answer) > 50) {
+                    $add(
+                        "clarificationQuestions.{$byLanguage[$submitted]['index']}.allowedAnswers",
+                        "\"{$answer}\" is over 50 characters. The phone sends the {$submitted} answers, whatever language the "
+                        .'patient reads, so each must be 50 characters or fewer.',
+                    );
+                }
+            }
 
             if (count($signatures) > 1) {
                 $first = reset($byLanguage);
@@ -225,6 +254,8 @@ final class ContentValidator
                     $add($field, 'An attribute condition needs an attribute, a comparator and a threshold.');
                 } elseif (! isset($thresholdKeys[$thresholdKey])) {
                     $add("{$field}.severityThresholdKey", "Unknown threshold key \"{$thresholdKey}\".");
+                } elseif (isset($textThresholds[$thresholdKey]) && ! in_array($comparator, ['=', '!='], true)) {
+                    $add("{$field}.comparator", "Threshold \"{$thresholdKey}\" is text, so it can only be compared with = or !=.");
                 }
             }
         }

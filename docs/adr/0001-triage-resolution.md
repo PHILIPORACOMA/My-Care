@@ -82,6 +82,31 @@ matches the `attribute`/`SeverityThreshold.key` it's meant to feed. Explicit
 `TriageInput.attributes` are applied first, so a clarification answer
 overrides a stale explicit value rather than the reverse.
 
+## Comparing a fixed-choice answer (2026-11-16)
+
+Clarification answers are fixed choices, so most are text ("1 to 2 days"),
+not numbers. Until 2026-11-16 a condition compared `Number(actual)` with
+`Number(threshold.value)`, so text became `NaN`. `=` never held, and `!=`
+always held (`NaN !== NaN`). A rule could not tell one answer from another.
+
+A condition now compares as numbers when both sides parse as numbers, exactly
+as before. Otherwise only `=` and `!=` mean anything: they compare the exact
+text, case and spacing included. An ordering comparator (`>`, `>=`, `<`,
+`<=`) against text never holds. The API refuses that combination when a
+version is saved (`ContentValidator`). It also refuses a text value on an
+`isOverride` threshold, because step 2 fires on `>=`. The engine stays pure
+and synchronous.
+
+The pattern this serves is the Batch 2 Part C follow-ups in
+`packages/ruleset/src/bundle/v2.ts`. The base rule keeps the presentation at
+home, and an rhu rule `IF <code> AND <questionKey> != "<home answer>"` raises
+any other answer. The threshold holding the home answer is not an override, so
+the rhu rule competes in step 3 and can only raise the result. The text compared
+is the answer as worded in the question's first variant. The API serves English
+first (ADR-0006), so thresholds hold the English wording. A question left
+unanswered leaves the attribute missing, so the condition does not hold and
+the presentation keeps its base tier.
+
 ## Traceability
 
 This is the project's fixed resolution-precedence rule. Exercised by

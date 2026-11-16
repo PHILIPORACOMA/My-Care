@@ -424,3 +424,153 @@ test("AND/NOT condition chains: a rule requiring symptom present AND another abs
   assert.equal(excluded.tier, "rhu");
   assert.equal(excluded.reason, "fail_safe_default");
 });
+
+// A fixed-choice answer is text. "=" and "!=" compare it exactly; an ordering
+// comparator never holds; numbers still compare as numbers (ADR-0001).
+function textRuleBundle(comparator: "=" | "!=" | ">=", value: string): RulesetBundle {
+  return syntheticBundle({
+    severityThresholds: [{ key: "q_home", label: "home answer", value, tier: "rhu", isOverride: false }],
+    rules: [
+      {
+        code: "R-TEST-HOME",
+        name: "symptom alone",
+        expression: "IF s THEN home",
+        conditions: [{ symptomCode: "s", operator: "AND" }],
+        outcomeTier: "home",
+        priority: 1,
+        isActive: true,
+      },
+      {
+        code: "R-TEST-TEXT",
+        name: "symptom with an answer",
+        expression: `IF s AND q ${comparator} "${value}" THEN rhu`,
+        conditions: [
+          { symptomCode: "s", operator: "AND" },
+          { attribute: "q", comparator, severityThresholdKey: "q_home", operator: "AND" },
+        ],
+        outcomeTier: "rhu",
+        priority: 2,
+        isActive: true,
+      },
+    ],
+  });
+}
+
+const answering = (answer: string) => ({ symptomCodes: ["s"], clarificationAnswers: [{ questionKey: "q", answer }] });
+
+test("text answers: '!=' holds for any other answer and not for the same one", () => {
+  const bundle = textRuleBundle("!=", "1 to 2 days");
+  assert.equal(evaluate(answering("1 to 2 days"), bundle).tier, "home");
+  const other = evaluate(answering("3 days or more"), bundle);
+  assert.equal(other.tier, "rhu");
+  assert.equal(other.matchedRuleCode, "R-TEST-TEXT");
+  // Exact text: case and spacing count.
+  assert.equal(evaluate(answering("1 to 2 Days"), bundle).tier, "rhu");
+  // No answer: the attribute condition cannot hold, so the base rule decides.
+  assert.equal(evaluate({ symptomCodes: ["s"] }, bundle).tier, "home");
+});
+
+test("text answers: '=' holds only for the same text", () => {
+  const bundle = textRuleBundle("=", "Big or deep cut");
+  assert.equal(evaluate(answering("Big or deep cut"), bundle).tier, "rhu");
+  assert.equal(evaluate(answering("Small scrape or shallow cut"), bundle).tier, "home");
+});
+
+test("text answers: an ordering comparator against text never holds", () => {
+  const bundle = textRuleBundle(">=", "Big or deep cut");
+  assert.equal(evaluate(answering("Big or deep cut"), bundle).tier, "home");
+  assert.equal(evaluate(answering("Zzz"), bundle).tier, "home");
+});
+
+test("numbers still compare as numbers, including '=' and '!='", () => {
+  assert.equal(evaluate(answering("3.0"), textRuleBundle("=", "3")).tier, "rhu");
+  assert.equal(evaluate(answering("3.0"), textRuleBundle("!=", "3")).tier, "home");
+  assert.equal(evaluate(answering("10"), textRuleBundle(">=", "9")).tier, "rhu");
+  assert.equal(evaluate(answering("8"), textRuleBundle(">=", "9")).tier, "home");
+});
+
+// Batch 2 Part C, approved by the appraiser 2026-11-16 (BUILD-LOG 9ao): every
+// answer of every follow-up, typed out, with the result it must give. The phone
+// submits the English answer at the chosen position (ADR-0006).
+const PART_C_RESULTS: [string, string, [string, "home" | "rhu" | "emergency"][]][] = [
+  ["fever_mild", "fever_days", [["1 to 2 days", "home"], ["3 days or more", "rhu"]]],
+  ["cold_cough_no_sob", "cough_weeks", [["Less than 2 weeks", "home"], ["2 weeks or more", "rhu"]]],
+  [
+    "diarrhea_mild_no_dehydration",
+    "diarrhea_dehydration",
+    [["None of these", "home"], ["Yes, one or more", "rhu"], ["Very weak, confused, or cannot drink", "emergency"]],
+  ],
+  [
+    "minor_wound_no_infection",
+    "wound_size",
+    [["Small scrape or shallow cut", "home"], ["Big or deep cut", "rhu"], ["Bleeding that will not stop", "emergency"]],
+  ],
+  ["minor_wound_no_infection", "wound_infection", [["No", "home"], ["Yes", "rhu"]]],
+  [
+    "headache_mild_moderate",
+    "headache_danger_signs",
+    [["No, none of these", "home"], ["None of these, but it has lasted 3 days or more", "rhu"], ["Yes, one or more", "emergency"]],
+  ],
+  [
+    "spotting_first_trimester_mild",
+    "spotting_pads",
+    [["Only spots, less than 1 pad a day", "rhu"], ["1 pad or more a day, but less than 1 an hour", "rhu"], ["1 pad or more every hour", "emergency"]],
+  ],
+];
+
+test("v2 bundle: every Part C follow-up answer gives the result the appraiser approved", () => {
+  for (const [symptomCode, questionKey, answers] of PART_C_RESULTS) {
+    for (const [answer, tier] of answers) {
+      const result = evaluate({ symptomCodes: [symptomCode], clarificationAnswers: [{ questionKey, answer }] }, v2Bundle);
+      assert.equal(result.tier, tier, `${symptomCode} / ${questionKey} = "${answer}"`);
+      if (tier === "emergency") assert.equal(result.reason, "red_flag_clarification");
+    }
+    // Unanswered, the presentation keeps its v1 tier.
+    const base = v1Bundle.rules.find((r) => r.conditions[0]?.symptomCode === symptomCode)!;
+    assert.equal(evaluate({ symptomCodes: [symptomCode] }, v2Bundle).tier, base.outcomeTier, symptomCode);
+  }
+});
+
+test("v2 bundle: an answer that leads to rhu matches its own follow-up rule", () => {
+  const cases: [string, string, string, string][] = [
+    ["fever_mild", "fever_days", "3 days or more", "R-051"],
+    ["cold_cough_no_sob", "cough_weeks", "2 weeks or more", "R-052"],
+    ["diarrhea_mild_no_dehydration", "diarrhea_dehydration", "Yes, one or more", "R-053"],
+    ["minor_wound_no_infection", "wound_size", "Big or deep cut", "R-054"],
+    ["minor_wound_no_infection", "wound_infection", "Yes", "R-055"],
+    ["headache_mild_moderate", "headache_danger_signs", "None of these, but it has lasted 3 days or more", "R-056"],
+  ];
+  for (const [symptomCode, questionKey, answer, ruleCode] of cases) {
+    const result = evaluate({ symptomCodes: [symptomCode], clarificationAnswers: [{ questionKey, answer }] }, v2Bundle);
+    assert.equal(result.matchedRuleCode, ruleCode, `${questionKey} = "${answer}"`);
+  }
+});
+
+test("v2 bundle: the two wound questions combine; either one alone can raise the result", () => {
+  const wound = (size: string, infection: string) =>
+    evaluate(
+      {
+        symptomCodes: ["minor_wound_no_infection"],
+        clarificationAnswers: [
+          { questionKey: "wound_size", answer: size },
+          { questionKey: "wound_infection", answer: infection },
+        ],
+      },
+      v2Bundle
+    ).tier;
+  assert.equal(wound("Small scrape or shallow cut", "No"), "home");
+  assert.equal(wound("Small scrape or shallow cut", "Yes"), "rhu");
+  assert.equal(wound("Big or deep cut", "No"), "rhu");
+  assert.equal(wound("Bleeding that will not stop", "No"), "emergency");
+});
+
+test("v2 bundle: a home follow-up answer cannot pull down another matched presentation", () => {
+  const result = evaluate(
+    {
+      symptomCodes: ["fever_mild", "snake_bite"],
+      clarificationAnswers: [{ questionKey: "fever_days", answer: "1 to 2 days" }],
+    },
+    v2Bundle
+  );
+  assert.equal(result.tier, "emergency");
+});

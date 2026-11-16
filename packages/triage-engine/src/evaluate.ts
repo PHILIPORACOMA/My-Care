@@ -40,6 +40,29 @@ const TIER_RANK: Record<Tier, number> = {
   emergency: 2,
 };
 
+/**
+ * Numbers compare as numbers, exactly as before. When either side is not a
+ * number (a fixed-choice answer such as "1 to 2 days"), only "=" and "!=" mean
+ * anything, and they compare the exact text; an ordering comparator never
+ * holds. Without this, "!=" against text was always true (NaN !== NaN) and "="
+ * always false. See docs/adr/0001-triage-resolution.md.
+ */
+function compareValues(comparator: Comparator, actual: string | number, expected: string): boolean {
+  const actualNumber = Number(actual);
+  const expectedNumber = Number(expected);
+  if (!Number.isNaN(actualNumber) && !Number.isNaN(expectedNumber)) {
+    return compare(comparator, actualNumber, expectedNumber);
+  }
+  switch (comparator) {
+    case "=":
+      return String(actual) === expected;
+    case "!=":
+      return String(actual) !== expected;
+    default:
+      return false;
+  }
+}
+
 function compare(comparator: Comparator, actual: number, expected: number): boolean {
   switch (comparator) {
     case "=":
@@ -76,7 +99,7 @@ function conditionHolds(
     if (actual === undefined || threshold === undefined) {
       return false;
     }
-    return compare(condition.comparator, Number(actual), Number(threshold.value));
+    return compareValues(condition.comparator, actual, threshold.value);
   }
   return false;
 }

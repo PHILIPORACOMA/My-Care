@@ -111,11 +111,30 @@ symptom, answer count and red-flag *position*, and the PWA submits the answer at
 the chosen position from the first variant. This is a convention on top of the
 existing contract, not an engine change.
 
+*Amended 2026-11-16.* "First variant" is now fixed: `BundleAssembler` lists
+each key's English variant first, then the others alphabetically. It used to
+sort plainly by language, which put Cebuano first. That variant's answers are
+what the phone submits, what `CLARIFICATION_ANSWER.answer` stores
+(VARCHAR(50)), and what a rule's text threshold is compared with (ADR-0001).
+So `ContentValidator` holds that variant's answers to 50 characters and the
+others to 100, because `allowed_answers` is a JSON column. A Tagalog or
+Cebuano answer may therefore run longer than the English. Nothing published
+changed: v1 has no questions, and no v2 version has been live.
+
 ### 7. Symptom codes lock once a frozen version uses them
 
 Because Table 6 is global, editing a code would silently change published
 versions. A code becomes immutable once any `in_review`, `published` or
 `retired` version references it; new codes can always be added.
+
+*Amended 2026-11-16.* One change is still accepted on a locked code:
+`needs_clarification` from off to on, through the console or an import. It
+lets a later version add a follow-up question to an existing presentation
+(Batch 2 Part C on six v1 codes). Frozen versions behave as before, because
+the phone asks only that version's own questions. The switch is refused if a
+frozen version already holds a question for the code, since that version would
+start asking it. Off again is refused, because it would silence a frozen
+version's questions. The change is audited like any other update.
 
 ### 8. Audit scope
 
