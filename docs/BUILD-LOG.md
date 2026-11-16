@@ -2508,7 +2508,7 @@ The approved follow-ups (9ao) are in `packages/ruleset/src/bundle/v2.ts` on
      and the switch is refused if a frozen version already has questions for
      that code (ADR-0006 amended).
 - **Also fixed:** the "no medicine in tips" test guard held backspace bytes
-  instead of ``, so it never matched `mg`, `tablet` or `pill`.
+  instead of `\b`, so it never matched `mg`, `tablet` or `pill`.
 - **Tests:** all JS workspaces, purity, and 218/218 Pest on MySQL.
 - **Import file:** `Downloads\My_Care_ruleset_v2_final_with_followups_2026-11-16.json`,
   which is the export plus the same 437 lexicon terms. It **replaces**
