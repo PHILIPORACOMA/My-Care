@@ -2414,5 +2414,9 @@ Emergency for both.
   item carried in 9aj and 9ak.
 - **PR #28** has since been merged (`df693e5`), so 9al's "waiting for Philipo
   to merge it" is out of date.
-- **Still open:** "Check for new rules"; Part C questions; unrecognised words
-  and Emergency; body-area groups; zero suppression.
+- **Still open:** "Check for new rules"; Part C questions; body-area
+  groups; zero suppression.
+- **Also settled (same day):** unrecognised words stay **RHU with the
+  emergency call button** (PR #25, 9x). Philipo confirmed this is the final
+  rule, so the open question of sending them to Emergency, or adding a "get
+  help now" line, is closed. Checklist 3 / 39.
