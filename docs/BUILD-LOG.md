@@ -2343,3 +2343,35 @@ Philipo answered the two questions meant for the nurse:
   Claude's drafts of the English (see v2.ts), shown to Philipo for approval next.
 - No code, file or schema change. `My_Care_ruleset_v2_final_2026-11-16.json` is
   unchanged and still unpublished.
+
+---
+
+### 9ak - Chest "No" is Home; remedy tips drafted for the nurse (PR #28) (2026-11-16)
+
+Philipo **disregarded his previous answers** (9aj) and decided:
+1. **Chest pain "No" goes to Home, with the health tip** (it was built as RHU).
+2. **Claude provides the basic remedy for the pain, and the nurse reviews it.**
+This reverses the RHU default Claude had proposed. Claude had warned that a
+patient with a heart problem may well answer "No"; the choice is Philipo's.
+- **Built (PR #27 follow-up, PR #28):** `chest_pain_unspecified` R-050 is
+  now home. Three home tips each for stomach and chest pain in en, tl and ceb
+  (18 rows): what can help; get help right away if; if the pain does not go
+  away. The stomach "does not go away" tip is the appraiser's own wording,
+  unchanged. **The rest is medical content written by Claude and not
+  reviewed by any clinician.** No medicine is named and no dose given (a test
+  enforces it). The chest list opens with the warning signs, as the
+  mitigation for chest "No" being Home.
+- **Review sheet for the nurse:** `Downloads\My_Care_Health_Tips_Review_Sheet_2026-11-16.docx`.
+  The English tips with Approve / Reject / Change, the tl and ceb drafts for
+  Philipo, and a box for the nurse's ruling on chest "No": Home, RHU or
+  Emergency. Nothing is used until it comes back.
+- **Import file:** `Downloads\My_Care_ruleset_v2_final_with_tips_2026-11-16.json`
+  (437 terms, 50 rules, 6 questions, 18 tips). It supersedes
+  `..._v2_final_2026-11-16.json`. The importer accepts it on the throwaway
+  schema. Not imported or published. Philipo's local v10 still has the RHU
+  chest rule and one stomach tip.
+- **Checks:** ruleset 7/7, engine 17/17, Pest 210/210; in all three languages
+  stomach and chest "No" give Home with three tips, and "Yes" gives Emergency;
+  373 positive terms and 64 negations unchanged; no English chips.
+- **Open:** the nurse's ruling on chest "No" and sign-off on the tips; the
+  insect sting / snake bite tier; "Check for new rules"; Part C questions.

@@ -78,10 +78,12 @@ City Health Office · **S** whoever runs the server.
 - [ ] **C** Unrecognised words (BUILD-LOG 9x): should they ever go to
       Emergency, and is a "confused, very sleepy or can't speak: get help
       now" line wanted on that screen? Both are clinical calls.
-- [ ] **C** Severe-or-not follow-ups (BUILD-LOG 9ae, 9aj): Philipo confirmed
-      2026-11-16 that chest "No" goes to the RHU and the stomach "No" goes to Home
-      with the tip as written (nothing added). Still open: the nurse's own ruling
-      on chest, and approval of the tip's tl/ceb wording.
+- [ ] **C** Severe-or-not follow-ups and tips (BUILD-LOG 9ae, 9ak): Philipo decided
+      2026-11-16 that chest "No" and stomach "No" both go to Home with three tips
+      each, drafted by Claude. The nurse must review the tips and rule on chest
+      "No" (Home, RHU or Emergency): sheet
+      `My_Care_Health_Tips_Review_Sheet_2026-11-16.docx`. Do not publish the tips
+      before then.
 - [ ] **P** Plain stomach and chest phrases: approved by Philipo 2026-11-16 (all
       46). Import `My_Care_ruleset_v2_final_2026-11-16.json` and publish it
       from the console (BUILD-LOG 9ai).
@@ -204,3 +206,5 @@ Everything else can follow.
   ready, not yet published (BUILD-LOG 9ai). 1 / 39.
 - **2026-11-16:** chest "No" = RHU and stomach "No" = Home with the tip confirmed by
   Philipo (BUILD-LOG 9aj); nurse's own ruling not on record. 1 / 39.
+- **2026-11-16:** chest "No" changed to Home and remedy tips drafted for the nurse's
+  review (PR #28, BUILD-LOG 9ak). Nothing ticked. 1 / 39.
