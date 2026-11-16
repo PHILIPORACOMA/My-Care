@@ -2420,3 +2420,36 @@ Emergency for both.
   emergency call button** (PR #25, 9x). Philipo confirmed this is the final
   rule, so the open question of sending them to Emergency, or adding a "get
   help now" line, is closed. Checklist 3 / 39.
+
+---
+
+### 9an - Part C follow-up questions drafted for the nurse (2026-11-16)
+
+The Batch 2 Part C wording was mostly illegible (9x), so at Philipo's request
+Claude drafted the follow-ups for the nurse to review, as with the tips (9ak).
+**Medical content, not clinically reviewed. Nothing is in the code or the app.**
+- **Sheet:** `Downloads\My_Care_Follow_Up_Questions_Review_Sheet_2026-11-16.docx`.
+  English for the nurse; Tagalog and Cebuano are Claude's drafts for Philipo.
+- **Seven questions**, each attached to a v1 code, with a result per answer:
+  1. fever days (`fever_mild`): 1-2 days Home, 3+ RHU;
+  2. cough length (`cold_cough_no_sob`): under 2 weeks Home, 2+ RHU;
+  3. dehydration signs (`diarrhea_mild_no_dehydration`): Home / RHU / Emergency;
+  4. wound size (`minor_wound_no_infection`): Home / RHU / Emergency (bleeding
+     that will not stop);
+  5. wound infection signs (same code): No Home, Yes RHU;
+  6. headache danger signs (`headache_mild_moderate`): Home / RHU (3+ days,
+     Claude's suggestion) / Emergency;
+  7. pads soaked (`spotting_first_trimester_mild`): RHU / RHU / Emergency (1+
+     pad an hour).
+- **Animal bite:** no question. The form says "consult immediately", so the
+  draft keeps R-013 at RHU and adds an RHU tip (wash 15 minutes, go today).
+- **Built to fit the engine:** answers are fixed choices; at most one Emergency
+  answer per question (`redFlagAnswer`, 50 characters max in every language,
+  checked); RHU answers will need attribute conditions on new rules. A question
+  can only keep or raise a tier: the base rule still matches.
+- **Flagged for the nurse:** exactly 3 days of fever (v1 says under 3 and over
+  3); the spotting middle answer; a second diarrhea duration question; cough
+  with blood or weight loss.
+- **Next:** the nurse reviews; Philipo checks the Tagalog and Cebuano; then
+  Claude proposes the code change (questions, `needsClarification`, new rules,
+  tests) and waits for a go-ahead.
