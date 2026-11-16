@@ -81,8 +81,9 @@ City Health Office · **S** whoever runs the server.
 - [ ] **C** Severe-or-not follow-ups (BUILD-LOG 9ae): confirm chest pain "No"
       goes to the RHU (or Home), approve the stomach tip and its tl/ceb
       wording, and say whether any other home advice belongs in it.
-- [ ] **P C** Plain stomach and chest phrases: approve the sheet
-      `My_Care_Plain_Stomach_Chest_Phrase_Sheet_2026-11-15.docx`.
+- [ ] **P** Plain stomach and chest phrases: approved by Philipo 2026-11-16 (all
+      46). Import `My_Care_ruleset_v2_final_2026-11-16.json` and publish it
+      from the console (BUILD-LOG 9ai).
 - [ ] **C** Check which body-area group each symptom sits in (PR #21), e.g.
       allergic reaction under skin, swollen legs under heart.
 
@@ -198,3 +199,5 @@ Everything else can follow.
   9ag). Nothing ticked. 1 / 39.
 - **2026-11-15:** v2 chip names approved by Philipo; import file ready, not yet
   published (BUILD-LOG 9ah). 1 / 39.
+- **2026-11-16:** v10 confirmed on a device; plain phrases approved; final v2 file
+  ready, not yet published (BUILD-LOG 9ai). 1 / 39.

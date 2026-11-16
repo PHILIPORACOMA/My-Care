@@ -2296,3 +2296,33 @@ reviewed them beyond Philipo.
 - **To use it:** import as a draft, submit for review, publish with the
   clinical-review confirmation, then force the device to re-download (change
   barangay or clear site data), since a device only refreshes after 6 hours.
+
+---
+
+### 9ai - Plain phrases approved; the final v2 import file (2026-11-16)
+
+Philipo confirmed v10 on his device (every chip Cebuano, the question works),
+then returned the plain stomach and chest phrase sheet (9ae) with "all
+approve". The sheet on disk has no ticks or edits, so this is his approval in
+chat of **all 46 rows, including the 8 stomach "cancels it" negations**, which
+Claude had asked him to tick explicitly.
+- **Final file:** `Downloads\My_Care_ruleset_v2_final_2026-11-16.json`. 437 terms:
+  the 100 approved chip names (v1 and the 27 new, tl and ceb), then English
+  display names, then every approved phrase: English 99 + 20 negations,
+  Tagalog 135 + 20, Cebuano 139 + 24. Plus 50 rules, 6 question rows, 3 tips.
+  It supersedes the chip-names file (kept; that one is published locally as
+  v10).
+- **A defect caught before handing over:** the two follow-up symptoms now have
+  English phrases, and a chip shows the first term in its language, so their
+  English chips would have read "my stomach hurts". Their English display names
+  now come first. Same fix as for the nine emergency symptoms in 9ab.
+- **Checks:** the real importer accepts the file on the throwaway schema; all 373
+  positive terms match only their own symptom and the 64 negations negate only
+  their own; 0 of 50 chips are English in tl or ceb; the English chips equal the
+  form's wording; and the app flow works in all three languages (stomach "No"
+  = Home plus the tip, "Yes" = Emergency; chest "No" = RHU, "Yes" = Emergency;
+  "no stomach pain" in en, tl and ceb is understood and checks nothing).
+- **Still open:** the appraiser's ruling on chest "No"; the stomach tip's
+  wording; "Check for new rules" (not built); the insect sting / snake bite tier
+  (the form ticked Emergency, the draft has insect_sting at RHU); Part C's
+  follow-up questions.
