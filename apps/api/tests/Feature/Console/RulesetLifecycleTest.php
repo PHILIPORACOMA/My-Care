@@ -486,30 +486,32 @@ it('imports the exported v2 bundle (v1 + Lexicon Appraisal Batch 2 + the follow-
 
     expect($version->status)->toBe(RulesetStatus::DRAFT)
         // 23 (v1) + 26 (the form's Part D) + 1 (chest pain, added after the form)
-        // + 6 rhu rules for the Part C follow-up answers (R-051..R-056).
-        ->and($version->rules()->count())->toBe(56)
+        // + 6 rhu rules for the Part C follow-up answers (R-051..R-056)
+        // + 7 for the nurse review's danger-sign answers (R-057..R-063).
+        ->and($version->rules()->count())->toBe(63)
         ->and($version->rules()->where('outcome_tier', 'home')->count())->toBe(14)
-        ->and($version->rules()->where('outcome_tier', 'rhu')->count())->toBe(27)
+        ->and($version->rules()->where('outcome_tier', 'rhu')->count())->toBe(34)
         ->and($version->rules()->where('outcome_tier', 'emergency')->count())->toBe(15)
         // The rules' home answers, as text thresholds that never override.
-        ->and($version->severityThresholds()->count())->toBe(6)
+        ->and($version->severityThresholds()->count())->toBe(13)
         ->and($version->severityThresholds()->where('is_override', true)->count())->toBe(0)
-        // 2 "Is the pain severe?" + 7 Part C questions, each in en, tl and ceb;
-        // 6 of the 9 have an Emergency answer.
-        ->and($version->clarificationQuestions()->count())->toBe(27)
-        ->and($version->clarificationQuestions()->whereNotNull('red_flag_answer')->count())->toBe(18)
+        // 2 "Is the pain severe?" + 7 Part C + 13 nurse-review questions, each in
+        // en, tl and ceb; 18 of the 22 have an Emergency answer.
+        ->and($version->clarificationQuestions()->count())->toBe(66)
+        ->and($version->clarificationQuestions()->whereNotNull('red_flag_answer')->count())->toBe(54)
         // Three home tips each for stomach and chest pain, and the animal-bite rhu tip, in each language.
         ->and($version->healthTips()->where('outcome_tier', 'home')->count())->toBe(18)
         ->and($version->healthTips()->where('outcome_tier', 'rhu')->count())->toBe(3)
-        ->and(SymptomCode::where('needs_clarification', true)->count())->toBe(9); // 8 in v2, plus this file's code_b
+        ->and(SymptomCode::where('needs_clarification', true)->count())->toBe(22); // 21 in v2, plus this file's code_b
 });
 
 /*
  * The real order of events: v1 was imported and published first, so its codes
- * are frozen with needs_clarification off. v2 switches it on for the six codes
- * that now ask a Part C follow-up, and the switch is audited.
+ * are frozen with needs_clarification off. v2 switches it on for the seven v1
+ * codes that now ask a follow-up (six from Part C, muscle pain from the nurse
+ * review), and the switch is audited.
  */
-it('imports v2 over a published v1, switching on the six follow-up codes', function () {
+it('imports v2 over a published v1, switching on the seven follow-up codes', function () {
     $v1 = base_path('../../packages/ruleset/dist/v1.json');
     $v2 = base_path('../../packages/ruleset/dist/v2.json');
 
@@ -524,10 +526,10 @@ it('imports v2 over a published v1, switching on the six follow-up codes', funct
     $this->artisan('mycare:ruleset:import', ['file' => $v2])->assertSuccessful();
 
     $switched = ['cold_cough_no_sob', 'diarrhea_mild_no_dehydration', 'fever_mild', 'headache_mild_moderate',
-        'minor_wound_no_infection', 'spotting_first_trimester_mild'];
+        'minor_wound_no_infection', 'muscle_pain_post_exertion', 'spotting_first_trimester_mild'];
     $audited = AuditLog::where('target_table', 'symptom_codes')->where('action_type', 'updated')->pluck('target_id');
 
-    expect(SymptomCode::whereIn('code', $switched)->where('needs_clarification', true)->count())->toBe(6)
+    expect(SymptomCode::whereIn('code', $switched)->where('needs_clarification', true)->count())->toBe(7)
         ->and($audited->sort()->values()->all())
         ->toBe(SymptomCode::whereIn('code', $switched)->orderBy('id')->pluck('id')->all());
 });
