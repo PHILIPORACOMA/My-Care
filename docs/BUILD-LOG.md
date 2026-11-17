@@ -2669,7 +2669,8 @@ beside it (`..._ID_key.json`).
     - coarse "gitubol ko" is kept;
     - "wala ko kalibang" may be confused with the "no diarrhoea" phrase;
     - "giluod ko" may not mean feeling sick.
-- **PR #32 (`feat/UT-005-nurse-followups`), open for Philipo to merge:**
+- **PR #32 (`feat/UT-005-nurse-followups`), merged 2026-11-17 (`7271a52`) at
+  Philipo's request, branch kept:**
   - `v2.ts` gains 13 questions in en, tl and ceb;
   - R-057 to R-063 (Home to RHU) with 7 text thresholds;
   - needsClarification is switched on for the 13 codes.
