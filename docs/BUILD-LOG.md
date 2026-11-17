@@ -2634,3 +2634,74 @@ B and C wait for him to sign in.
 - **Next for Philipo:** import the v5 file in the live console, submit it,
   publish it with "Reviewed and approved by" filled in, and force a device
   refresh. Or redeploy first and use the v14 file.
+
+---
+
+### 9at - Nurse phrase review approved; 13 follow-ups encoded (PR #32) (2026-11-17)
+
+Philipo asked for Cebuano dialect and modern Bisaya phrases, and follow-up
+questions, for a nurse to review. Claude drafted
+`Downloads\My_Care_Cebuano_Phrase_Review_for_Nurse_2026-11-17.docx`, with an ID key
+beside it (`..._ID_key.json`).
+- **The sheet:**
+  - A1: 383 new phrases;
+  - A2: 140 short spellings;
+  - B1: notes on the 9 existing questions;
+  - B2: 13 proposed danger-sign follow-ups.
+  The phrases come from binisaya.com and Wikipedia's Cebuano, Boholano,
+  Davao and Bislish pages. Every one was checked with the real matcher.
+  - **Claude's error on the sheet:** A2's header says all 140 are short forms
+    of phrases already in the app. 43 are short forms of new A1 phrases. No
+    decision depends on it, because every A1 original was approved too.
+- **Returned the same day, all approved:**
+  - all 523 phrases ticked OK;
+  - the 9 existing questions kept as they are, so the wording notes were
+    declined;
+  - all 13 new questions approved with no changes.
+  - **Who:** a nurse went through it with Philipo, as he confirmed in chat.
+    The sheet names the nurse, but consent to be named was not confirmed, so
+    the repo and console record "nurse" (9ar rule).
+  - **Scope:** the signature line reads "will vouch for the pilot testing".
+  - **Questions on the sheet that were ticked without an answer, so stay as
+    drafted:**
+    - haemorrhoids "gi-almoranas ko" goes to Emergency under `blood_in_stool`;
+    - one swollen, red, painful leg stays RHU;
+    - coarse "gitubol ko" is kept;
+    - "wala ko kalibang" may be confused with the "no diarrhoea" phrase;
+    - "giluod ko" may not mean feeling sick.
+- **PR #32 (`feat/UT-005-nurse-followups`), open for Philipo to merge:**
+  - `v2.ts` gains 13 questions in en, tl and ceb;
+  - R-057 to R-063 (Home to RHU) with 7 text thresholds;
+  - needsClarification is switched on for the 13 codes.
+  The engine, schema, API and apps are untouched. Tests: ruleset 10/10,
+  engine 27/27, all JS workspaces, Pest 220/220.
+- **Two changes after approval, awaiting the nurse's confirmation:**
+  - The Tagalog is Claude's translation of the approved English.
+  - **Five questions were recast** (toothache, eye, back pain, constipation,
+    muscle pain). Their Emergency answers ran to 52-105 characters.
+    `red_flag_answer` is VARCHAR(50) in *every* language, and the validator
+    requires the same red-flag position in each language. Widening the column
+    would mean a manuscript amendment. So the questions follow the approved
+    headache pattern:
+    - the signs move word for word into the question;
+    - the Emergency answer is "Oo, usa o labaw pa";
+    - the RHU answer is "Wala niini, pero ..." plus the approved wording.
+    Every answer keeps its approved result.
+- **Import file:** `Downloads\My_Care_ruleset_v2_nurse_review_2026-11-17.json`.
+  - **Contents:** the PR's export plus 970 terms (v14's 447 with the 9 "not"
+    phrases, plus the 523 approved phrases).
+  - **Checks:**
+    - every new phrase matches only its own symptom;
+    - no existing phrase changed;
+    - tap names are unchanged;
+    - the importer accepts it as a draft on `mycare_test` (reset to empty
+      afterwards), and the server serves the same 970 terms.
+  - **It needs the code from PR #29 and later.** The live server runs older
+    code, so redeploy from `main` after merging #32, then import, publish
+    and force a device refresh.
+- **Seen in passing:**
+  - The `expression` text of R-051 to R-056 differs between the export (`!=
+    "1 to 2 days"`) and the database (`!= fever_days_home`). It is display
+    only; the conditions are identical, and it predates this change.
+  - The PWA barangay-change unit test failed once under load beside Pest.
+    It passed 3/3 alone and 78/78 in a clean run.
