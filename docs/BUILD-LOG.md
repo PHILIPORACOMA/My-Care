@@ -2538,3 +2538,45 @@ his own word, not one Claude drafted.
   Test & explain on v14 shows it matching `cold_cough_no_sob`, R-002.
 - **Not added:** a Cebuano negation such as "dili ko gi ubo". Today that
   phrase matches nothing. If one is wanted, the word must come from Philipo.
+
+---
+
+### 9ar - Console: follow-up dropdowns and "Reviewed and approved by" (2026-11-17)
+
+Philipo merged two console PRs. Both branches are kept.
+- **PR #30 (`84dde9e`), UT-007.** Test & explain asked for each follow-up
+  answer as free text. With the Part C "!=" rules, a typo or a half-typed
+  answer showed RHU, and a Tagalog or Cebuano answer never matched. Each
+  follow-up is now a dropdown: "Not answered", then the English answers with
+  the tl and ceb wording beside them, and the red flag marked. A choice sends
+  exactly what the phone sends. Checked by hand on draft v13: fever "3 days or
+  more" gives RHU (R-051), and wound "Bleeding that will not stop" gives
+  Emergency.
+- **PR #31 (`e316b01`), UT-011.** Publishing now requires "Reviewed and
+  approved by (name or role)", up to 100 characters. The console shows
+  "Reviewed and approved by: ..." on the version page and in the version list.
+  Philipo's decisions:
+  - **console only**: phones never receive it;
+  - **audit log, no schema change**: one `clinical_review` entry written by
+    `RulesetLifecycle` through `Recorder`, never edited, and copied onto a
+    rolled-back version with `carried_from` (ADR-0006 amended);
+  - **a name only with consent, otherwise a role**: the first appraiser did
+    not consent to be named, so a role such as "RHU nurse, Carcar" is what to
+    enter for her.
+  v11 and older show "not recorded".
+- **Version numbers (asked, no change).** Labels stay v1, v2, and so on:
+  - a deleted draft's number is never reused, so the audit log never has two
+    different v13s;
+  - every save makes a whole new version;
+  - dotted labels such as v14.0.1 were declined, because even one word
+    (9aq) can move a patient between tiers, so no change is "minor".
+- **Flaky e2e test:** `patient.change-barangay.spec.ts` ("Brgy. Valladolid"
+  not visible) fails now and then with no related change. It failed on the
+  docs-only commit 5027f5a and on PR #31's first run, then passed on a rerun.
+  It has been failing intermittently since PR #28. When it fails, the staff and
+  lexicon e2e projects never run. Not fixed yet.
+- **Next for Philipo:**
+  1. `git checkout main && git pull`;
+  2. submit v14 for review;
+  3. publish it with the reviewer field filled in;
+  4. force a device refresh and run the device tests (9ap, 9aq).
