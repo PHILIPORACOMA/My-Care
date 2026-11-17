@@ -76,8 +76,12 @@ test("a super-admin publishes the test lexicon from the console (UT-011)", async
   const dialog = admin.getByRole("dialog");
   await expect(dialog.getByRole("button", { name: "Publish" })).toBeDisabled();
   await dialog.getByRole("checkbox").check();
+  // The attestation alone is not enough: who reviewed and approved it is required.
+  await expect(dialog.getByRole("button", { name: "Publish" })).toBeDisabled();
+  await dialog.getByLabel(/^Reviewed and approved by/).fill("E2E test step, not a clinical review");
   await dialog.getByRole("button", { name: "Publish" }).click();
   await expect(admin.getByText(`${label} is published.`, { exact: false })).toBeVisible();
+  await expect(admin.getByText("E2E test step, not a clinical review", { exact: false }).first()).toBeVisible();
 
   expect(errors).toEqual([]);
   await staff.close();

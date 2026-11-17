@@ -11,6 +11,7 @@ const version = (id: number, label: string, status: RulesetStatus, rules = 23, t
   status,
   publishedAt: status === "published" ? "2026-11-01T00:00:00+00:00" : null,
   publishedBy: status === "published" ? "admin@example.org" : null,
+  reviewedBy: status === "published" ? "Fixture reviewer (test)" : null,
   counts: { rules, lexiconTerms: terms, severityThresholds: 0, clarificationQuestions: 2, healthTips: 0 },
 });
 
@@ -59,6 +60,11 @@ describe("Triage rules & lexicon: the version list", () => {
 
     await user.click(screen.getByRole("button", { name: "Hide older versions" }));
     expect(screen.queryByRole("link", { name: "v4" })).not.toBeInTheDocument();
+  });
+
+  it("shows who reviewed and approved each published version", async () => {
+    renderPage();
+    expect(await screen.findByText("Reviewed and approved by: Fixture reviewer (test)")).toBeInTheDocument();
   });
 
   it("offers Delete on a draft only, never on a version in review or published", async () => {

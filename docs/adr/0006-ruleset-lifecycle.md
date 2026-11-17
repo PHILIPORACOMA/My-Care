@@ -32,6 +32,25 @@ retrievable", and it is taken literally. `PUT
 new `draft` version (`VersionWriter`); the old draft becomes `superseded`.
 Nothing is ever edited in place. Nothing that went to review or was published is ever deleted.
 
+**Amended 2026-11-17: who reviewed and approved a version.** Publishing now
+also asks for the reviewer, as free text of up to 100 characters. Philipo asked
+for it so that each published version says "Reviewed and approved by: …". Rules:
+
+- It is required. The API refuses to publish without it, as it refuses without
+  the clinical-review attestation. Spaces alone do not count.
+- It is a **name only with that person's consent, otherwise a role** ("RHU
+  nurse, Carcar"). The first appraiser did not consent to be named. A name is
+  personal data under RA 10173, and the audit log keeps it for good.
+- RULESET_VERSION (Table 7) has no column for it, and the project takes no
+  manuscript amendments. So it is one audit entry, `clinical_review`, whose
+  `old_value` is `{"reviewed_by": "…"}`. `RulesetLifecycle` writes it through
+  `Recorder` at publish, as it already does for `draft_saved` and `rollback`
+  provenance. It is never edited.
+- A rollback copies the original reviewer onto the restored version, adding
+  `carried_from`, because the content was reviewed when it was first published.
+- It is shown in the console only: on the version page and in the version list.
+  Phones never receive it. A version published before this shows "not recorded".
+
 **Amended 2026-11-15: a draft can be deleted.** The console's Delete button removes a
 version whose status is `draft`: a "New draft" clicked by mistake, an import nobody
 wants, unfinished work. Philipo asked for it. It does not touch UT-010, which is

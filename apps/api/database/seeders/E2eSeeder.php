@@ -65,7 +65,12 @@ class E2eSeeder extends Seeder
         ]);
 
         $draft = $importer->import(json_decode((string) file_get_contents($path), true, flags: JSON_THROW_ON_ERROR));
-        $published = $lifecycle->publish($lifecycle->submitForReview($draft), $super, clinicalReviewConfirmed: true);
+        $published = $lifecycle->publish(
+            $lifecycle->submitForReview($draft),
+            $super,
+            clinicalReviewConfirmed: true,
+            reviewedBy: 'E2E test fixture, not a clinical review',
+        );
 
         $this->command?->info("E2E fixture: {$published->label} published, two test staff accounts created.");
     }

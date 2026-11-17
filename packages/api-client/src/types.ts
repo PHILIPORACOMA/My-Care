@@ -125,6 +125,8 @@ export interface RulesetVersionSummary {
   status: RulesetStatus;
   publishedAt: string | null;
   publishedBy: string | null;
+  /** Who reviewed and approved it, as entered at publish: a name (given with consent) or a role. Null if never recorded. */
+  reviewedBy: string | null;
   counts?: {
     rules: number;
     lexiconTerms: number;
