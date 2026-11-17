@@ -78,4 +78,55 @@ describe("TestPanel", () => {
     expect(screen.getByText("Emergency referral")).toBeInTheDocument();
     expect(screen.getByText(/Rule R-001/)).toBeInTheDocument();
   });
+
+  // Fixture follow-up shaped like v2's Part C ones: a home answer, an rhu rule on
+  // "!= home answer", and a red flag. English first, as the API serves it.
+  const followUp: RulesetContent = {
+    lexiconTerms: [],
+    severityThresholds: [{ key: "q_home", label: "home answer", value: "Small", tier: "rhu", isOverride: false }],
+    clarificationQuestions: [
+      { questionKey: "q", symptomCode: "code_a", language: "en", prompt: "How big is it?", answerType: "single_select", allowedAnswers: ["Small", "Big", "Bleeding"], redFlagAnswer: "Bleeding" },
+      { questionKey: "q", symptomCode: "code_a", language: "ceb", prompt: "Unsa kadako?", answerType: "single_select", allowedAnswers: ["Gamay", "Dako", "Nagdugo"], redFlagAnswer: "Nagdugo" },
+    ],
+    rules: [
+      { code: "R-001", name: "Fixture home", expression: "", conditions: [{ symptomCode: "code_a", operator: "AND" }], outcomeTier: "home", priority: 1, isActive: true },
+      {
+        code: "R-002",
+        name: "Fixture rhu",
+        expression: "",
+        conditions: [
+          { symptomCode: "code_a", operator: "AND" },
+          { attribute: "q", comparator: "!=", severityThresholdKey: "q_home", operator: "AND" },
+        ],
+        outcomeTier: "rhu",
+        priority: 2,
+        isActive: true,
+      },
+    ],
+    healthTips: [],
+  };
+
+  it("offers a follow-up's answers as a choice and sends the exact answer the phone would", () => {
+    render(<TestPanel content={followUp} codes={codes} versionLabel="v9" />);
+    fireEvent.click(screen.getByLabelText("code_a"));
+
+    // The field's <label> wraps the select, so its text runs on into the options.
+    const question = screen.getByLabelText(/^How big is it\?/);
+    expect(question).toHaveValue("");
+    expect(screen.getByRole("option", { name: "Big (Dako)" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Bleeding (Nagdugo) — red flag: emergency" })).toBeInTheDocument();
+
+    // Not answered: the base rule decides, as on the phone.
+    expect(screen.getByText(/Rule R-001/)).toBeInTheDocument();
+
+    fireEvent.change(question, { target: { value: "Small" } });
+    expect(screen.getByText(/Rule R-001/)).toBeInTheDocument();
+
+    fireEvent.change(question, { target: { value: "Big" } });
+    expect(screen.getByText(/Rule R-002/)).toBeInTheDocument();
+
+    fireEvent.change(question, { target: { value: "Bleeding" } });
+    expect(screen.getByText("Emergency referral")).toBeInTheDocument();
+    expect(screen.getByText(/Red-flag question: q/)).toBeInTheDocument();
+  });
 });
