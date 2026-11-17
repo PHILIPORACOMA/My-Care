@@ -2580,3 +2580,57 @@ Philipo merged two console PRs. Both branches are kept.
   2. submit v14 for review;
   3. publish it with the reviewer field filled in;
   4. force a device refresh and run the device tests (9ap, 9aq).
+
+---
+
+### 9as - UAT on the live server; nine "not" phrases approved; pilot sheet (2026-11-17)
+
+Philipo deployed to mycare.pogorot.com and asked for the UAT form to be run
+against it. Form A (patient) was run in Cebuano, barangay Valladolid. Forms
+B and C wait for him to sign in.
+- **Live content:** published v5 is exactly
+  `My_Care_ruleset_v2_final_with_tips_2026-11-16.json` (fingerprints of
+  symptom codes, terms, rules, questions, tips and thresholds all match).
+- **Form A:** 12 of 15 steps pass, 2 pass with a problem, 1 partly fails. The
+  offline steps were simulated in the page, so they need one check on a real
+  phone.
+  - **The server runs code from before PR #25**: the "not recognised" result has
+    no Call for help button. So #26 to #29 are probably missing too. Redeploy
+    from `main` before importing anything with the Part C questions.
+  - **No emergency numbers on the server:** Call for help dials 911.
+  - The upload reused its batch uuid on retry and was stored once. It carried
+    codes and lexicon entries, never the typed sentence.
+- **Negation is word for word only, by design** (`match.ts`): "dili sakit
+  ang akong tiyan" read as stomach pain *present*, because the plain phrase
+  inside it matched. A code change (negation cues derived from the approved
+  lexicon) was proposed and not taken. Philipo chose to add phrases instead.
+- **Nine Cebuano negations, drafted by Claude, approved by Philipo
+  2026-11-17:** for `abdominal_pain_ordinary`, "dili sakit ang akong tiyan",
+  "dili sakit ako tiyan", "walay sakit ang akong tiyan", "walay sakit sa
+  tiyan", "wala koy sakit sa tiyan" and "wala nagsakit akong tiyan"; for
+  `fever_mild` (as in the test fixture), "walay hilanat", "wala koy hilanat"
+  and "wala ko gihilantan".
+  - **Checks:** each gives x for its own code, alone and beside "ginahangos
+    ko"; no existing term's match changes; "naay hilanat" is still never read
+    as a negation. The real importer stores both files on `mycare_test`, which
+    was reset to empty afterwards.
+  - **Files** (nothing imported anywhere else):
+    - `Downloads\My_Care_ruleset_v5_plus_not_phrases_2026-11-17.json`
+      (446 terms): for the live server now;
+    - `Downloads\My_Care_ruleset_v14_plus_not_phrases_2026-11-17.json`
+      (447 terms, Part C and "gi ubo ko" included): replaces v14 after the
+      redeploy.
+- **Pilot sheet:** `Downloads\My_Care_Pilot_Cebuano_Phrases_2026-11-17.docx`.
+  It holds a patient card of Cebuano phrases and a facilitator key. Every one
+  of v5's 139 Cebuano terms was run through the matcher and engine.
+  - **Typed phrases (89) only reach Emergency or the stomach and chest
+    question.** 39 of 50 symptoms can only be tapped.
+  - Valid only while v5 is published.
+  - `heartburn_acid_reflux` gives Emergency (R-026): flagged for the appraiser.
+- **UAT form corrected:** `Downloads\My_Care_UAT_Form_2026-11-17.docx`. Step
+  10 now uses a phrase that exists, and steps 7 and 8 say "then Get started".
+- **Test data on the live server:** 6 sessions in Valladolid; the test device
+  is now registered to Bolinawan.
+- **Next for Philipo:** import the v5 file in the live console, submit it,
+  publish it with "Reviewed and approved by" filled in, and force a device
+  refresh. Or redeploy first and use the v14 file.
