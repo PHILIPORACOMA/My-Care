@@ -46,12 +46,18 @@ import { v1Bundle, v1Rules, v1SymptomCodes } from "./v1.js";
  * Added from Part C of the same form (2026-11-16): seven follow-up questions
  * on six v1 presentations and an animal-bite tip. See FOLLOW_UPS below.
  *
+ * Added from the nurse's phrase review (2026-11-17): thirteen danger-sign
+ * follow-ups on presentations that asked nothing before. See NURSE_FOLLOW_UPS.
+ *
  * Deliberately not encoded yet:
  * - The appraiser answered "follow-up needed" for every Part D complaint and
  *   wrote escalation conditions beside some (pain over 24 hours with no relief,
  *   abdominal distention, tinnitus or hearing loss, rule out cardiac). Each
  *   needs a clarification question with fixed answers, which Philipo will
  *   type up; until then every other complaint here resolves to its tier directly.
+ *   (Twelve of them, and v1's muscle pain, now ask the nurse review's danger-sign
+ *   questions instead; see NURSE_FOLLOW_UPS. That review did not use the
+ *   appraiser's escalation notes, which are still to be typed up.)
  * - No lexicon terms: Batch 2 returned no resident words. The new codes are
  *   reachable as chips (English display name) until terms are entered, and
  *   unrecognised free text already falls to the rhu fail-safe.
@@ -366,7 +372,229 @@ const FOLLOW_UPS: FollowUp[] = [
   },
 ];
 
-export const followUpQuestions: ClarificationQuestion[] = FOLLOW_UPS.flatMap((q) =>
+/**
+ * Danger-sign follow-ups from the nurse's phrase review (2026-11-17,
+ * `My_Care_Cebuano_Phrase_Review_for_Nurse_2026-11-17.docx`, Part B2). Claude
+ * drafted them from common primary-care danger signs; a nurse (not named here)
+ * went through the sheet with Philipo and approved all thirteen, English and
+ * Cebuano, as written, for the pilot. MEDICAL CONTENT:
+ * a draft for clinical review, not a validated ruleset.
+ *
+ * Two changes after approval, both waiting for the nurse's confirmation:
+ * - The Tagalog is Claude's translation of the approved English (the sheet
+ *   left it for later). Unreviewed.
+ * - Five questions (toothache, eye, back pain, constipation, muscle pain) had
+ *   Emergency answers longer than 50 characters. The red-flag answer is
+ *   VARCHAR(50) in every language (CLARIFICATION_QUESTION.red_flag_answer),
+ *   and the English answer the phone submits is held to 50 too. Rather than
+ *   abbreviate the Cebuano, they now follow the approved headache pattern:
+ *   the Emergency signs move word for word into the question, the Emergency
+ *   answer is "Yes, one or more" / "Oo, usa o labaw pa", and the rhu answer
+ *   is "No, but ..." / "Wala niini, pero ..." plus the approved wording.
+ *   Each answer still gives the result the nurse approved.
+ *
+ * The seven Home presentations get a rhu rule each (R-057 to R-063), the same
+ * "!=" shape as Part C. The six rhu presentations only gain a red flag: "No"
+ * keeps them at rhu, so no rule is needed. On swollen legs, the nurse approved
+ * the wording as drafted, so one swollen, red, painful leg stays rhu.
+ */
+const YES_ONE_OR_MORE: Record<LanguageCode, string[]> = {
+  en: ["No, none of these", "Yes, one or more"],
+  tl: ["Wala, wala sa mga ito", "Oo, isa o higit pa"],
+  ceb: ["Wala, wala niini", "Oo, usa o labaw pa"],
+};
+
+const NURSE_FOLLOW_UPS: FollowUp[] = [
+  {
+    key: "sore_throat_danger_signs",
+    symptomCode: "sore_throat",
+    prompt: {
+      en: "With the sore throat, do you have any of these: cannot swallow even your own saliva, drooling, trouble breathing, or cannot open your mouth fully?",
+      tl: "Kasabay ng pananakit ng lalamunan, mayroon ka ba ng alinman dito: hindi makalunok kahit ng sariling laway, tumutulo ang laway, hirap huminga, o hindi maibuka nang buo ang bibig?",
+      ceb: "Uban sa sakit sa tutunlan, naa ba kay bisan usa niini: dili makatulon bisan sa imong laway, nagtulo ang laway, lisod moginhawa, o dili maabli og maayo ang baba?",
+    },
+    answers: {
+      en: ["No, none of these", "None of these, but it has lasted 7 days or more", "Yes, one or more"],
+      tl: ["Wala, wala sa mga ito", "Wala sa mga ito, pero 7 araw o higit pa na", "Oo, isa o higit pa"],
+      ceb: ["Wala, wala niini", "Wala niini, pero 7 ka adlaw o labaw na", "Oo, usa o labaw pa"],
+    },
+    home: 0,
+    redFlag: 2,
+  },
+  {
+    key: "nose_days",
+    symptomCode: "runny_blocked_nose",
+    prompt: {
+      en: "How long have you had the runny or blocked nose?",
+      tl: "Gaano katagal ka nang may sipon o barado ang ilong?",
+      ceb: "Unsa na kadugay nga nagsip-on o barado ang imong ilong?",
+    },
+    answers: {
+      en: ["Less than 10 days", "10 days or more"],
+      tl: ["Wala pang 10 araw", "10 araw o higit pa"],
+      ceb: ["Wala pay 10 ka adlaw", "10 ka adlaw o labaw pa"],
+    },
+    home: 0,
+  },
+  {
+    key: "tooth_swelling",
+    symptomCode: "toothache_swollen_gums",
+    prompt: {
+      en: "With the toothache, do you have any of these: swelling down to the neck or under the jaw, or trouble swallowing or breathing?",
+      tl: "Kasabay ng sakit ng ngipin, mayroon ka ba ng alinman dito: umabot na ang pamamaga sa leeg o ilalim ng panga, o hirap lumunok o huminga?",
+      ceb: "Uban sa sakit sa ngipon, naa ba kay bisan usa niini: ang hubag miabot na sa liog o ilawom sa apapangig, o lisod motulon o moginhawa?",
+    },
+    answers: {
+      en: ["No, none of these", "No, but swollen cheek or face, or a fever", "Yes, one or more"],
+      tl: ["Wala, wala sa mga ito", "Wala sa mga ito, pero namamaga ang pisngi o mukha, o may lagnat", "Oo, isa o higit pa"],
+      ceb: ["Wala, wala niini", "Wala niini, pero hubag ang aping o nawong, o naa kay hilanat", "Oo, usa o labaw pa"],
+    },
+    home: 0,
+    redFlag: 2,
+  },
+  {
+    key: "eye_danger_signs",
+    symptomCode: "red_itchy_eyes",
+    prompt: {
+      en: "With the eye problem, do you have any of these: something hit or got into the eye (injury or chemical), or sudden loss of sight?",
+      tl: "Sa iyong mata, mayroon ka ba ng alinman dito: natamaan o napasukan ang mata (sugat o kemikal), o biglang hindi makakita?",
+      ceb: "Sa imong mata, naa ba kay bisan usa niini: naigo o nasudlan ang mata (samad o kemikal), o kalit nga dili makakita?",
+    },
+    answers: {
+      en: ["No, only red, itchy or watery", "No, but eye pain, blurred vision, or light hurts", "Yes, one or more"],
+      tl: [
+        "Wala, mapula, makati o nagluluha lang",
+        "Wala, pero masakit ang mata, malabo ang paningin, o masakit sa liwanag",
+        "Oo, isa o higit pa",
+      ],
+      ceb: ["Wala, pula, katol o luha-on ra", "Wala, pero sakit ang mata, lubog ang panan-aw, o masakitan sa kahayag", "Oo, usa o labaw pa"],
+    },
+    home: 0,
+    redFlag: 2,
+  },
+  {
+    key: "back_pain_danger_signs",
+    symptomCode: "back_pain",
+    prompt: {
+      en: "With the back pain, do you have any of these: it started after a fall or accident, the legs are weak or numb, or you cannot hold your urine or stool?",
+      tl: "Kasabay ng sakit ng likod, mayroon ka ba ng alinman dito: nagsimula matapos mahulog o maaksidente, nanghihina o namamanhid ang binti, o hindi mapigil ang ihi o dumi?",
+      ceb: "Uban sa sakit sa likod, naa ba kay bisan usa niini: nagsugod human sa pagkahulog o aksidente, maluya o manhid ang tiil, o dili makapugong sa ihi o tae?",
+    },
+    answers: {
+      en: ["No, none of these", "No, but fever, burning urine, or 2 weeks or more", "Yes, one or more"],
+      tl: [
+        "Wala, wala sa mga ito",
+        "Wala sa mga ito, pero may lagnat, mahapdi ang pag-ihi, o 2 linggo o higit pa na",
+        "Oo, isa o higit pa",
+      ],
+      ceb: ["Wala, wala niini", "Wala niini, pero naay hilanat, mahapdos ang pag-ihi, o 2 ka semana o labaw na", "Oo, usa o labaw pa"],
+    },
+    home: 0,
+    redFlag: 2,
+  },
+  {
+    key: "constipation_danger_signs",
+    symptomCode: "constipation",
+    prompt: {
+      en: "With the constipation, do you have any of these: a swollen, hard belly with vomiting, or you cannot pass gas?",
+      tl: "Kasabay ng pagtitibi, mayroon ka ba ng alinman dito: namamaga at matigas ang tiyan at nagsusuka, o hindi mailabas ang hangin (utot)?",
+      ceb: "Uban sa pagkatibi, naa ba kay bisan usa niini: hubag ug gahi ang tiyan ug nagsuka, o dili makagawas ang hangin (utot)?",
+    },
+    answers: {
+      en: ["No, none of these", "No, but no stool for 7 days or more", "Yes, one or more"],
+      tl: ["Wala, wala sa mga ito", "Wala sa mga ito, pero 7 araw o higit pa nang hindi nakakadumi", "Oo, isa o higit pa"],
+      ceb: ["Wala, wala niini", "Wala niini, pero 7 ka adlaw o labaw na nga wala makakalibang", "Oo, usa o labaw pa"],
+    },
+    home: 0,
+    redFlag: 2,
+  },
+  {
+    key: "muscle_pain_danger_signs",
+    symptomCode: "muscle_pain_post_exertion",
+    prompt: {
+      en: "With the body or muscle pain, do you have any of these: brown, cola-coloured urine, or too weak to stand?",
+      tl: "Kasabay ng pananakit ng katawan o kalamnan, mayroon ka ba ng alinman dito: kulay-kape na ihi, o sobrang hina at hindi makatayo?",
+      ceb: "Uban sa sakit sa lawas o kaunuran, naa ba kay bisan usa niini: kolor-kape nga ihi, o luya kaayo nga dili makatindog?",
+    },
+    answers: {
+      en: ["No, none of these", "No, but very swollen, fever, or 7 days or more", "Yes, one or more"],
+      tl: ["Wala, wala sa mga ito", "Wala sa mga ito, pero sobrang maga, may lagnat, o 7 araw o higit pa na", "Oo, isa o higit pa"],
+      ceb: ["Wala, wala niini", "Wala niini, pero hubag kaayo, naay hilanat, o 7 ka adlaw o labaw na", "Oo, usa o labaw pa"],
+    },
+    home: 0,
+    redFlag: 2,
+  },
+  {
+    key: "vomiting_danger_signs",
+    symptomCode: "nausea_vomiting",
+    prompt: {
+      en: "With the vomiting, do you have any of these: vomiting blood or something black like coffee grounds, even water comes back up for a whole day, severe stomach pain, or confusion?",
+      tl: "Kasabay ng pagsusuka, mayroon ka ba ng alinman dito: nagsusuka ng dugo o ng itim na parang giniling na kape, isinusuka kahit ang tubig nang buong araw, matinding sakit ng tiyan, o pagkalito?",
+      ceb: "Uban sa pagsuka, naa ba kay bisan usa niini: nagsuka og dugo o itom nga murag kape, bisan tubig isuka ra sulod sa usa ka adlaw, grabe nga sakit sa tiyan, o naglibog?",
+    },
+    answers: YES_ONE_OR_MORE,
+    redFlag: 1,
+  },
+  {
+    key: "sting_danger_signs",
+    symptomCode: "insect_sting",
+    prompt: {
+      en: "After the sting, do you have any of these: swelling of the face, lips or throat, trouble breathing, many stings at once, or dizziness or fainting?",
+      tl: "Matapos makagat o matusok ng insekto, mayroon ka ba ng alinman dito: namamaga ang mukha, labi o lalamunan, hirap huminga, napakaraming kagat, o nahilo o nahimatay?",
+      ceb: "Human ka napaak sa insekto, naa ba kay bisan usa niini: nanghubag ang nawong, ngabil o tutunlan, lisod moginhawa, daghan kaayo nga paak, o nalipong o nahimatay?",
+    },
+    answers: YES_ONE_OR_MORE,
+    redFlag: 1,
+  },
+  {
+    key: "rash_danger_signs",
+    symptomCode: "skin_rash_itching",
+    prompt: {
+      en: "With the rash, do you have any of these: fever with red or purple spots that do not fade when pressed, swelling of the face or lips, trouble breathing, or blisters or peeling of the skin, mouth or eyes?",
+      tl: "Kasabay ng pantal o pangangati, mayroon ka ba ng alinman dito: lagnat na may pula o lilang batik na hindi nawawala kapag pinindot, namamaga ang mukha o labi, hirap huminga, o nagpapaltos o nagbabakbak ang balat, bibig o mata?",
+      ceb: "Uban sa pantal o katol, naa ba kay bisan usa niini: hilanat nga naay pula o ube nga tulbok nga dili mawala inig pislit, nanghubag ang nawong o ngabil, lisod moginhawa, o nagpaltos o nanuklap ang panit, baba o mata?",
+    },
+    answers: YES_ONE_OR_MORE,
+    redFlag: 1,
+  },
+  {
+    key: "palpitations_danger_signs",
+    symptomCode: "palpitations",
+    prompt: {
+      en: "With the fast heartbeat, do you have chest pain or trouble breathing, or have you fainted?",
+      tl: "Kasabay ng mabilis na tibok ng puso, may sakit ka ba sa dibdib o hirap huminga, o nahimatay ka ba?",
+      ceb: "Uban sa kusog nga pitik sa kasingkasing, naa ba kay sakit sa dughan o lisod moginhawa, o nahimatay ka?",
+    },
+    answers: { en: ["No", "Yes"], tl: ["Wala", "Oo"], ceb: ["Wala", "Oo"] },
+    redFlag: 1,
+  },
+  {
+    key: "leg_swelling_danger_signs",
+    symptomCode: "swollen_feet_legs",
+    prompt: {
+      en: "With the swelling, do you have sudden trouble breathing or chest pain?",
+      tl: "Kasabay ng pamamaga ng paa o binti, bigla ka bang nahirapang huminga o sumakit ang dibdib?",
+      ceb: "Uban sa hubag sa tiil, naa ba kay kalit nga lisod moginhawa o sakit sa dughan?",
+    },
+    answers: { en: ["No", "Yes"], tl: ["Hindi", "Oo"], ceb: ["Wala", "Oo"] },
+    redFlag: 1,
+  },
+  {
+    key: "numbness_danger_signs",
+    symptomCode: "numbness_tingling",
+    prompt: {
+      en: "Did the numbness start suddenly on one side of the body, or come with a drooping face, unclear speech or weakness?",
+      tl: "Bigla bang nagsimula ang pamamanhid sa isang bahagi ng katawan, o may kasamang nakalaylay na mukha, hindi malinaw na pagsasalita, o panghihina?",
+      ceb: "Kalit ba nga nagsugod ang pagkamanhid sa usa ka bahin sa lawas, o uban sa kiwi nga nawong, dili klaro nga pagsulti, o kahuyang?",
+    },
+    answers: YES_NO,
+    redFlag: 1,
+  },
+];
+
+const ALL_FOLLOW_UPS = [...FOLLOW_UPS, ...NURSE_FOLLOW_UPS];
+
+export const followUpQuestions: ClarificationQuestion[] = ALL_FOLLOW_UPS.flatMap((q) =>
   (["en", "tl", "ceb"] as const).map((language) => ({
     questionKey: q.key,
     symptomCode: q.symptomCode,
@@ -378,7 +606,8 @@ export const followUpQuestions: ClarificationQuestion[] = FOLLOW_UPS.flatMap((q)
   }))
 );
 
-const HOME_ANSWERED = FOLLOW_UPS.filter((q): q is FollowUp & { home: number } => q.home !== undefined);
+const HOME_ANSWERED = ALL_FOLLOW_UPS.filter((q): q is FollowUp & { home: number } => q.home !== undefined);
+const DISPLAY_NAME = new Map([...v1SymptomCodes, ...batch2SymptomCodes].map((c) => [c.code, c.displayName]));
 
 /** Not an override: each only feeds its rule's "!=" condition (ADR-0001 step 3). */
 export const followUpThresholds: SeverityThreshold[] = HOME_ANSWERED.map((q) => ({
@@ -389,13 +618,14 @@ export const followUpThresholds: SeverityThreshold[] = HOME_ANSWERED.map((q) => 
   isOverride: false,
 }));
 
-// R-051 onwards, after the 50 presentation rules.
+// R-051 onwards, after the 50 presentation rules: Part C's R-051..R-056, then
+// the nurse review's R-057..R-063.
 export const followUpRules: TriageRule[] = HOME_ANSWERED.map((q, index) => {
   const n = v1Rules.length + batch2Rules.length + index + 1;
   const value = q.answers.en[q.home]!;
   return {
     code: `R-${String(n).padStart(3, "0")}`,
-    name: `${v1SymptomCodes.find((c) => c.code === q.symptomCode)!.displayName}: follow-up answer other than "${value}"`,
+    name: `${DISPLAY_NAME.get(q.symptomCode)!}: follow-up answer other than "${value}"`,
     expression: `IF ${q.symptomCode} AND ${q.key} != "${value}" THEN rhu`,
     conditions: [
       { symptomCode: q.symptomCode, operator: "AND" },
@@ -407,7 +637,7 @@ export const followUpRules: TriageRule[] = HOME_ANSWERED.map((q, index) => {
   };
 });
 
-const ASKS_FOLLOW_UP = new Set(FOLLOW_UPS.map((q) => q.symptomCode));
+const ASKS_FOLLOW_UP = new Set(ALL_FOLLOW_UPS.map((q) => q.symptomCode));
 
 /**
  * RHU tip for an animal bite (R-013 stays rhu: the form says to consult
@@ -432,11 +662,10 @@ export const followUpHealthTips: HealthTip[] = (["en", "tl", "ceb"] as const).ma
   displayOrder: 1,
 }));
 
-// The v1 codes keep their names; only the six with a follow-up now ask first.
-export const v2SymptomCodes: SymptomCode[] = [
-  ...v1SymptomCodes.map((c) => (ASKS_FOLLOW_UP.has(c.code) ? { ...c, needsClarification: true } : c)),
-  ...batch2SymptomCodes,
-];
+// The codes keep their names; only those with a follow-up now ask first
+// (Part C's six v1 codes, then the nurse review's thirteen).
+const asking = (c: SymptomCode): SymptomCode => (ASKS_FOLLOW_UP.has(c.code) ? { ...c, needsClarification: true } : c);
+export const v2SymptomCodes: SymptomCode[] = [...v1SymptomCodes.map(asking), ...batch2SymptomCodes.map(asking)];
 
 export const v2Rules: TriageRule[] = [...v1Rules, ...batch2Rules, ...followUpRules];
 

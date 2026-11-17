@@ -546,6 +546,78 @@ test("v2 bundle: an answer that leads to rhu matches its own follow-up rule", ()
   }
 });
 
+// The nurse review (2026-11-17, Part B2): the result the nurse approved for each
+// answer. The English answers are what the phone submits; five questions were
+// recast in the headache pattern to fit the 50-character red-flag column.
+const NURSE_RESULTS: [string, string, [string, "home" | "rhu" | "emergency"][]][] = [
+  [
+    "sore_throat",
+    "sore_throat_danger_signs",
+    [["No, none of these", "home"], ["None of these, but it has lasted 7 days or more", "rhu"], ["Yes, one or more", "emergency"]],
+  ],
+  ["runny_blocked_nose", "nose_days", [["Less than 10 days", "home"], ["10 days or more", "rhu"]]],
+  [
+    "toothache_swollen_gums",
+    "tooth_swelling",
+    [["No, none of these", "home"], ["No, but swollen cheek or face, or a fever", "rhu"], ["Yes, one or more", "emergency"]],
+  ],
+  [
+    "red_itchy_eyes",
+    "eye_danger_signs",
+    [["No, only red, itchy or watery", "home"], ["No, but eye pain, blurred vision, or light hurts", "rhu"], ["Yes, one or more", "emergency"]],
+  ],
+  [
+    "back_pain",
+    "back_pain_danger_signs",
+    [["No, none of these", "home"], ["No, but fever, burning urine, or 2 weeks or more", "rhu"], ["Yes, one or more", "emergency"]],
+  ],
+  [
+    "constipation",
+    "constipation_danger_signs",
+    [["No, none of these", "home"], ["No, but no stool for 7 days or more", "rhu"], ["Yes, one or more", "emergency"]],
+  ],
+  [
+    "muscle_pain_post_exertion",
+    "muscle_pain_danger_signs",
+    [["No, none of these", "home"], ["No, but very swollen, fever, or 7 days or more", "rhu"], ["Yes, one or more", "emergency"]],
+  ],
+  ["nausea_vomiting", "vomiting_danger_signs", [["No, none of these", "rhu"], ["Yes, one or more", "emergency"]]],
+  ["insect_sting", "sting_danger_signs", [["No, none of these", "rhu"], ["Yes, one or more", "emergency"]]],
+  ["skin_rash_itching", "rash_danger_signs", [["No, none of these", "rhu"], ["Yes, one or more", "emergency"]]],
+  ["palpitations", "palpitations_danger_signs", [["No", "rhu"], ["Yes", "emergency"]]],
+  ["swollen_feet_legs", "leg_swelling_danger_signs", [["No", "rhu"], ["Yes", "emergency"]]],
+  ["numbness_tingling", "numbness_danger_signs", [["No", "rhu"], ["Yes", "emergency"]]],
+];
+
+test("v2 bundle: every nurse-review follow-up answer gives the result the nurse approved", () => {
+  for (const [symptomCode, questionKey, answers] of NURSE_RESULTS) {
+    for (const [answer, tier] of answers) {
+      const result = evaluate({ symptomCodes: [symptomCode], clarificationAnswers: [{ questionKey, answer }] }, v2Bundle);
+      assert.equal(result.tier, tier, `${symptomCode} / ${questionKey} = "${answer}"`);
+      if (tier === "emergency") assert.equal(result.reason, "red_flag_clarification");
+    }
+    // Unanswered, the presentation keeps the tier it had before the question.
+    const base = v2Bundle.rules.find((r) => r.conditions.length === 1 && r.conditions[0]?.symptomCode === symptomCode)!;
+    assert.equal(evaluate({ symptomCodes: [symptomCode] }, v2Bundle).tier, base.outcomeTier, symptomCode);
+  }
+});
+
+test("v2 bundle: a nurse-review answer that leads to rhu matches its own rule, R-057 to R-063", () => {
+  const cases: [string, string, string, string][] = [
+    ["sore_throat", "sore_throat_danger_signs", "None of these, but it has lasted 7 days or more", "R-057"],
+    ["runny_blocked_nose", "nose_days", "10 days or more", "R-058"],
+    ["toothache_swollen_gums", "tooth_swelling", "No, but swollen cheek or face, or a fever", "R-059"],
+    ["red_itchy_eyes", "eye_danger_signs", "No, but eye pain, blurred vision, or light hurts", "R-060"],
+    ["back_pain", "back_pain_danger_signs", "No, but fever, burning urine, or 2 weeks or more", "R-061"],
+    ["constipation", "constipation_danger_signs", "No, but no stool for 7 days or more", "R-062"],
+    ["muscle_pain_post_exertion", "muscle_pain_danger_signs", "No, but very swollen, fever, or 7 days or more", "R-063"],
+  ];
+  for (const [symptomCode, questionKey, answer, ruleCode] of cases) {
+    const result = evaluate({ symptomCodes: [symptomCode], clarificationAnswers: [{ questionKey, answer }] }, v2Bundle);
+    assert.equal(result.matchedRuleCode, ruleCode, `${questionKey} = "${answer}"`);
+  }
+});
+
 test("v2 bundle: the two wound questions combine; either one alone can raise the result", () => {
   const wound = (size: string, infection: string) =>
     evaluate(

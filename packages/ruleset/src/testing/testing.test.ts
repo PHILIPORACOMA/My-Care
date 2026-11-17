@@ -41,8 +41,8 @@ test("v2 is v1 plus the 26 Batch 2 presentations and one added after the form, a
   assert.deepEqual(v2Bundle.rules.slice(0, 23), v1Bundle.rules);
   // 23 (v1) + 26 (the appraisal form's Part D) + 1 (chest pain, added 2026-11-15).
   assert.equal(v2Bundle.symptomCodes.length, 50);
-  // ... and 6 follow-up rules (Part C, 2026-11-16).
-  assert.equal(v2Bundle.rules.length, 56);
+  // ... and 6 follow-up rules (Part C, 2026-11-16) and 7 (nurse review, 2026-11-17).
+  assert.equal(v2Bundle.rules.length, 63);
   assert.equal(v2Bundle.symptomCodes[49]!.code, "chest_pain_unspecified");
 
   // Nothing else about v1 changed except the follow-up questions, thresholds and tips added below.
@@ -106,7 +106,26 @@ const PART_C: [string, string, ("home" | "rhu" | "emergency")[]][] = [
   ["spotting_pads", "spotting_first_trimester_mild", ["rhu", "rhu", "emergency"]],
 ];
 
-test("v2's Part C follow-ups: seven questions in three languages, English first, each fitting the API", () => {
+// The nurse review (2026-11-17, Part B2): thirteen danger-sign follow-ups, typed
+// out from the approved sheet. Seven Home presentations can rise to rhu or
+// Emergency; six rhu presentations only gain an Emergency answer.
+const NURSE: [string, string, ("home" | "rhu" | "emergency")[]][] = [
+  ["sore_throat_danger_signs", "sore_throat", ["home", "rhu", "emergency"]],
+  ["nose_days", "runny_blocked_nose", ["home", "rhu"]],
+  ["tooth_swelling", "toothache_swollen_gums", ["home", "rhu", "emergency"]],
+  ["eye_danger_signs", "red_itchy_eyes", ["home", "rhu", "emergency"]],
+  ["back_pain_danger_signs", "back_pain", ["home", "rhu", "emergency"]],
+  ["constipation_danger_signs", "constipation", ["home", "rhu", "emergency"]],
+  ["muscle_pain_danger_signs", "muscle_pain_post_exertion", ["home", "rhu", "emergency"]],
+  ["vomiting_danger_signs", "nausea_vomiting", ["rhu", "emergency"]],
+  ["sting_danger_signs", "insect_sting", ["rhu", "emergency"]],
+  ["rash_danger_signs", "skin_rash_itching", ["rhu", "emergency"]],
+  ["palpitations_danger_signs", "palpitations", ["rhu", "emergency"]],
+  ["leg_swelling_danger_signs", "swollen_feet_legs", ["rhu", "emergency"]],
+  ["numbness_danger_signs", "numbness_tingling", ["rhu", "emergency"]],
+];
+
+test("v2's follow-ups (Part C and the nurse review): twenty questions in three languages, English first, each fitting the API", () => {
   const asking = v2Bundle.symptomCodes.filter((c) => c.needsClarification).map((c) => c.code).sort();
   assert.deepEqual(asking, [
     "abdominal_pain_ordinary",
@@ -117,11 +136,16 @@ test("v2's Part C follow-ups: seven questions in three languages, English first,
     "headache_mild_moderate",
     "minor_wound_no_infection",
     "spotting_first_trimester_mild",
-  ]);
-  // 2 severe-or-not questions + 7 Part C, each in en, tl, ceb.
-  assert.equal(v2Bundle.clarificationQuestions.length, 27);
+    ...NURSE.map(([, symptomCode]) => symptomCode),
+  ].sort());
+  // 2 severe-or-not questions + 7 Part C + 13 nurse review, each in en, tl, ceb.
+  assert.equal(v2Bundle.clarificationQuestions.length, 66);
+  // Each nurse-review presentation asks exactly one question.
+  for (const [key, symptomCode] of NURSE) {
+    assert.deepEqual([...new Set(v2Bundle.clarificationQuestions.filter((q) => q.symptomCode === symptomCode).map((q) => q.questionKey))], [key]);
+  }
 
-  for (const [key, symptomCode, results] of PART_C) {
+  for (const [key, symptomCode, results] of [...PART_C, ...NURSE]) {
     const variants = v2Bundle.clarificationQuestions.filter((q) => q.questionKey === key);
     assert.deepEqual(variants.map((q) => q.language), ["en", "tl", "ceb"], key);
     const emergencyAt = results.indexOf("emergency");
@@ -141,12 +165,20 @@ test("v2's Part C follow-ups: seven questions in three languages, English first,
   }
 });
 
-test("v2's Part C thresholds hold the English home answer, never override, and feed one rhu rule each", () => {
+test("v2's follow-up thresholds hold the English home answer, never override, and feed one rhu rule each", () => {
   const followUpRules = v2Bundle.rules.slice(50);
-  assert.deepEqual(followUpRules.map((r) => r.code), ["R-051", "R-052", "R-053", "R-054", "R-055", "R-056"]);
-  assert.equal(v2Bundle.severityThresholds.length, 6);
+  assert.deepEqual(
+    followUpRules.map((r) => r.code),
+    ["R-051", "R-052", "R-053", "R-054", "R-055", "R-056", "R-057", "R-058", "R-059", "R-060", "R-061", "R-062", "R-063"]
+  );
+  // The nurse review's rules, in sheet order, on the seven Home presentations.
+  assert.deepEqual(
+    followUpRules.slice(6).map((r) => r.conditions[1]!.attribute),
+    NURSE.filter(([, , results]) => results[0] === "home").map(([key]) => key)
+  );
+  assert.equal(v2Bundle.severityThresholds.length, 13);
 
-  for (const [key, symptomCode, results] of PART_C) {
+  for (const [key, symptomCode, results] of [...PART_C, ...NURSE]) {
     const home = results.indexOf("home");
     const rule = followUpRules.find((r) => r.conditions[1]?.attribute === key);
     if (home === -1) {
