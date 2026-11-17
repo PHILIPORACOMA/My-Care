@@ -146,7 +146,15 @@ export function RulesetListPage() {
                     {
                       key: "published",
                       header: "Published",
-                      render: (v) => (v.publishedAt ? `${formatDateTime(v.publishedAt)} by ${v.publishedBy ?? "—"}` : "—"),
+                      render: (v) =>
+                        v.publishedAt ? (
+                          <>
+                            {formatDateTime(v.publishedAt)} by {v.publishedBy ?? "—"}
+                            <div className="mc-small mc-muted">Reviewed and approved by: {v.reviewedBy ?? "not recorded"}</div>
+                          </>
+                        ) : (
+                          "—"
+                        ),
                     },
                     {
                       key: "actions",

@@ -18,14 +18,20 @@ use Illuminate\Support\Facades\DB;
  * never touch RULESET_VERSION.status themselves.
  *
  * Status changes are audited by the model observer (an `updated` entry whose
- * old_value holds the previous status). Two actions carry provenance the
- * observer cannot see — which version a draft was saved from, and which
- * version a rollback restored — so this service adds one explicit entry for
- * each through Recorder. It is a domain service, not a controller, which is the
+ * old_value holds the previous status). Three things carry provenance the
+ * observer cannot see — which version a draft was saved from, which version a
+ * rollback restored, and who reviewed and approved a published version — so
+ * this service adds one explicit entry for each through Recorder. It is a domain service, not a controller, which is the
  * boundary the audit rule draws.
  */
 final class RulesetLifecycle
 {
+    /** AUDIT_LOG.action_type (VARCHAR(20)) of the reviewer record written at publish. */
+    public const CLINICAL_REVIEW = 'clinical_review';
+
+    /** The reviewer is free text: a name, given only with that person's consent, or a role. */
+    public const MAX_REVIEWER = 100;
+
     public function __construct(
         private readonly ContentValidator $validator,
         private readonly VersionWriter $writer,
@@ -99,14 +105,27 @@ final class RulesetLifecycle
      * 11's clinical review happened. The system cannot verify a clinician's
      * sign-off, so it refuses to publish without the attestation and audits who
      * gave it.
+     *
+     * `$reviewedBy` says who reviewed and approved it: a health worker's name,
+     * entered only with their consent, or a role such as "RHU nurse". RULESET_VERSION
+     * (Table 7) has no column for it, so it is kept in the audit log, written
+     * once at publish and never edited (ADR-0006). Shown in the console only.
      */
-    public function publish(RulesetVersion $version, User $by, bool $clinicalReviewConfirmed): RulesetVersion
+    public function publish(RulesetVersion $version, User $by, bool $clinicalReviewConfirmed, string $reviewedBy): RulesetVersion
     {
         if (! $clinicalReviewConfirmed) {
             throw DomainActionException::conflict('Publishing requires confirming that clinical review took place.');
         }
 
-        return DB::transaction(function () use ($version, $by): RulesetVersion {
+        $reviewedBy = trim($reviewedBy);
+
+        if ($reviewedBy === '' || mb_strlen($reviewedBy) > self::MAX_REVIEWER) {
+            throw DomainActionException::invalid(['reviewedBy' => [
+                'Say who reviewed and approved this version, as a name or a role, in '.self::MAX_REVIEWER.' characters or fewer.',
+            ]]);
+        }
+
+        return DB::transaction(function () use ($version, $by, $reviewedBy): RulesetVersion {
             $locked = $this->lock($version);
 
             if ($locked->status !== RulesetStatus::IN_REVIEW) {
@@ -120,6 +139,8 @@ final class RulesetLifecycle
                 'published_at' => CarbonImmutable::now('UTC'),
                 'published_by_id' => $by->getKey(),
             ]);
+
+            $this->recorder->record(self::CLINICAL_REVIEW, 'ruleset_versions', $locked->getKey(), ['reviewed_by' => $reviewedBy], $by);
 
             return $locked->refresh();
         });
@@ -154,8 +175,41 @@ final class RulesetLifecycle
 
             $this->recorder->record('rollback', 'ruleset_versions', $restored->getKey(), ['restored_from' => $target->label]);
 
+            // The content was reviewed when it was first published; the restored
+            // copy keeps that reviewer, and says where it came from.
+            $reviewer = $this->reviewersOf([$target->getKey()])[$target->getKey()] ?? null;
+            if ($reviewer !== null) {
+                $this->recorder->record(self::CLINICAL_REVIEW, 'ruleset_versions', $restored->getKey(), [
+                    'reviewed_by' => $reviewer,
+                    'carried_from' => $target->label,
+                ]);
+            }
+
             return $restored;
         });
+    }
+
+    /**
+     * Who reviewed and approved each version, from its CLINICAL_REVIEW audit
+     * entry. A version published before reviewers were recorded has none.
+     *
+     * @param  list<int>  $versionIds
+     * @return array<int, string>  version id => reviewer
+     */
+    public function reviewersOf(array $versionIds): array
+    {
+        if ($versionIds === []) {
+            return [];
+        }
+
+        return AuditLog::where('target_table', 'ruleset_versions')
+            ->where('action_type', self::CLINICAL_REVIEW)
+            ->whereIn('target_id', $versionIds)
+            ->orderBy('id')
+            ->get()
+            ->mapWithKeys(fn (AuditLog $entry): array => [(int) $entry->target_id => (string) ($entry->old_value['reviewed_by'] ?? '')])
+            ->filter(fn (string $reviewer): bool => $reviewer !== '')
+            ->all();
     }
 
     /**

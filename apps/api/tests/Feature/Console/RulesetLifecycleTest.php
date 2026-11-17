@@ -16,6 +16,9 @@ uses(StaffHelpers::class, ApiTestHelpers::class);
  * scaffolding, not clinical content — the real v1 presentations live in
  * packages/ruleset and still await clinician review.
  */
+/** A role, as the console asks for when a reviewer has not agreed to be named. Test scaffolding. */
+const FIXTURE_REVIEWER = 'Fixture reviewer (test)';
+
 function fixtureContent(array $overrides = []): array
 {
     return array_merge([
@@ -57,7 +60,7 @@ function draftWith(array $content): RulesetVersion
 function publishVersion(RulesetVersion $version): void
 {
     test()->postJson("/api/v1/console/ruleset-versions/{$version->id}/submit")->assertStatus(200);
-    test()->postJson("/api/v1/console/ruleset-versions/{$version->id}/publish", ['clinicalReviewConfirmed' => true])
+    test()->postJson("/api/v1/console/ruleset-versions/{$version->id}/publish", ['clinicalReviewConfirmed' => true, 'reviewedBy' => FIXTURE_REVIEWER])
         ->assertStatus(200);
 }
 
@@ -207,15 +210,62 @@ it('publishes to devices and rolls back to the prior version (UT-011)', function
 it('refuses to publish without clinical review attestation or from a draft', function () {
     $draft = draftWith(fixtureContent());
 
-    $this->postJson("/api/v1/console/ruleset-versions/{$draft->id}/publish", ['clinicalReviewConfirmed' => true])
+    $this->postJson("/api/v1/console/ruleset-versions/{$draft->id}/publish", ['clinicalReviewConfirmed' => true, 'reviewedBy' => FIXTURE_REVIEWER])
         ->assertStatus(409);
 
     $this->postJson("/api/v1/console/ruleset-versions/{$draft->id}/submit")->assertStatus(200);
 
-    $this->postJson("/api/v1/console/ruleset-versions/{$draft->id}/publish", ['clinicalReviewConfirmed' => false])
+    $this->postJson("/api/v1/console/ruleset-versions/{$draft->id}/publish", ['clinicalReviewConfirmed' => false, 'reviewedBy' => FIXTURE_REVIEWER])
         ->assertStatus(409);
 
     expect($draft->fresh()->status)->toBe(RulesetStatus::IN_REVIEW);
+});
+
+/*
+ * Who reviewed and approved a version is entered at publish and shown in the
+ * console. RULESET_VERSION has no column for it, so it lives in one audit
+ * entry, written once (ADR-0006).
+ */
+it('requires who reviewed and approved a version, records it once, and shows it', function () {
+    $draft = draftWith(fixtureContent());
+    $this->postJson("/api/v1/console/ruleset-versions/{$draft->id}/submit")->assertStatus(200);
+    $publish = fn (array $body) => $this->postJson("/api/v1/console/ruleset-versions/{$draft->id}/publish", $body);
+
+    $publish(['clinicalReviewConfirmed' => true])->assertStatus(422)->assertJsonValidationErrors('reviewedBy');
+    $publish(['clinicalReviewConfirmed' => true, 'reviewedBy' => str_repeat('x', 101)])->assertStatus(422);
+    // Spaces alone are no reviewer.
+    $publish(['clinicalReviewConfirmed' => true, 'reviewedBy' => '   '])->assertStatus(422)->assertJsonValidationErrors('reviewedBy');
+    expect($draft->fresh()->status)->toBe(RulesetStatus::IN_REVIEW);
+
+    $publish(['clinicalReviewConfirmed' => true, 'reviewedBy' => '  '.FIXTURE_REVIEWER.' '])
+        ->assertStatus(200)
+        ->assertJsonPath('version.reviewedBy', FIXTURE_REVIEWER);
+
+    $entry = AuditLog::where('action_type', 'clinical_review')->sole();
+    expect($entry->target_id)->toBe($draft->id)
+        ->and($entry->old_value)->toBe(['reviewed_by' => FIXTURE_REVIEWER])
+        ->and($entry->actor_id)->toBe($this->admin->id);
+
+    $this->getJson("/api/v1/console/ruleset-versions/{$draft->id}")->assertJsonPath('version.reviewedBy', FIXTURE_REVIEWER);
+    $listed = collect($this->getJson('/api/v1/console/ruleset-versions')->json('versions'))->keyBy('id');
+    expect($listed[$draft->id]['reviewedBy'])->toBe(FIXTURE_REVIEWER);
+
+    // A version never published has no reviewer.
+    $other = draftWith(fixtureContent());
+    expect($listed->has($other->id) ? $listed[$other->id]['reviewedBy'] : null)->toBeNull();
+    $this->getJson("/api/v1/console/ruleset-versions/{$other->id}")->assertJsonPath('version.reviewedBy', null);
+});
+
+it('keeps the original reviewer on a rolled-back copy, and says where it came from', function () {
+    $v1 = draftWith(fixtureContent());
+    publishVersion($v1);
+    publishVersion(draftWith(fixtureContent(['rules' => [array_merge(fixtureContent()['rules'][0], ['outcomeTier' => 'emergency'])]])));
+
+    $restored = $this->postJson("/api/v1/console/ruleset-versions/{$v1->id}/rollback")->assertStatus(201)->json('version');
+
+    expect($restored['reviewedBy'])->toBe(FIXTURE_REVIEWER)
+        ->and(AuditLog::where('action_type', 'clinical_review')->where('target_id', $restored['id'])->value('old_value'))
+        ->toBe(['reviewed_by' => FIXTURE_REVIEWER, 'carried_from' => $v1->label]);
 });
 
 it('returns a version from review to draft', function () {
@@ -537,7 +587,7 @@ it('keeps every version that was in review, published, retired or saved over', f
     $try($savedOver->id);
     $try($inReview);
 
-    $this->postJson("/api/v1/console/ruleset-versions/{$first->id}/publish", ['clinicalReviewConfirmed' => true])->assertStatus(200);
+    $this->postJson("/api/v1/console/ruleset-versions/{$first->id}/publish", ['clinicalReviewConfirmed' => true, 'reviewedBy' => FIXTURE_REVIEWER])->assertStatus(200);
     $try($published);
 
     publishVersion(draftWith(fixtureContent(['lexiconTerms' => [

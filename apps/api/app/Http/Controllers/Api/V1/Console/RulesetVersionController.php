@@ -31,8 +31,12 @@ class RulesetVersionController extends Controller
         $versions = RulesetVersion::with('publishedBy')
             ->withCount(['rules', 'lexiconTerms', 'severityThresholds', 'clarificationQuestions', 'healthTips'])
             ->orderByDesc('id')
-            ->get()
-            ->map(fn (RulesetVersion $v): array => $this->present($v) + [
+            ->get();
+
+        $reviewers = $this->lifecycle->reviewersOf($versions->modelKeys());
+
+        $versions = $versions
+            ->map(fn (RulesetVersion $v): array => $this->present($v, $reviewers) + [
                 'counts' => [
                     'rules' => $v->rules_count,
                     'lexiconTerms' => $v->lexicon_terms_count,
@@ -92,12 +96,15 @@ class RulesetVersionController extends Controller
     /** UT-011. */
     public function publish(Request $request, RulesetVersion $version): JsonResponse
     {
-        $data = $request->validate(['clinicalReviewConfirmed' => ['required', 'boolean']]);
+        $data = $request->validate([
+            'clinicalReviewConfirmed' => ['required', 'boolean'],
+            'reviewedBy' => ['required', 'string', 'max:'.RulesetLifecycle::MAX_REVIEWER],
+        ]);
 
         /** @var User $user */
         $user = $request->user();
 
-        return $this->ok($this->lifecycle->publish($version, $user, (bool) $data['clinicalReviewConfirmed']));
+        return $this->ok($this->lifecycle->publish($version, $user, (bool) $data['clinicalReviewConfirmed'], $data['reviewedBy']));
     }
 
     /** UT-011: restore a previously published version as a new publication. */
@@ -117,15 +124,22 @@ class RulesetVersionController extends Controller
         return response()->json(['deleted' => ['id' => $version->getKey(), 'label' => $version->label]]);
     }
 
-    /** @return array<string, mixed> */
-    private function present(RulesetVersion $version): array
+    /**
+     * @param  array<int, string>|null  $reviewers  version id => reviewer, when already looked up for a list
+     * @return array<string, mixed>
+     */
+    private function present(RulesetVersion $version, ?array $reviewers = null): array
     {
+        $reviewers ??= $this->lifecycle->reviewersOf([$version->getKey()]);
+
         return [
             'id' => $version->getKey(),
             'label' => $version->label,
             'status' => $version->status,
             'publishedAt' => $version->published_at?->toIso8601String(),
             'publishedBy' => $version->publishedBy?->email,
+            // Who reviewed and approved it, as entered at publish (null if never recorded).
+            'reviewedBy' => $reviewers[$version->getKey()] ?? null,
         ];
     }
 

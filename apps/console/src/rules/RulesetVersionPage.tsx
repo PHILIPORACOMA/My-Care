@@ -1,5 +1,5 @@
 import { ApiError, type RulesetContent, type RulesetVersionSummary, type SymptomCodeEntry } from "@mycare/api-client";
-import { Async, Badge, Banner, Button, Checkbox, Dialog, PageHeader, formatDateTime, useAsync } from "@mycare/ui";
+import { Async, Badge, Banner, Button, Checkbox, Dialog, PageHeader, TextField, formatDateTime, useAsync } from "@mycare/ui";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
@@ -136,6 +136,17 @@ function VersionEditor(props: { version: RulesetVersionSummary; initial: Ruleset
 
       <div className="mc-stack mc-mb-4">
         {notice && <Banner tone="success">{notice}</Banner>}
+        {version.publishedAt && (
+          <Banner tone={version.reviewedBy ? "success" : "info"}>
+            {version.reviewedBy ? (
+              <>
+                Reviewed and approved by: <strong>{version.reviewedBy}</strong>
+              </>
+            ) : (
+              "Reviewed and approved by: not recorded. This version was published before the reviewer was asked for."
+            )}
+          </Banner>
+        )}
         {error && (
           <Banner tone="danger" title={error.message}>
             {errorCount > 0 && (
@@ -184,9 +195,12 @@ function VersionEditor(props: { version: RulesetVersionSummary; initial: Ruleset
           label={version.label}
           busy={busy}
           onClose={() => setPublishing(false)}
-          onConfirm={() => {
+          onConfirm={(reviewedBy) => {
             setPublishing(false);
-            void run(() => api.console.publish(version.id, true), `${version.label} is published. Devices receive it on their next check.`);
+            void run(
+              () => api.console.publish(version.id, true, reviewedBy),
+              `${version.label} is published. Devices receive it on their next check. Reviewed and approved by: ${reviewedBy}.`
+            );
           }}
         />
       )}
@@ -194,13 +208,19 @@ function VersionEditor(props: { version: RulesetVersionSummary; initial: Ruleset
   );
 }
 
+/** Same limit as the API (RulesetLifecycle::MAX_REVIEWER). */
+const MAX_REVIEWER = 100;
+
 /**
  * Figure 11: no rule change reaches patients without clinical review. The
- * software cannot verify a clinician's sign-off, so the publisher attests to it
- * and the audit log records who did.
+ * software cannot verify a clinician's sign-off, so the publisher attests to it,
+ * says who reviewed and approved it, and the audit log records both.
  */
-function PublishDialog(props: { label: string; busy: boolean; onClose: () => void; onConfirm: () => void }) {
+export function PublishDialog(props: { label: string; busy: boolean; onClose: () => void; onConfirm: (reviewedBy: string) => void }) {
   const [confirmed, setConfirmed] = useState(false);
+  const [reviewer, setReviewer] = useState("");
+  const reviewedBy = reviewer.trim();
+  const ready = confirmed && reviewedBy !== "" && reviewedBy.length <= MAX_REVIEWER;
 
   return (
     <Dialog
@@ -212,7 +232,7 @@ function PublishDialog(props: { label: string; busy: boolean; onClose: () => voi
           <Button variant="secondary" onClick={props.onClose}>
             Cancel
           </Button>
-          <Button disabled={!confirmed} busy={props.busy} onClick={props.onConfirm}>
+          <Button disabled={!ready} busy={props.busy} onClick={() => props.onConfirm(reviewedBy)}>
             Publish
           </Button>
         </>
@@ -227,6 +247,13 @@ function PublishDialog(props: { label: string; busy: boolean; onClose: () => voi
           I confirm this version's rules, thresholds, questions, lexicon and health tips were reviewed and approved by the project adviser or a qualified
           health professional.
         </Checkbox>
+        <TextField
+          label="Reviewed and approved by (name or role)"
+          value={reviewer}
+          maxLength={MAX_REVIEWER}
+          onChange={(e) => setReviewer(e.target.value)}
+          hint="Enter a person's name only if they agreed to be named. Otherwise a role, such as “RHU nurse, Carcar”. It is kept in the audit log and shown in this console only."
+        />
       </div>
     </Dialog>
   );

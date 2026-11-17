@@ -171,8 +171,10 @@ export function createClient(options: ClientOptions = {}) {
         json<{ version: RulesetVersionSummary }>("POST", `/api/v1/console/ruleset-versions/${id}/submit`).then((r) => r.version),
       returnToDraft: (id: number) =>
         json<{ version: RulesetVersionSummary }>("POST", `/api/v1/console/ruleset-versions/${id}/return-to-draft`).then((r) => r.version),
-      publish: (id: number, clinicalReviewConfirmed: boolean) =>
-        json<{ version: RulesetVersionSummary }>("POST", `/api/v1/console/ruleset-versions/${id}/publish`, { clinicalReviewConfirmed }).then((r) => r.version),
+      publish: (id: number, clinicalReviewConfirmed: boolean, reviewedBy: string) =>
+        json<{ version: RulesetVersionSummary }>("POST", `/api/v1/console/ruleset-versions/${id}/publish`, { clinicalReviewConfirmed, reviewedBy }).then(
+          (r) => r.version
+        ),
       rollback: (id: number) =>
         json<{ version: RulesetVersionSummary }>("POST", `/api/v1/console/ruleset-versions/${id}/rollback`).then((r) => r.version),
       /** A draft that never went to review. Anything else is kept as history. */
