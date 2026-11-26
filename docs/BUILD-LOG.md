@@ -2709,7 +2709,7 @@ beside it (`..._ID_key.json`).
 
 ---
 
-### 9au - The v2 lexicon and the demo vocabulary reported validated (2026-11-26)
+### 9au - A nurse validated the demo vocabulary and the v2 lexicon, for the pilot (2026-11-26)
 
 On 2026-11-26 Philipo reported that "the lexicons in the demo app are now
 validated". Asked which lexicon, he answered **both**:
@@ -2723,9 +2723,16 @@ validated". Asked which lexicon, he answered **both**:
     9 negations.
   - 304 come from `DEMO_PHRASES` in `apps/pwa/src/demo.ts`.
 
-**Not yet stated, so not recorded:** who validated, on what date, and for what
-scope (the pilot only, or wider). Until Philipo says otherwise, the record says
-"validated" and names no one (9ar rule).
+**Who, when and scope, as Philipo gave them on 2026-11-26:**
+- **Who:** a nurse. The nurse is not named, because consent to be named is not
+  confirmed (9ar rule).
+- **Demo vocabulary:** validated on 2026-11-06. The nurse also ran a UAT on
+  the `dev:demo` build that day. The demo vocabulary has not changed since. The
+  only later edit to `demo.ts` (`8374ba5`, 2026-11-15) changed chip labels,
+  not terms.
+- **v2 lexicon:** the whole 970-term file was re-validated on 2026-11-25. This
+  is in addition to the approval of the 523 phrases on 2026-11-17 (9at).
+- **Scope:** the pilot, for both.
 
 **Philipo chose to record this only (Part 1 of the plan).**
 - No import file was built, and no code changed.
@@ -2757,6 +2764,9 @@ Results are now stale:
 - that the vocabulary "was approved by a member of the research team rather
   than a clinician";
 - that the lexicon appraisal "did not yet produce reviewed vocabulary".
+
+The manuscript also does not record the nurse's 2026-11-06 validation and UAT,
+or the 2026-11-25 re-validation.
 
 **PRODUCTION-CHECKLIST stays unchanged.** Section 1's "Enter the reviewed
 lexicon terms" stays unticked: the terms are validated but not yet entered on
