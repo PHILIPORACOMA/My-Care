@@ -2706,3 +2706,58 @@ beside it (`..._ID_key.json`).
     only; the conditions are identical, and it predates this change.
   - The PWA barangay-change unit test failed once under load beside Pest.
     It passed 3/3 alone and 78/78 in a clean run.
+
+---
+
+### 9au - The v2 lexicon and the demo vocabulary reported validated (2026-11-26)
+
+On 2026-11-26 Philipo reported that "the lexicons in the demo app are now
+validated". Asked which lexicon, he answered **both**:
+- **The v2 nurse-review lexicon:** 970 terms in
+  `Downloads\My_Care_ruleset_v2_nurse_review_2026-11-17.json` (9at). It is
+  published locally as v15 and is not yet on the live server.
+- **The demo-mode vocabulary** (`npm run dev:demo -w @mycare/pwa`): 428 terms
+  on 24 symptom codes.
+  - 124 come from kizaru3214's PR #2 draft, kept as the test fixture
+    `packages/ruleset/src/testing/lexicon-fixture.ts`: 115 positive terms and
+    9 negations.
+  - 304 come from `DEMO_PHRASES` in `apps/pwa/src/demo.ts`.
+
+**Not yet stated, so not recorded:** who validated, on what date, and for what
+scope (the pilot only, or wider). Until Philipo says otherwise, the record says
+"validated" and names no one (9ar rule).
+
+**Philipo chose to record this only (Part 1 of the plan).**
+- No import file was built, and no code changed.
+- The fixture and `demo.ts` keep their "NOT CLINICALLY REVIEWED" headers.
+- The guard test in `packages/ruleset/src/testing/testing.test.ts` stays, and
+  v1 still publishes 0 terms.
+- Demo vocabulary reaches patients only if it is imported and published as a
+  ruleset version. That needs his go-ahead.
+
+**This covers lexicon terms only.** Two items from 9at are questions, not
+terms, and still await the nurse's confirmation:
+- the Tagalog of the 13 follow-ups;
+- the 5 recast questions.
+
+**Open before any demo term enters a real ruleset:**
+- **Did the validation accept the fixture's known bare-word mappings?**
+  - A bare "fever" / "lagnat" / "hilanat" maps to `fever_mild`, a Home
+    presentation. v2 then asks "How many days have you had the fever?" but
+    asks nothing about danger signs.
+  - A bare "chest pain" goes straight to Emergency.
+- **The same mappings settle the manuscript's Recommendation 5 words:**
+  imported, they would make "hilanat" and "lagnat" from the UAT session work.
+- **Every demo term must be checked with the real matcher against the 970
+  terms before import.** Each must match only its own code, change no existing
+  term's match, and leave negations intact.
+
+**Manuscript (flagged for Philipo, not amended):** two statements in the
+Results are now stale:
+- that the vocabulary "was approved by a member of the research team rather
+  than a clinician";
+- that the lexicon appraisal "did not yet produce reviewed vocabulary".
+
+**PRODUCTION-CHECKLIST stays unchanged.** Section 1's "Enter the reviewed
+lexicon terms" stays unticked: the terms are validated but not yet entered on
+a server.
